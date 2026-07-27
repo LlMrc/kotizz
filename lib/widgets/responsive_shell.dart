@@ -25,12 +25,12 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     final destinations = [
-      (icon: Icons.home_rounded, label: t.navHome),
-      (icon: Icons.groups_rounded, label: t.navGroups),
-      (icon: Icons.notifications_rounded, label: t.navAlerts),
-      (icon: Icons.person_rounded, label: t.navProfile),
+      (icon: Icons.home_rounded, label: 'Home'),
+      (icon: Icons.groups_rounded, label: 'Groups'),
+      (icon: Icons.notifications_rounded, label: 'Alerts'),
+      (icon: Icons.person_rounded, label: 'Profile'),
     ];
 
     return LayoutBuilder(

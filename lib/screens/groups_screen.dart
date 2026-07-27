@@ -8,7 +8,7 @@ class GroupsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),

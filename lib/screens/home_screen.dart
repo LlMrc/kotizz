@@ -33,7 +33,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -57,7 +57,10 @@ class _TopBar extends StatelessWidget {
               Container(
                 width: 7,
                 height: 7,
-                decoration: const BoxDecoration(color: AppColors.palm, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: AppColors.palm,
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 6),
               Text(
@@ -81,11 +84,14 @@ class _WheelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 26, 20, 22),
-      decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(28)),
+      decoration: BoxDecoration(
+        color: AppColors.ink,
+        borderRadius: BorderRadius.circular(28),
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: Stack(
@@ -98,10 +104,12 @@ class _WheelCard extends StatelessWidget {
                 height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    AppColors.marigold.withOpacity(0.35),
-                    AppColors.marigold.withOpacity(0),
-                  ]),
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.marigold.withOpacity(0.35),
+                      AppColors.marigold.withOpacity(0),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -197,7 +205,8 @@ class _RotationWheel extends StatefulWidget {
   State<_RotationWheel> createState() => _RotationWheelState();
 }
 
-class _RotationWheelState extends State<_RotationWheel> with SingleTickerProviderStateMixin {
+class _RotationWheelState extends State<_RotationWheel>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
 
   static const _nodes = [
@@ -214,8 +223,10 @@ class _RotationWheelState extends State<_RotationWheel> with SingleTickerProvide
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
-      ..repeat(reverse: true);
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -226,7 +237,7 @@ class _RotationWheelState extends State<_RotationWheel> with SingleTickerProvide
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     const size = 164.0;
     return SizedBox(
       width: size,
@@ -239,7 +250,10 @@ class _RotationWheelState extends State<_RotationWheel> with SingleTickerProvide
             height: 140,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.white.withOpacity(0.12), width: 2),
+              border: Border.all(
+                color: AppColors.white.withOpacity(0.12),
+                width: 2,
+              ),
             ),
           ),
           Column(
@@ -256,14 +270,21 @@ class _RotationWheelState extends State<_RotationWheel> with SingleTickerProvide
               const SizedBox(height: 2),
               Text(
                 t.currentTurnLabel,
-                style: TextStyle(fontSize: 10, letterSpacing: 0.6, color: AppColors.white.withOpacity(0.55)),
+                style: TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 0.6,
+                  color: AppColors.white.withOpacity(0.55),
+                ),
               ),
             ],
           ),
           for (final node in _nodes)
             Positioned(
-              top: node.top * size - (node.state == _NodeState.active ? 18 : 15),
-              left: node.left * size - (node.state == _NodeState.active ? 18 : 15),
+              top:
+                  node.top * size - (node.state == _NodeState.active ? 18 : 15),
+              left:
+                  node.left * size -
+                  (node.state == _NodeState.active ? 18 : 15),
               child: node.state == _NodeState.active
                   ? AnimatedBuilder(
                       animation: _pulseController,
@@ -278,7 +299,9 @@ class _RotationWheelState extends State<_RotationWheel> with SingleTickerProvide
                             border: Border.all(color: AppColors.ink, width: 2),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.marigold.withOpacity(0.22 - v * 0.12),
+                                color: AppColors.marigold.withOpacity(
+                                  0.22 - v * 0.12,
+                                ),
                                 spreadRadius: 5 + v * 4,
                               ),
                             ],
@@ -286,7 +309,11 @@ class _RotationWheelState extends State<_RotationWheel> with SingleTickerProvide
                           alignment: Alignment.center,
                           child: Text(
                             node.label,
-                            style: GoogleFonts.ibmPlexMono(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.ink),
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.ink,
+                            ),
                           ),
                         );
                       },
@@ -333,16 +360,28 @@ class _GroupsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(t.activeGroups,
-                style: GoogleFonts.bricolageGrotesque(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.ink)),
-            Text(t.seeAll, style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ash)),
+            Text(
+              t.activeGroups,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
+            Text(
+              t.seeAll,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 12,
+                color: AppColors.ash,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -407,29 +446,60 @@ class _GroupCard extends StatelessWidget {
           Container(
             width: 42,
             height: 42,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(13)),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(13),
+            ),
             alignment: Alignment.center,
-            child: Text(initials,
-                style: GoogleFonts.bricolageGrotesque(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.white)),
+            child: Text(
+              initials,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.white,
+              ),
+            ),
           ),
           const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    style: GoogleFonts.ibmPlexSans(fontSize: 14.5, fontWeight: FontWeight.w600, color: AppColors.ink),
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  name,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 2),
-                Text(meta, style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ash)),
+                Text(
+                  meta,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 12,
+                    color: AppColors.ash,
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-            child: Text(label,
-                style: GoogleFonts.ibmPlexMono(fontSize: 10.5, fontWeight: FontWeight.w600, letterSpacing: 0.3, color: fg)),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+                color: fg,
+              ),
+            ),
           ),
         ],
       ),
@@ -442,18 +512,36 @@ class _QuickActionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(t.quickActions,
-            style: GoogleFonts.bricolageGrotesque(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        Text(
+          t.quickActions,
+          style: GoogleFonts.bricolageGrotesque(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _ActionButton(icon: '➕', iconBg: AppColors.marigold.withOpacity(0.18), label: t.createSol)),
+            Expanded(
+              child: _ActionButton(
+                icon: '➕',
+                iconBg: AppColors.marigold.withOpacity(0.18),
+                label: t.createSol,
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _ActionButton(icon: '✅', iconBg: AppColors.palm.withOpacity(0.15), label: t.iPaid)),
+            Expanded(
+              child: _ActionButton(
+                icon: '✅',
+                iconBg: AppColors.palm.withOpacity(0.15),
+                label: t.iPaid,
+              ),
+            ),
           ],
         ),
       ],
@@ -464,7 +552,11 @@ class _QuickActionsSection extends StatelessWidget {
 class _ActionButton extends StatelessWidget {
   final String icon, label;
   final Color iconBg;
-  const _ActionButton({required this.icon, required this.iconBg, required this.label});
+  const _ActionButton({
+    required this.icon,
+    required this.iconBg,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -480,14 +572,23 @@ class _ActionButton extends StatelessWidget {
           Container(
             width: 30,
             height: 30,
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(9)),
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(9),
+            ),
             alignment: Alignment.center,
             child: Text(icon, style: const TextStyle(fontSize: 15)),
           ),
           const SizedBox(width: 9),
           Expanded(
-            child: Text(label,
-                style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+            child: Text(
+              label,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.ink,
+              ),
+            ),
           ),
         ],
       ),

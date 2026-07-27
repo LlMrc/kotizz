@@ -112,7 +112,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
   // Affiché quand l'organisateur a déjà 1 groupe actif, que son essai
   // de 30 jours est terminé, et qu'il n'a pas d'abonnement actif.
   Future<void> _showPaywallSheet() async {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     if (!mounted) return;
 
     await showModalBottomSheet(
@@ -194,7 +194,8 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
       'biweekly': t.freqBiweekly,
       'monthly': t.freqMonthly,
     }[_frequency];
-    final dateLabel = DateFormat.yMMMMd(t.locale.languageCode).format(_startDate);
+    // AppLocalizations provides localeName rather than a Locale getter
+    final dateLabel = DateFormat.yMMMMd(t.localeName).format(_startDate);
     const link = 'https://sol.app/join/demo';
 
     return '''
@@ -211,7 +212,7 @@ $link
 
   Future<void> _showInviteSheet({required String groupId}) async {
     final t = AppLocalizations.of(context);
-    final message = _buildInviteMessage(t);
+    final message = _buildInviteMessage(t!);
     if (!mounted) return;
 
     await showModalBottomSheet(
@@ -274,7 +275,7 @@ $link
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
@@ -355,7 +356,7 @@ $link
                   children: [
                     const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.ash),
                     const SizedBox(width: 10),
-                    Text(DateFormat.yMMMMd(t.locale.languageCode).format(_startDate),
+                    Text(DateFormat.yMMMMd(Localizations.localeOf(context).languageCode).format(_startDate),
                         style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ink)),
                   ],
                 ),

@@ -27,6 +27,19 @@ void main() async {
   runApp(const SolApp());
 }
 
+// Fournit un getter `locale` pour AppLanguage si l'enum est défini ailleurs
+// (évite l'erreur "The getter 'locale' isn't defined for the type 'AppLanguage'.")
+extension _AppLanguageLocale on AppLanguage {
+  Locale get locale {
+    switch (this) {
+      case AppLanguage.french:
+        return const Locale('fr');
+      case AppLanguage.english:
+        return const Locale('en');
+    }
+  }
+}
+
 class SolApp extends StatefulWidget {
   const SolApp({super.key});
 
@@ -36,7 +49,7 @@ class SolApp extends StatefulWidget {
 
 class _SolAppState extends State<SolApp> {
   // Langue par défaut : français, ajustable via l'écran Profil.
-  AppLanguage _language = AppLanguage.fr;
+  AppLanguage _language = AppLanguage.french;
 
   void _setLanguage(AppLanguage lang) => setState(() => _language = lang);
 
