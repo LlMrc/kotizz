@@ -1,4 +1,4 @@
-package com.kotizz.com
+package com.kotizz.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -21,7 +21,7 @@ workflows:
       - name: Build iOS app
 
         script: |
-          flutter build ios --debug --no-codesign
+          flutter build ios --debug --no-codesign --simulator
       - name: Install simulator runtime
 
         script: |
