@@ -1,0 +1,443 @@
+// Dépendances requises dans pubspec.yaml :
+//   supabase_flutter: ^2.5.0
+//   share_plus: ^10.0.0
+//   intl: ^0.19.0
+//   google_fonts: ^6.2.1
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../theme/app_colors.dart';
+import '../l10n/app_localizations.dart';
+
+class CreateSolScreen extends StatefulWidget {
+  const CreateSolScreen({super.key});
+
+  @override
+  State<CreateSolScreen> createState() => _CreateSolScreenState();
+}
+
+class _CreateSolScreenState extends State<CreateSolScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+  final _amountCtrl = TextEditingController();
+  final _membersCtrl = TextEditingController();
+
+  String _currency = 'HTG';
+  String _frequency = 'monthly';
+  DateTime _startDate = DateTime.now().add(const Duration(days: 7));
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    _amountCtrl.dispose();
+    _membersCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickStartDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) setState(() => _startDate = picked);
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSubmitting = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) throw Exception('Not authenticated');
+
+      // --- Vérification côté app AVANT l'insert : évite de faire
+      // --- remplir tout le formulaire pour finir sur une erreur.
+      // --- La fonction can_create_group() côté base reste le filet
+      // --- de sécurité final (voir trigger sur la table groups).
+      final canCreate = await supabase
+          .rpc('can_create_group', params: {'p_user_id': currentUser.id});
+
+      if (canCreate != true) {
+        if (!mounted) return;
+        setState(() => _isSubmitting = false);
+        await _showPaywallSheet();
+        return;
+      }
+
+      // --- L'utilisateur qui crée le groupe devient automatiquement
+      // --- l'organisateur : aucun champ à remplir pour ça.
+      final inserted = await supabase
+          .from('groups')
+          .insert({
+            'name': _nameCtrl.text.trim(),
+            'organizer_id': currentUser.id,
+            'contribution_amount': double.parse(_amountCtrl.text.trim()),
+            'currency': _currency,
+            'frequency': _frequency,
+            'order_type': 'random',
+            'start_date': DateFormat('yyyy-MM-dd').format(_startDate),
+            'status': 'draft',
+          })
+          .select()
+          .single();
+
+      if (!mounted) return;
+      await _showInviteSheet(groupId: inserted['id'] as String);
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      // Filet de sécurité : si le trigger côté base a bloqué l'insert
+      // (ex: appel direct à l'API sans passer par can_create_group ci-dessus)
+      if (e.message.contains('subscription_required')) {
+        await _showPaywallSheet();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  // Affiché quand l'organisateur a déjà 1 groupe actif, que son essai
+  // de 30 jours est terminé, et qu'il n'a pas d'abonnement actif.
+  Future<void> _showPaywallSheet() async {
+    final t = AppLocalizations.of(context);
+    if (!mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.paper,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t.paywallTitle,
+                style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.ink)),
+            const SizedBox(height: 8),
+            Text(t.paywallBody, style: GoogleFonts.ibmPlexSans(fontSize: 13.5, color: AppColors.ash)),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.ink,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(t.paywallPlanName,
+                            style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.white)),
+                        const SizedBox(height: 2),
+                        Text('9,99 \$ / mois',
+                            style: GoogleFonts.ibmPlexMono(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.marigold)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.workspace_premium_rounded, color: AppColors.marigold),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  // TODO: brancher sur RevenueCat.purchasePackage(...)
+                  // comme déjà fait pour VinPassport.
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.marigold,
+                  foregroundColor: AppColors.ink,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: Text(t.paywallCta, style: GoogleFonts.ibmPlexSans(fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(t.later, style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _buildInviteMessage(AppLocalizations t) {
+    final amount = _amountCtrl.text.trim();
+    final desc = _descCtrl.text.trim();
+    final freqLabel = {
+      'weekly': t.freqWeekly,
+      'biweekly': t.freqBiweekly,
+      'monthly': t.freqMonthly,
+    }[_frequency];
+    final dateLabel = DateFormat.yMMMMd(t.locale.languageCode).format(_startDate);
+    const link = 'https://sol.app/join/demo';
+
+    return '''
+${t.inviteMessageIntro} "${_nameCtrl.text.trim()}" !
+
+${desc.isNotEmpty ? '$desc\n' : ''}${t.inviteMessageAmountLabel} : $amount $_currency
+${t.inviteMessageFrequencyLabel} : $freqLabel
+${t.inviteMessageStartLabel} : $dateLabel
+
+${t.inviteMessageJoinLabel}
+$link
+''';
+  }
+
+  Future<void> _showInviteSheet({required String groupId}) async {
+    final t = AppLocalizations.of(context);
+    final message = _buildInviteMessage(t);
+    if (!mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.paper,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t.inviteSheetTitle,
+                style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.ink)),
+            const SizedBox(height: 6),
+            Text(t.inviteSheetSubtitle, style: GoogleFonts.ibmPlexSans(fontSize: 13.5, color: AppColors.ash)),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.paperDim),
+              ),
+              child: Text(message, style: GoogleFonts.ibmPlexSans(fontSize: 12.5, color: AppColors.ink)),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => Share.share(message),
+                icon: const Icon(Icons.share_rounded, size: 18),
+                label: Text(t.shareInvite),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.marigold,
+                  foregroundColor: AppColors.ink,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  textStyle: GoogleFonts.ibmPlexSans(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pop();
+                },
+                child: Text(t.later, style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(
+      backgroundColor: AppColors.paper,
+      appBar: AppBar(
+        backgroundColor: AppColors.paper,
+        elevation: 0,
+        title: Text(t.createSolTitle,
+            style: GoogleFonts.bricolageGrotesque(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        iconTheme: const IconThemeData(color: AppColors.ink),
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          children: [
+            _label(t.fieldName),
+            _field(controller: _nameCtrl, hint: t.fieldNameHint, validator: (v) => (v == null || v.trim().isEmpty) ? t.validationNameRequired : null),
+            const SizedBox(height: 16),
+            _label(t.fieldDescription),
+            _field(controller: _descCtrl, hint: t.fieldDescriptionHint, maxLines: 3),
+            const SizedBox(height: 16),
+            _label(t.fieldAmount),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: _field(
+                    controller: _amountCtrl,
+                    hint: t.fieldAmountHint,
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return t.validationAmountRequired;
+                      if (double.tryParse(v.trim()) == null) return t.validationAmountInvalid;
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _dropdown(value: _currency, items: const ['HTG', 'USD'], onChanged: (v) => setState(() => _currency = v!)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _label(t.fieldFrequency),
+            _dropdown(
+              value: _frequency,
+              items: const ['weekly', 'biweekly', 'monthly'],
+              displayLabel: (k) => {'weekly': t.freqWeekly, 'biweekly': t.freqBiweekly, 'monthly': t.freqMonthly}[k]!,
+              onChanged: (v) => setState(() => _frequency = v!),
+              fullWidth: true,
+            ),
+            const SizedBox(height: 16),
+            _label(t.fieldMembers),
+            _field(
+              controller: _membersCtrl,
+              hint: t.fieldMembersHint,
+              keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return t.validationMembersRequired;
+                if (int.tryParse(v.trim()) == null) return t.validationMembersInvalid;
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            _label(t.fieldStartDate),
+            InkWell(
+              onTap: _pickStartDate,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.paperDim),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.ash),
+                    const SizedBox(width: 10),
+                    Text(DateFormat.yMMMMd(t.locale.languageCode).format(_startDate),
+                        style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ink)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.ink,
+                  foregroundColor: AppColors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.white),
+                      )
+                    : Text(t.submitCreate, style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _label(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(text, style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+      );
+
+  Widget _field({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ink),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ash),
+        filled: true,
+        fillColor: AppColors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.paperDim)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.paperDim)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.marigold, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.coral)),
+      ),
+    );
+  }
+
+  Widget _dropdown({
+    required String value,
+    required List<String> items,
+    required void Function(String?) onChanged,
+    String Function(String)? displayLabel,
+    bool fullWidth = false,
+  }) {
+    return Container(
+      width: fullWidth ? double.infinity : null,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.paperDim)),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isExpanded: fullWidth,
+          onChanged: onChanged,
+          style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ink),
+          items: items.map((v) => DropdownMenuItem(value: v, child: Text(displayLabel != null ? displayLabel(v) : v))).toList(),
+        ),
+      ),
+    );
+  }
+}

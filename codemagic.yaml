@@ -1,0 +1,29 @@
+workflows:
+  ios-simulator:
+    name: Build and run Flutter app on iOS simulator
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install Flutter dependencies
+        script: |
+          flutter pub get
+          flutter gen-l10n
+      - name: Build iOS app
+        script: |
+          flutter build ios --debug --no-codesign
+      - name: Install simulator runtime
+        script: |
+          xcrun simctl list devices available
+      - name: Run app on simulator
+        script: |
+          open -a Simulator
+          xcrun simctl boot "iPhone 15" || true
+          xcrun simctl install booted build/ios/iphoneos/Runner.app || true
+          xcrun simctl launch booted com.example.wonn || true
+    artifacts:
+      - build/**/outputs/**/*.ipa
+      - build/**/outputs/**/*.app
