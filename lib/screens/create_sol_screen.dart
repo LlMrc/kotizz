@@ -63,8 +63,10 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
       // --- remplir tout le formulaire pour finir sur une erreur.
       // --- La fonction can_create_group() côté base reste le filet
       // --- de sécurité final (voir trigger sur la table groups).
-      final canCreate = await supabase
-          .rpc('can_create_group', params: {'p_user_id': currentUser.id});
+      final canCreate = await supabase.rpc(
+        'can_create_group',
+        params: {'p_user_id': currentUser.id},
+      );
 
       if (canCreate != true) {
         if (!mounted) return;
@@ -99,7 +101,9 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
       if (e.message.contains('subscription_required')) {
         await _showPaywallSheet();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } catch (e) {
       if (!mounted) return;
@@ -118,17 +122,31 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
     await showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.paper,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(t.paywallTitle,
-                style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.ink)),
+            Text(
+              t.paywallTitle,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(t.paywallBody, style: GoogleFonts.ibmPlexSans(fontSize: 13.5, color: AppColors.ash)),
+            Text(
+              t.paywallBody,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13.5,
+                color: AppColors.ash,
+              ),
+            ),
             const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.all(16),
@@ -142,15 +160,30 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(t.paywallPlanName,
-                            style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.white)),
+                        Text(
+                          t.paywallPlanName,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.white,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text('9,99 \$ / mois',
-                            style: GoogleFonts.ibmPlexMono(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.marigold)),
+                        Text(
+                          '9,99 \$ / mois',
+                          style: GoogleFonts.ibmPlexMono(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.marigold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.workspace_premium_rounded, color: AppColors.marigold),
+                  const Icon(
+                    Icons.workspace_premium_rounded,
+                    color: AppColors.marigold,
+                  ),
                 ],
               ),
             ),
@@ -167,9 +200,17 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
                   backgroundColor: AppColors.marigold,
                   foregroundColor: AppColors.ink,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: Text(t.paywallCta, style: GoogleFonts.ibmPlexSans(fontSize: 14, fontWeight: FontWeight.w600)),
+                child: Text(
+                  t.paywallCta,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -177,7 +218,10 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(t.later, style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+                child: Text(
+                  t.later,
+                  style: GoogleFonts.ibmPlexSans(color: AppColors.ash),
+                ),
               ),
             ),
           ],
@@ -218,17 +262,31 @@ $link
     await showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.paper,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(t.inviteSheetTitle,
-                style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.ink)),
+            Text(
+              t.inviteSheetTitle,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
             const SizedBox(height: 6),
-            Text(t.inviteSheetSubtitle, style: GoogleFonts.ibmPlexSans(fontSize: 13.5, color: AppColors.ash)),
+            Text(
+              t.inviteSheetSubtitle,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13.5,
+                color: AppColors.ash,
+              ),
+            ),
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
@@ -238,7 +296,13 @@ $link
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.paperDim),
               ),
-              child: Text(message, style: GoogleFonts.ibmPlexSans(fontSize: 12.5, color: AppColors.ink)),
+              child: Text(
+                message,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 12.5,
+                  color: AppColors.ink,
+                ),
+              ),
             ),
             const SizedBox(height: 18),
             SizedBox(
@@ -251,8 +315,13 @@ $link
                   backgroundColor: AppColors.marigold,
                   foregroundColor: AppColors.ink,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  textStyle: GoogleFonts.ibmPlexSans(fontSize: 14, fontWeight: FontWeight.w600),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  textStyle: GoogleFonts.ibmPlexSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -264,7 +333,10 @@ $link
                   Navigator.of(ctx).pop();
                   Navigator.of(context).pop();
                 },
-                child: Text(t.later, style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+                child: Text(
+                  t.later,
+                  style: GoogleFonts.ibmPlexSans(color: AppColors.ash),
+                ),
               ),
             ),
           ],
@@ -281,8 +353,14 @@ $link
       appBar: AppBar(
         backgroundColor: AppColors.paper,
         elevation: 0,
-        title: Text(t.createSolTitle,
-            style: GoogleFonts.bricolageGrotesque(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        title: Text(
+          t.createSolTitle,
+          style: GoogleFonts.bricolageGrotesque(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
         iconTheme: const IconThemeData(color: AppColors.ink),
       ),
       body: Form(
@@ -291,10 +369,20 @@ $link
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
             _label(t.fieldName),
-            _field(controller: _nameCtrl, hint: t.fieldNameHint, validator: (v) => (v == null || v.trim().isEmpty) ? t.validationNameRequired : null),
+            _field(
+              controller: _nameCtrl,
+              hint: t.fieldNameHint,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? t.validationNameRequired
+                  : null,
+            ),
             const SizedBox(height: 16),
             _label(t.fieldDescription),
-            _field(controller: _descCtrl, hint: t.fieldDescriptionHint, maxLines: 3),
+            _field(
+              controller: _descCtrl,
+              hint: t.fieldDescriptionHint,
+              maxLines: 3,
+            ),
             const SizedBox(height: 16),
             _label(t.fieldAmount),
             Row(
@@ -306,15 +394,21 @@ $link
                     hint: t.fieldAmountHint,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return t.validationAmountRequired;
-                      if (double.tryParse(v.trim()) == null) return t.validationAmountInvalid;
+                      if (v == null || v.trim().isEmpty)
+                        return t.validationAmountRequired;
+                      if (double.tryParse(v.trim()) == null)
+                        return t.validationAmountInvalid;
                       return null;
                     },
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: _dropdown(value: _currency, items: const ['HTG', 'USD'], onChanged: (v) => setState(() => _currency = v!)),
+                  child: _dropdown(
+                    value: _currency,
+                    items: const ['HTG', 'USD'],
+                    onChanged: (v) => setState(() => _currency = v!),
+                  ),
                 ),
               ],
             ),
@@ -323,7 +417,11 @@ $link
             _dropdown(
               value: _frequency,
               items: const ['weekly', 'biweekly', 'monthly'],
-              displayLabel: (k) => {'weekly': t.freqWeekly, 'biweekly': t.freqBiweekly, 'monthly': t.freqMonthly}[k]!,
+              displayLabel: (k) => {
+                'weekly': t.freqWeekly,
+                'biweekly': t.freqBiweekly,
+                'monthly': t.freqMonthly,
+              }[k]!,
               onChanged: (v) => setState(() => _frequency = v!),
               fullWidth: true,
             ),
@@ -334,8 +432,10 @@ $link
               hint: t.fieldMembersHint,
               keyboardType: TextInputType.number,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return t.validationMembersRequired;
-                if (int.tryParse(v.trim()) == null) return t.validationMembersInvalid;
+                if (v == null || v.trim().isEmpty)
+                  return t.validationMembersRequired;
+                if (int.tryParse(v.trim()) == null)
+                  return t.validationMembersInvalid;
                 return null;
               },
             ),
@@ -346,7 +446,10 @@ $link
               borderRadius: BorderRadius.circular(14),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 15,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -354,10 +457,21 @@ $link
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.ash),
+                    const Icon(
+                      Icons.calendar_today_rounded,
+                      size: 16,
+                      color: AppColors.ash,
+                    ),
                     const SizedBox(width: 10),
-                    Text(DateFormat.yMMMMd(Localizations.localeOf(context).languageCode).format(_startDate),
-                        style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ink)),
+                    Text(
+                      DateFormat.yMMMMd(
+                        Localizations.localeOf(context).languageCode,
+                      ).format(_startDate),
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 14,
+                        color: AppColors.ink,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -371,14 +485,26 @@ $link
                   backgroundColor: AppColors.ink,
                   foregroundColor: AppColors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: _isSubmitting
                     ? const SizedBox(
-                        width: 20, height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.white),
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: AppColors.white,
+                        ),
                       )
-                    : Text(t.submitCreate, style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w600)),
+                    : Text(
+                        t.submitCreate,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -388,9 +514,16 @@ $link
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text, style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
-      );
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text,
+      style: GoogleFonts.ibmPlexSans(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.ink,
+      ),
+    ),
+  );
 
   Widget _field({
     required TextEditingController controller,
@@ -410,11 +543,26 @@ $link
         hintStyle: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ash),
         filled: true,
         fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.paperDim)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.paperDim)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.marigold, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.coral)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.paperDim),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.paperDim),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.marigold, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.coral),
+        ),
       ),
     );
   }
@@ -429,14 +577,25 @@ $link
     return Container(
       width: fullWidth ? double.infinity : null,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.paperDim)),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.paperDim),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: fullWidth,
           onChanged: onChanged,
           style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ink),
-          items: items.map((v) => DropdownMenuItem(value: v, child: Text(displayLabel != null ? displayLabel(v) : v))).toList(),
+          items: items
+              .map(
+                (v) => DropdownMenuItem(
+                  value: v,
+                  child: Text(displayLabel != null ? displayLabel(v) : v),
+                ),
+              )
+              .toList(),
         ),
       ),
     );
