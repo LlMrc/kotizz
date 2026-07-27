@@ -1,0 +1,27 @@
+{
+  "@@locale": "en",
+  "appTitle": "Wonn",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "homePageTitle": "Home",
+  "@homePageTitle": {
+    "description": "Title for the home page"
+  },
+  "profilePageTitle": "Profile",
+  "@profilePageTitle": {
+    "description": "Title for the profile page"
+  },
+  "groupsPageTitle": "Groups",
+  "@groupsPageTitle": {
+    "description": "Title for the groups page"
+  },
+  "alertsPageTitle": "Alerts",
+  "@alertsPageTitle": {
+    "description": "Title for the alerts page"
+  },
+  "createTitle": "Create",
+  "@createTitle": {
+    "description": "Title for create page"
+  }
+}
