@@ -212,7 +212,7 @@ class _SavingsSummaryCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.marigold.withOpacity(0.18),
+              color: AppColors.marigold.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(16),
             ),
             alignment: Alignment.center,
@@ -260,7 +260,7 @@ class _SavingsSummaryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.palm.withOpacity(0.12),
+              color: AppColors.palm.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -369,7 +369,7 @@ class _GroupCardItem extends StatelessWidget {
           border: Border.all(color: AppColors.paperDim),
           boxShadow: [
             BoxShadow(
-              color: AppColors.ink.withOpacity(0.03),
+              color: AppColors.ink.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -385,7 +385,7 @@ class _GroupCardItem extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: group.color.withOpacity(0.12),
+                    color: group.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -575,22 +575,22 @@ class _StatusBadge extends StatelessWidget {
     switch (status) {
       case _GroupStatus.yourTurn:
         label = "C'est votre tour ! 🎉";
-        bg = AppColors.marigold.withOpacity(0.2);
+        bg = AppColors.marigold.withValues(alpha: 0.2);
         fg = const Color(0xFFB87A1F);
         break;
       case _GroupStatus.upToDate:
         label = 'À jour';
-        bg = AppColors.palm.withOpacity(0.15);
+        bg = AppColors.palm.withValues(alpha: 0.15);
         fg = AppColors.palm;
         break;
       case _GroupStatus.dueSoon:
         label = 'Cotisation due';
-        bg = AppColors.coral.withOpacity(0.15);
+        bg = AppColors.coral.withValues(alpha: 0.15);
         fg = AppColors.coral;
         break;
       case _GroupStatus.completed:
         label = 'Terminé 🏆';
-        bg = AppColors.ash.withOpacity(0.15);
+        bg = AppColors.ash.withValues(alpha: 0.15);
         fg = AppColors.ash;
         break;
     }
@@ -695,7 +695,7 @@ class _GroupDetailSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.ash.withOpacity(0.3),
+                color: AppColors.ash.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(99),
               ),
             ),
@@ -775,7 +775,7 @@ class _GroupDetailSheet extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isCurrent ? AppColors.marigold.withOpacity(0.12) : AppColors.white,
+                    color: isCurrent ? AppColors.marigold.withValues(alpha: 0.12) : AppColors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isCurrent ? AppColors.marigold : AppColors.paperDim,
@@ -895,3 +895,4 @@ class _GroupDetailSheet extends StatelessWidget {
     );
   }
 }
+

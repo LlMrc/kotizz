@@ -146,55 +146,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Language Selector
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: AppColors.white,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: AppColors.paperDim),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.language_rounded, size: 20, color: AppColors.ink),
-                      const SizedBox(width: 10),
-                      Text(
-                        t.profileLanguage,
-                        style: GoogleFonts.ibmPlexSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.ink,
-                        ),
-                      ),
-                    ],
+                  const Icon(Icons.language_rounded, size: 20, color: AppColors.ink),
+                  const SizedBox(width: 10),
+                  Text(
+                    t.profileLanguage,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: AppLanguage.values.map((lang) {
-                      final selected = lang == widget.currentLanguage;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: ChoiceChip(
-                          label: Text(lang.nativeLabel),
-                          selected: selected,
-                          onSelected: (_) => widget.onLanguageChanged(lang),
-                          selectedColor: AppColors.ink,
-                          backgroundColor: AppColors.paper,
-                          labelStyle: GoogleFonts.ibmPlexSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: selected ? AppColors.white : AppColors.ink,
-                          ),
-                          side: BorderSide(
-                            color: selected ? AppColors.ink : AppColors.paperDim,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  const Spacer(),
+                  DropdownButtonHideUnderline(
+                    child: DropdownButton<AppLanguage>(
+                      value: widget.currentLanguage,
+                      isDense: true,
+                      borderRadius: BorderRadius.circular(14),
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: AppColors.ink),
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink,
+                      ),
+                      items: AppLanguage.values.map((lang) {
+                        return DropdownMenuItem<AppLanguage>(
+                          value: lang,
+                          child: Text(lang.nativeLabel),
+                        );
+                      }).toList(),
+                      onChanged: (lang) {
+                        if (lang != null) widget.onLanguageChanged(lang);
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -304,7 +295,7 @@ class _UserHeaderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.ink.withOpacity(0.12),
+            color: AppColors.ink.withValues(alpha: 0.12),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -371,21 +362,21 @@ class _UserHeaderCard extends StatelessWidget {
                   '@louis_m • Membre depuis Jan. 2024',
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
-                    color: AppColors.white.withOpacity(0.65),
+                    color: AppColors.white.withValues(alpha: 0.65),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.white.withOpacity(0.12),
+                    color: AppColors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     '+509 37 12 34 56',
                     style: GoogleFonts.ibmPlexMono(
                       fontSize: 11,
-                      color: AppColors.white.withOpacity(0.9),
+                      color: AppColors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ),
@@ -458,7 +449,7 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -535,7 +526,7 @@ class _VerificationRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.palm.withOpacity(0.12),
+              color: AppColors.palm.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(

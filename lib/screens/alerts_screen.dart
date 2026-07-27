@@ -198,7 +198,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.ash.withOpacity(0.3),
+                  color: AppColors.ash.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),
@@ -246,7 +246,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               alert.body,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
-                color: AppColors.ink.withOpacity(0.8),
+                color: AppColors.ink.withValues(alpha: 0.8),
                 height: 1.4,
               ),
             ),
@@ -344,16 +344,16 @@ class _AlertCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: alert.isUnread ? AppColors.white : AppColors.white.withOpacity(0.7),
+          color: alert.isUnread ? AppColors.white : AppColors.white.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: alert.isUnread ? AppColors.marigold.withOpacity(0.5) : AppColors.paperDim,
+            color: alert.isUnread ? AppColors.marigold.withValues(alpha: 0.5) : AppColors.paperDim,
             width: alert.isUnread ? 1.5 : 1.0,
           ),
           boxShadow: alert.isUnread
               ? [
                   BoxShadow(
-                    color: AppColors.marigold.withOpacity(0.06),
+                    color: AppColors.marigold.withValues(alpha: 0.06),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -405,7 +405,7 @@ class _AlertCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 12.5,
-                      color: AppColors.ink.withOpacity(0.7),
+                      color: AppColors.ink.withValues(alpha: 0.7),
                       height: 1.3,
                     ),
                   ),
@@ -442,32 +442,32 @@ class _AlertIconBadge extends StatelessWidget {
     switch (type) {
       case _AlertType.payout:
         icon = Icons.payments_rounded;
-        bg = AppColors.marigold.withOpacity(0.18);
+        bg = AppColors.marigold.withValues(alpha: 0.18);
         fg = AppColors.marigold;
         break;
       case _AlertType.payment:
         icon = Icons.check_circle_rounded;
-        bg = AppColors.palm.withOpacity(0.18);
+        bg = AppColors.palm.withValues(alpha: 0.18);
         fg = AppColors.palm;
         break;
       case _AlertType.reminder:
         icon = Icons.alarm_rounded;
-        bg = AppColors.coral.withOpacity(0.18);
+        bg = AppColors.coral.withValues(alpha: 0.18);
         fg = AppColors.coral;
         break;
       case _AlertType.memberJoined:
         icon = Icons.person_add_rounded;
-        bg = AppColors.ink.withOpacity(0.12);
+        bg = AppColors.ink.withValues(alpha: 0.12);
         fg = AppColors.ink;
         break;
       case _AlertType.system:
         icon = Icons.verified_user_rounded;
-        bg = AppColors.palm.withOpacity(0.18);
+        bg = AppColors.palm.withValues(alpha: 0.18);
         fg = AppColors.palm;
         break;
       case _AlertType.completed:
         icon = Icons.emoji_events_rounded;
-        bg = AppColors.marigold.withOpacity(0.18);
+        bg = AppColors.marigold.withValues(alpha: 0.18);
         fg = AppColors.marigold;
         break;
     }
@@ -484,3 +484,4 @@ class _AlertIconBadge extends StatelessWidget {
     );
   }
 }
+

@@ -308,7 +308,7 @@ $link
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => Share.share(message),
+                onPressed: () => SharePlus.instance.share(ShareParams(text: message)),
                 icon: const Icon(Icons.share_rounded, size: 18),
                 label: Text(t.shareInvite),
                 style: ElevatedButton.styleFrom(
@@ -394,10 +394,12 @@ $link
                     hint: t.fieldAmountHint,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return t.validationAmountRequired;
-                      if (double.tryParse(v.trim()) == null)
+                      }
+                      if (double.tryParse(v.trim()) == null) {
                         return t.validationAmountInvalid;
+                      }
                       return null;
                     },
                   ),
@@ -432,10 +434,12 @@ $link
               hint: t.fieldMembersHint,
               keyboardType: TextInputType.number,
               validator: (v) {
-                if (v == null || v.trim().isEmpty)
+                if (v == null || v.trim().isEmpty) {
                   return t.validationMembersRequired;
-                if (int.tryParse(v.trim()) == null)
+                }
+                if (int.tryParse(v.trim()) == null) {
                   return t.validationMembersInvalid;
+                }
                 return null;
               },
             ),

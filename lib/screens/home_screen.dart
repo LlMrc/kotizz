@@ -183,13 +183,16 @@ class _MiniStatCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: GoogleFonts.ibmPlexMono(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
-                  color: AppColors.ash,
+              Flexible(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
+                    color: AppColors.ash,
+                  ),
                 ),
               ),
               Icon(icon, size: 16, color: iconColor),
@@ -232,7 +235,7 @@ class _WheelCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: AppColors.ink.withOpacity(0.15),
+            color: AppColors.ink.withValues(alpha: 0.15),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -252,8 +255,8 @@ class _WheelCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.marigold.withOpacity(0.35),
-                      AppColors.marigold.withOpacity(0),
+                      AppColors.marigold.withValues(alpha: 0.35),
+                      AppColors.marigold.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -277,7 +280,7 @@ class _WheelCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.marigold.withOpacity(0.2),
+                        color: AppColors.marigold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -330,7 +333,7 @@ class _WheelCard extends StatelessWidget {
                             t.confirmedCount(6, 8),
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 12.5,
-                              color: AppColors.white.withOpacity(0.7),
+                              color: AppColors.white.withValues(alpha: 0.7),
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -352,7 +355,7 @@ class _WheelCard extends StatelessWidget {
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.white.withOpacity(0.6),
+                                  color: AppColors.white.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],
@@ -426,7 +429,7 @@ class _RotationWheelState extends State<_RotationWheel>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.white.withOpacity(0.14),
+                color: AppColors.white.withValues(alpha: 0.14),
                 width: 2,
               ),
             ),
@@ -475,7 +478,7 @@ class _RotationWheelState extends State<_RotationWheel>
                             border: Border.all(color: AppColors.ink, width: 2),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.marigold.withOpacity(
+                                color: AppColors.marigold.withValues(alpha: 
                                   0.3 - v * 0.15,
                                 ),
                                 spreadRadius: 5 + v * 4,
@@ -515,7 +518,7 @@ class _StaticNode extends StatelessWidget {
       height: 30,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isDone ? AppColors.palm : AppColors.white.withOpacity(0.14),
+        color: isDone ? AppColors.palm : AppColors.white.withValues(alpha: 0.14),
         border: Border.all(color: AppColors.ink, width: 2),
       ),
       alignment: Alignment.center,
@@ -524,7 +527,7 @@ class _StaticNode extends StatelessWidget {
         style: GoogleFonts.ibmPlexMono(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: isDone ? AppColors.white : AppColors.white.withOpacity(0.6),
+          color: isDone ? AppColors.white : AppColors.white.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -568,7 +571,7 @@ class _GroupsPreview extends StatelessWidget {
           name: 'Famille Monplaisir',
           meta: '8 membres • 15 000 HTG / mois',
           label: "C'est votre tour !",
-          bg: AppColors.marigold.withOpacity(0.18),
+          bg: AppColors.marigold.withValues(alpha: 0.18),
           fg: const Color(0xFFB87A1F),
         ),
         const SizedBox(height: 10),
@@ -578,7 +581,7 @@ class _GroupsPreview extends StatelessWidget {
           name: 'Collègues Vinpassport',
           meta: '5 membres • 100 USD / mois',
           label: t.statusUpToDate,
-          bg: AppColors.palm.withOpacity(0.15),
+          bg: AppColors.palm.withValues(alpha: 0.15),
           fg: AppColors.palm,
         ),
         const SizedBox(height: 10),
@@ -588,7 +591,7 @@ class _GroupsPreview extends StatelessWidget {
           name: 'Quartier Turgeau',
           meta: '12 membres • 20 000 HTG / bi-hebdo',
           label: 'Cotisation due',
-          bg: AppColors.coral.withOpacity(0.15),
+          bg: AppColors.coral.withValues(alpha: 0.15),
           fg: AppColors.coral,
         ),
       ],
@@ -707,7 +710,7 @@ class _QuickActionsSection extends StatelessWidget {
             Expanded(
               child: _ActionButton(
                 icon: '➕',
-                iconBg: AppColors.marigold.withOpacity(0.18),
+                iconBg: AppColors.marigold.withValues(alpha: 0.18),
                 label: t.createSol,
                 subLabel: 'Créer un groupe',
               ),
@@ -716,7 +719,7 @@ class _QuickActionsSection extends StatelessWidget {
             Expanded(
               child: _ActionButton(
                 icon: '✅',
-                iconBg: AppColors.palm.withOpacity(0.15),
+                iconBg: AppColors.palm.withValues(alpha: 0.15),
                 label: t.iPaid,
                 subLabel: 'Cotisation versée',
               ),
@@ -787,3 +790,4 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+
