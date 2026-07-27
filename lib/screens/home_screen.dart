@@ -39,50 +39,57 @@ class _TopBar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.marigold,
-                border: Border.all(color: AppColors.ink, width: 1.5),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                'LM',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.marigold,
+                  border: Border.all(color: AppColors.ink, width: 1.5),
                 ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t.greeting('Louis'),
+                alignment: Alignment.center,
+                child: Text(
+                  'LM',
                   style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 22,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppColors.ink,
-                    letterSpacing: -0.3,
                   ),
                 ),
-                Text(
-                  'Bienvenue sur Kotizz',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12,
-                    color: AppColors.ash,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.greeting('Louis'),
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                        letterSpacing: -0.3,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Bienvenue sur Kotizz',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12,
+                        color: AppColors.ash,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
+        const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
           decoration: BoxDecoration(
@@ -268,15 +275,19 @@ class _WheelCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'TONTINE VEDETTE: FAMILLE MONPLAISIR',
-                      style: GoogleFonts.ibmPlexMono(
-                        fontSize: 10.5,
-                        letterSpacing: 1.1,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.marigold,
+                    Expanded(
+                      child: Text(
+                        'TONTINE VEDETTE: FAMILLE MONPLAISIR',
+                        style: GoogleFonts.ibmPlexMono(
+                          fontSize: 10.5,
+                          letterSpacing: 1.1,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.marigold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(

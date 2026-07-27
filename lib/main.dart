@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -42,6 +43,38 @@ extension _AppLanguageLocale on AppLanguage {
   }
 }
 
+class _HtMaterialLocalizationsDelegate
+    extends LocalizationsDelegate<MaterialLocalizations> {
+  const _HtMaterialLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => locale.languageCode == 'ht';
+
+  @override
+  Future<MaterialLocalizations> load(Locale locale) async {
+    return await GlobalMaterialLocalizations.delegate.load(const Locale('fr'));
+  }
+
+  @override
+  bool shouldReload(_HtMaterialLocalizationsDelegate old) => false;
+}
+
+class _HtCupertinoLocalizationsDelegate
+    extends LocalizationsDelegate<CupertinoLocalizations> {
+  const _HtCupertinoLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => locale.languageCode == 'ht';
+
+  @override
+  Future<CupertinoLocalizations> load(Locale locale) async {
+    return await GlobalCupertinoLocalizations.delegate.load(const Locale('fr'));
+  }
+
+  @override
+  bool shouldReload(_HtCupertinoLocalizationsDelegate old) => false;
+}
+
 class SolApp extends StatefulWidget {
   const SolApp({super.key});
 
@@ -62,8 +95,10 @@ class _SolAppState extends State<SolApp> {
       title: 'Kotizz',
       locale: _language.locale,
       supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: [
+      localizationsDelegates: const [
         AppLocalizations.delegate,
+        _HtMaterialLocalizationsDelegate(),
+        _HtCupertinoLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
