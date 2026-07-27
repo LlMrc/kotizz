@@ -27,10 +27,10 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final destinations = [
-      (icon: Icons.home_rounded, label: 'Home'),
-      (icon: Icons.groups_rounded, label: 'Groups'),
-      (icon: Icons.notifications_rounded, label: 'Alerts'),
-      (icon: Icons.person_rounded, label: 'Profile'),
+      (icon: Icons.grid_view_rounded, label: t.appTitle == 'Kotizz' ? 'Accueil' : 'Home'),
+      (icon: Icons.groups_rounded, label: t.groupsTitle),
+      (icon: Icons.notifications_rounded, label: t.alertsTitle),
+      (icon: Icons.person_rounded, label: t.profileTitle),
     ];
 
     return LayoutBuilder(
@@ -104,8 +104,17 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
             selectedIconTheme: const IconThemeData(color: AppColors.marigold),
             showUnselectedLabels: true,
             items: [
-              for (final d in destinations)
-                BottomNavigationBarItem(icon: Icon(d.icon), label: d.label),
+              for (int i = 0; i < destinations.length; i++)
+                BottomNavigationBarItem(
+                  icon: i == 2
+                      ? Badge(
+                          label: const Text('3', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.white)),
+                          backgroundColor: AppColors.coral,
+                          child: Icon(destinations[i].icon),
+                        )
+                      : Icon(destinations[i].icon),
+                  label: destinations[i].label,
+                ),
             ],
           ),
         );

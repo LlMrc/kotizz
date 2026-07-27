@@ -16,6 +16,8 @@ class HomeScreen extends StatelessWidget {
           children: const [
             _TopBar(),
             SizedBox(height: 18),
+            _SummaryStatsRow(),
+            SizedBox(height: 18),
             _WheelCard(),
             SizedBox(height: 22),
             _GroupsPreview(),
@@ -37,14 +39,49 @@ class _TopBar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          t.greeting('Louis'),
-          style: GoogleFonts.bricolageGrotesque(
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            color: AppColors.ink,
-            letterSpacing: -0.3,
-          ),
+        Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.marigold,
+                border: Border.all(color: AppColors.ink, width: 1.5),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'LM',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.greeting('Louis'),
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  'Bienvenue sur Kotizz',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 12,
+                    color: AppColors.ash,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         Container(
           padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
@@ -79,6 +116,108 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+class _SummaryStatsRow extends StatelessWidget {
+  const _SummaryStatsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: const [
+          _MiniStatCard(
+            title: 'ÉPARGNE GLOBALE',
+            value: '360 000 HTG',
+            sub: '3 tontines actives',
+            icon: Icons.account_balance_wallet_rounded,
+            iconColor: AppColors.marigold,
+          ),
+          SizedBox(width: 12),
+          _MiniStatCard(
+            title: 'PROCHAIN POT',
+            value: '15 000 HTG',
+            sub: 'Reçu le 15 Fév. (Vous)',
+            icon: Icons.savings_rounded,
+            iconColor: AppColors.palm,
+          ),
+          SizedBox(width: 12),
+          _MiniStatCard(
+            title: 'SCORE CONFIANCE',
+            value: '92 / 100',
+            sub: 'Statut Vérifié ✓',
+            icon: Icons.verified_user_rounded,
+            iconColor: AppColors.coral,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStatCard extends StatelessWidget {
+  final String title, value, sub;
+  final IconData icon;
+  final Color iconColor;
+
+  const _MiniStatCard({
+    required this.title,
+    required this.value,
+    required this.sub,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 175,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.paperDim),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.ibmPlexMono(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                  color: AppColors.ash,
+                ),
+              ),
+              Icon(icon, size: 16, color: iconColor),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.ink,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            sub,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 11,
+              color: AppColors.ash,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _WheelCard extends StatelessWidget {
   const _WheelCard();
 
@@ -87,10 +226,17 @@ class _WheelCard extends StatelessWidget {
     final t = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 26, 20, 22),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
         color: AppColors.ink,
         borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withOpacity(0.15),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
@@ -116,13 +262,34 @@ class _WheelCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  t.wheelGroupExample.toUpperCase(),
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: 11,
-                    letterSpacing: 1.1,
-                    color: AppColors.white.withOpacity(0.55),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TONTINE VEDETTE: FAMILLE MONPLAISIR',
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 10.5,
+                        letterSpacing: 1.1,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.marigold,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.marigold.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'TOUR 3/8',
+                        style: GoogleFonts.ibmPlexMono(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.marigold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -138,28 +305,35 @@ class _WheelCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const _RotationWheel(),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 18),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            t.yourTurn,
-                            style: GoogleFonts.bricolageGrotesque(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.white,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.marigold,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              t.yourTurn.toUpperCase(),
+                              style: GoogleFonts.ibmPlexMono(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.ink,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 6),
                           Text(
                             t.confirmedCount(6, 8),
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 12.5,
-                              color: AppColors.white.withOpacity(0.6),
+                              color: AppColors.white.withOpacity(0.7),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,
@@ -167,8 +341,8 @@ class _WheelCard extends StatelessWidget {
                               Text(
                                 '15 000',
                                 style: GoogleFonts.ibmPlexMono(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
                                   color: AppColors.marigold,
                                 ),
                               ),
@@ -176,8 +350,9 @@ class _WheelCard extends StatelessWidget {
                               Text(
                                 'HTG',
                                 style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 11,
-                                  color: AppColors.white.withOpacity(0.55),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.white.withOpacity(0.6),
                                 ),
                               ),
                             ],
@@ -238,7 +413,7 @@ class _RotationWheelState extends State<_RotationWheel>
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    const size = 164.0;
+    const size = 154.0;
     return SizedBox(
       width: size,
       height: size,
@@ -246,12 +421,12 @@ class _RotationWheelState extends State<_RotationWheel>
         alignment: Alignment.center,
         children: [
           Container(
-            width: 140,
-            height: 140,
+            width: 130,
+            height: 130,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.white.withOpacity(0.12),
+                color: AppColors.white.withOpacity(0.14),
                 width: 2,
               ),
             ),
@@ -263,7 +438,7 @@ class _RotationWheelState extends State<_RotationWheel>
                 t.turnCounter(3, 8),
                 style: GoogleFonts.ibmPlexMono(
                   fontSize: 22,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.white,
                 ),
               ),
@@ -271,9 +446,10 @@ class _RotationWheelState extends State<_RotationWheel>
               Text(
                 t.currentTurnLabel,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 9.5,
                   letterSpacing: 0.6,
-                  color: AppColors.white.withOpacity(0.55),
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.marigold,
                 ),
               ),
             ],
@@ -300,7 +476,7 @@ class _RotationWheelState extends State<_RotationWheel>
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.marigold.withOpacity(
-                                  0.22 - v * 0.12,
+                                  0.3 - v * 0.15,
                                 ),
                                 spreadRadius: 5 + v * 4,
                               ),
@@ -311,7 +487,7 @@ class _RotationWheelState extends State<_RotationWheel>
                             node.label,
                             style: GoogleFonts.ibmPlexMono(
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.ink,
                             ),
                           ),
@@ -370,7 +546,7 @@ class _GroupsPreview extends StatelessWidget {
             Text(
               t.activeGroups,
               style: GoogleFonts.bricolageGrotesque(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.ink,
               ),
@@ -378,7 +554,8 @@ class _GroupsPreview extends StatelessWidget {
             Text(
               t.seeAll,
               style: GoogleFonts.ibmPlexSans(
-                fontSize: 12,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
                 color: AppColors.ash,
               ),
             ),
@@ -388,10 +565,10 @@ class _GroupsPreview extends StatelessWidget {
         _GroupCard(
           initials: 'FM',
           color: AppColors.marigold,
-          name: t.wheelGroupExample,
-          meta: '8 · 4j',
-          label: t.statusPending,
-          bg: AppColors.marigold.withOpacity(0.16),
+          name: 'Famille Monplaisir',
+          meta: '8 membres • 15 000 HTG / mois',
+          label: "C'est votre tour !",
+          bg: AppColors.marigold.withOpacity(0.18),
           fg: const Color(0xFFB87A1F),
         ),
         const SizedBox(height: 10),
@@ -399,9 +576,9 @@ class _GroupsPreview extends StatelessWidget {
           initials: 'CV',
           color: AppColors.palm,
           name: 'Collègues Vinpassport',
-          meta: '5',
+          meta: '5 membres • 100 USD / mois',
           label: t.statusUpToDate,
-          bg: AppColors.palm.withOpacity(0.12),
+          bg: AppColors.palm.withOpacity(0.15),
           fg: AppColors.palm,
         ),
         const SizedBox(height: 10),
@@ -409,9 +586,9 @@ class _GroupsPreview extends StatelessWidget {
           initials: 'QT',
           color: AppColors.coral,
           name: 'Quartier Turgeau',
-          meta: '12',
-          label: t.statusDispute,
-          bg: AppColors.coral.withOpacity(0.13),
+          meta: '12 membres • 20 000 HTG / bi-hebdo',
+          label: 'Cotisation due',
+          bg: AppColors.coral.withOpacity(0.15),
           fg: AppColors.coral,
         ),
       ],
@@ -519,7 +696,7 @@ class _QuickActionsSection extends StatelessWidget {
         Text(
           t.quickActions,
           style: GoogleFonts.bricolageGrotesque(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppColors.ink,
           ),
@@ -532,6 +709,7 @@ class _QuickActionsSection extends StatelessWidget {
                 icon: '➕',
                 iconBg: AppColors.marigold.withOpacity(0.18),
                 label: t.createSol,
+                subLabel: 'Créer un groupe',
               ),
             ),
             const SizedBox(width: 10),
@@ -540,6 +718,7 @@ class _QuickActionsSection extends StatelessWidget {
                 icon: '✅',
                 iconBg: AppColors.palm.withOpacity(0.15),
                 label: t.iPaid,
+                subLabel: 'Cotisation versée',
               ),
             ),
           ],
@@ -550,12 +729,13 @@ class _QuickActionsSection extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  final String icon, label;
+  final String icon, label, subLabel;
   final Color iconBg;
   const _ActionButton({
     required this.icon,
     required this.iconBg,
     required this.label,
+    required this.subLabel,
   });
 
   @override
@@ -570,24 +750,36 @@ class _ActionButton extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: iconBg,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(11),
             ),
             alignment: Alignment.center,
-            child: Text(icon, style: const TextStyle(fontSize: 15)),
+            child: Text(icon, style: const TextStyle(fontSize: 16)),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.ink,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
+                Text(
+                  subLabel,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 11,
+                    color: AppColors.ash,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -36,6 +36,8 @@ extension _AppLanguageLocale on AppLanguage {
         return const Locale('fr');
       case AppLanguage.english:
         return const Locale('en');
+      case AppLanguage.creole:
+        return const Locale('ht');
     }
   }
 }
