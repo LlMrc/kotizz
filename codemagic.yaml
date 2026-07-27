@@ -3,27 +3,48 @@ workflows:
     name: Build and run Flutter app on iOS simulator
     instance_type: mac_mini_m1
     max_build_duration: 60
+    integrations:
+      app_store_connect: Codemagic pp Store Api key
+
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.kotizz.app
+      vars:
+        BUNDLE_ID: "com.kotizz.app"
+
     scripts:
       - name: Install Flutter dependencies
         script: |
           flutter pub get
           flutter gen-l10n
       - name: Build iOS app
+
         script: |
           flutter build ios --debug --no-codesign
       - name: Install simulator runtime
+
         script: |
           xcrun simctl list devices available
       - name: Run app on simulator
+
         script: |
           open -a Simulator
           xcrun simctl boot "iPhone 15" || true
           xcrun simctl install booted build/ios/iphoneos/Runner.app || true
-          xcrun simctl launch booted com.example.wonn || true
+          xcrun simctl launch booted "$BUNDLE_ID" || true
+
+      - name: Setup VNC Workspace & Keep Alive
+        script: |
+          caffeinate -u -t 3600 &
+          xcrun simctl boot "iPhone 15" || true
+          open -a Simulator
+          open $CM_BUILD_DIR/ios/Runner.xcworkspace
+          echo "🚀 WORKSPACE READY: Connect via VNC to debug."
+
     artifacts:
       - build/**/outputs/**/*.ipa
       - build/**/outputs/**/*.app
