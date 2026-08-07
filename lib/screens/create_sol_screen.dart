@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../services/plan_service.dart';
 
 class CreateSolScreen extends StatefulWidget {
   const CreateSolScreen({super.key});
@@ -30,6 +31,20 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
   String _frequency = 'monthly';
   DateTime _startDate = DateTime.now().add(const Duration(days: 7));
   bool _isSubmitting = false;
+
+  /// Plan de l'utilisateur courant. Chargé dans initState.
+  bool _isPro = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPlan();
+  }
+
+  Future<void> _loadUserPlan() async {
+    final pro = await PlanService.isPro();
+    if (mounted) setState(() => _isPro = pro);
+  }
 
   @override
   void dispose() {
@@ -71,7 +86,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
       if (canCreate != true) {
         if (!mounted) return;
         setState(() => _isSubmitting = false);
-        await _showPaywallSheet();
+        await _showPaywallSheet(reason: 'group');
         return;
       }
 
@@ -97,9 +112,13 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
     } on PostgrestException catch (e) {
       if (!mounted) return;
       // Filet de sécurité : si le trigger côté base a bloqué l'insert
-      // (ex: appel direct à l'API sans passer par can_create_group ci-dessus)
-      if (e.message.contains('subscription_required')) {
-        await _showPaywallSheet();
+      if (e.message.contains('subscription_required') ||
+          e.message.contains('member_limit_reached')) {
+        await _showPaywallSheet(
+          reason: e.message.contains('member_limit_reached')
+              ? 'member'
+              : 'group',
+        );
       } else {
         ScaffoldMessenger.of(
           context,
@@ -113,11 +132,20 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
     }
   }
 
-  // Affiché quand l'organisateur a déjà 1 groupe actif, que son essai
-  // de 30 jours est terminé, et qu'il n'a pas d'abonnement actif.
-  Future<void> _showPaywallSheet() async {
+  // Affichez selon la raison :
+  //   'group'  → limite de groupes atteinte (FREE : 1 groupe max)
+  //   'member' → limite de membres atteinte (FREE : 5 membres max)
+  Future<void> _showPaywallSheet({String reason = 'group'}) async {
     final t = AppLocalizations.of(context)!;
     if (!mounted) return;
+
+    final isMemberLimit = reason == 'member';
+    final title = isMemberLimit
+        ? 'Limite de membres atteinte'
+        : t.paywallTitle;
+    final body = isMemberLimit
+        ? 'Le plan gratuit est limité à ${PlanService.freeMaxMembers} membres par groupe.\nPassez au PRO pour des membres illimités.'
+        : t.paywallBody;
 
     await showModalBottomSheet(
       context: context,
@@ -132,7 +160,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              t.paywallTitle,
+              title,
               style: GoogleFonts.bricolageGrotesque(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -141,7 +169,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              t.paywallBody,
+              body,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 13.5,
                 color: AppColors.ash,
@@ -191,10 +219,24 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  // TODO: brancher sur RevenueCat.purchasePackage(...)
-                  // comme déjà fait pour VinPassport.
+                onPressed: () async {
+                  Navigator.of(ctx).pop(); // Ferme le bottom sheet d'abord
+                  
+                  // Lance l'achat
+                  final success = await PlanService.purchasePro();
+                  if (success) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Merci pour votre achat ! Vous êtes maintenant PRO.')),
+                    );
+                    // Recharge le plan pour débloquer l'interface
+                    _loadUserPlan();
+                  } else {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('L\'achat n\'a pas pu être finalisé.')),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.marigold,
@@ -437,8 +479,11 @@ $link
                 if (v == null || v.trim().isEmpty) {
                   return t.validationMembersRequired;
                 }
-                if (int.tryParse(v.trim()) == null) {
-                  return t.validationMembersInvalid;
+                final n = int.tryParse(v.trim());
+                if (n == null) return t.validationMembersInvalid;
+                // Plan FREE : maximum 5 membres (organisateur inclus)
+                if (!_isPro && n > PlanService.freeMaxMembers) {
+                  return 'Plan gratuit : max ${PlanService.freeMaxMembers} membres. Passez au PRO !';
                 }
                 return null;
               },

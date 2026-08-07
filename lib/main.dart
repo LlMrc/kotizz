@@ -1,30 +1,40 @@
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme/app_colors.dart';
 import 'widgets/responsive_shell.dart';
+import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/groups_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/create_sol_screen.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Si l'app utilise Supabase (comme le suppose create_sol_screen.dart),
-// initialise-le ici avant runApp() :
-//
-// import 'package:supabase_flutter/supabase_flutter.dart';
-// Future<void> main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   await Supabase.initialize(url: '...', anonKey: '...');
-//   runApp(const SolApp());
-// }
+/// Clés d'accès au backend Supabase
+const _supabaseUrl = 'https://nwdgnbzpvoypzduzreec.supabase.co';
+const _supabaseAnonKey = 'sb_publishable_W2m9cj3XcDzNVJVIr9zd0g_r0aB0NMg';
 
-void main() async {
-  //   WidgetsFlutterBinding.ensureInitialized();
-  //   await Supabase.initialize(url: '...', anonKey: '...');
+// Clé API RevenueCat
+const _revenueCatApiKey = 'appl_ndKqPUhQfqBsVRtPAAuzoaRsEAY';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialisation Supabase
+  await Supabase.initialize(
+    url: _supabaseUrl,
+    anonKey: _supabaseAnonKey,
+  );
+
+  // Initialisation RevenueCat
+  await Purchases.setLogLevel(LogLevel.info);
+  PurchasesConfiguration configuration = PurchasesConfiguration(_revenueCatApiKey);
+  await Purchases.configure(configuration);
+
   runApp(const SolApp());
 }
 
@@ -112,7 +122,12 @@ class _SolAppState extends State<SolApp> {
           surface: AppColors.paper,
         ),
       ),
-      home: _RootShell(language: _language, onLanguageChanged: _setLanguage),
+      // AuthGate écoute la session Supabase :
+      //   • Pas de session  → AuthScreen (connexion / inscription)
+      //   • Session active  → shell principal de l'app
+      home: AuthGate(
+        child: _RootShell(language: _language, onLanguageChanged: _setLanguage),
+      ),
     );
   }
 }

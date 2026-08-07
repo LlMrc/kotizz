@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../services/plan_service.dart';
 
 enum AppLanguage { english, french, creole }
 
@@ -36,6 +38,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _pushNotifications = true;
   bool _biometricEnabled = true;
 
+  /// Plan courant de l'utilisateur ('free' ou 'pro'). Chargé depuis Supabase.
+  String _plan = 'free';
+  bool _planLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+      final data = await Supabase.instance.client
+          .from('profiles')
+          .select('plan, plan_expires_at, trust_score')
+          .eq('id', uid)
+          .single();
+      if (mounted) {
+        setState(() {
+          _plan = (data['plan'] as String?) ?? 'free';
+          _planLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _planLoading = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    await Supabase.instance.client.auth.signOut();
+    // AuthGate redirige automatiquement vers AuthScreen.
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
@@ -61,6 +98,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const _UserHeaderCard(),
             const SizedBox(height: 20),
 
+            // Banner PRO / FREE
+            if (!_planLoading)
+              _PlanBanner(
+                plan: _plan,
+                onPlanUpdated: _loadProfile,
+              ),
+            const SizedBox(height: 16),
+
             // Reputation & Stats Grid
             Row(
               children: [
@@ -70,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     unit: '/100',
                     label: t.profileTrustScore,
                     color: AppColors.marigold,
-                    badge: '⭐ Premium',
+                    badge: _plan == 'pro' ? '⭐ PRO' : '🆓 Gratuit',
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -248,7 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: _signOut,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.coral,
                   side: const BorderSide(color: AppColors.coral, width: 1.2),
@@ -542,6 +587,216 @@ class _VerificationRow extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Widget : Bandeau du plan (FREE / PRO)
+// ─────────────────────────────────────────────────────────────────────────────
+class _PlanBanner extends StatefulWidget {
+  final String plan;
+  final VoidCallback onPlanUpdated;
+
+  const _PlanBanner({required this.plan, required this.onPlanUpdated});
+
+  @override
+  State<_PlanBanner> createState() => _PlanBannerState();
+}
+
+class _PlanBannerState extends State<_PlanBanner> {
+  bool _isPurchasing = false;
+
+  Future<void> _handlePurchase() async {
+    setState(() => _isPurchasing = true);
+    final success = await PlanService.purchasePro();
+    if (mounted) {
+      setState(() => _isPurchasing = false);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Merci pour votre achat ! Vous êtes maintenant PRO.')),
+        );
+        widget.onPlanUpdated();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('L\'achat n\'a pas pu être finalisé.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isPro = widget.plan == 'pro';
+
+    if (isPro) {
+      // Bandeau PRO actif
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.ink,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.marigold.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.workspace_premium_rounded,
+                color: AppColors.marigold,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Plan PRO actif',
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.white,
+                    ),
+                  ),
+                  Text(
+                    'Groupes et membres illimités',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 12,
+                      color: AppColors.white.withValues(alpha: 0.65),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.marigold.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '9,99\$/m',
+                style: GoogleFonts.ibmPlexMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.marigold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Bandeau FREE → invitation à passer PRO
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.paperDim),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.marigold.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.marigold,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Plan Gratuit',
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    Text(
+                      '1 groupe • ${PlanService.freeMaxMembers} membres max',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12,
+                        color: AppColors.ash,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isPurchasing ? null : _handlePurchase,
+              icon: _isPurchasing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.ink,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.workspace_premium_rounded,
+                      size: 18,
+                      color: AppColors.ink,
+                    ),
+              label: Text(
+                _isPurchasing ? 'Traitement...' : 'Passer au PRO — 9,99\$/mois',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.marigold,
+                foregroundColor: AppColors.ink,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
             ),
           ),
         ],

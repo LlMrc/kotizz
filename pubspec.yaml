@@ -37,6 +37,7 @@ dependencies:
   supabase_flutter:
   share_plus: 
   intl: 
+  purchases_flutter: ^8.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
