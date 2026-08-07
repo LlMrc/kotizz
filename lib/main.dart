@@ -13,6 +13,7 @@ import 'screens/groups_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/create_sol_screen.dart';
+import 'services/notification_service.dart';
 
 /// Clés d'accès au backend Supabase
 const _supabaseUrl = 'https://nwdgnbzpvoypzduzreec.supabase.co';
@@ -34,6 +35,9 @@ Future<void> main() async {
   await Purchases.setLogLevel(LogLevel.info);
   PurchasesConfiguration configuration = PurchasesConfiguration(_revenueCatApiKey);
   await Purchases.configure(configuration);
+
+  // Initialisation Firebase Notifications
+  await NotificationService.initialize();
 
   runApp(const SolApp());
 }
@@ -134,11 +138,25 @@ class _SolAppState extends State<SolApp> {
 
 /// Assemble les 4 écrans principaux dans le shell de navigation
 /// responsive (bottomNav sur mobile, NavigationRail sur écran large).
-class _RootShell extends StatelessWidget {
+class _RootShell extends StatefulWidget {
   final AppLanguage language;
   final ValueChanged<AppLanguage> onLanguageChanged;
 
   const _RootShell({required this.language, required this.onLanguageChanged});
+
+  @override
+  State<_RootShell> createState() => _RootShellState();
+}
+
+class _RootShellState extends State<_RootShell> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.setupForegroundListener(context);
+      NotificationService.syncFcmToken();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,8 +166,8 @@ class _RootShell extends StatelessWidget {
         const GroupsScreen(),
         const AlertsScreen(),
         ProfileScreen(
-          currentLanguage: language,
-          onLanguageChanged: onLanguageChanged,
+          currentLanguage: widget.language,
+          onLanguageChanged: widget.onLanguageChanged,
         ),
       ],
       onCreateSol: () {
