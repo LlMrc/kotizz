@@ -27,7 +27,7 @@ Future<void> main() async {
   // Initialisation Supabase
   await Supabase.initialize(
     url: _supabaseUrl,
-    anonKey: _supabaseAnonKey,
+    publishableKey: _supabaseAnonKey,
   );
 
   // Initialisation RevenueCat
