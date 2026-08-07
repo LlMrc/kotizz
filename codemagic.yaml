@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     integrations:
-      app_store_connect: Codemagic App Store API key
+      app_store_connect: Codemagic pp Store Api key
 
     environment:
       flutter: stable
