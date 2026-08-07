@@ -1,4 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../theme/app_colors.dart';
+import '../l10n/app_localizations.dart';
 import 'create_sol_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
@@ -154,9 +158,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
             // Loading / Empty / List state
             if (_isLoading)
-              const Center(
+              const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
-                child: CircularProgressIndicator(color: AppColors.marigold),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.marigold),
+                ),
               )
             else if (filteredGroups.isEmpty)
               Container(

@@ -151,9 +151,11 @@ class _AlertsScreenState extends State<AlertsScreen> {
             const SizedBox(height: 20),
 
             if (_isLoading)
-              const Center(
+              const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
-                child: CircularProgressIndicator(color: AppColors.marigold),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.marigold),
+                ),
               )
             else if (filteredAlerts.isEmpty)
               Container(
