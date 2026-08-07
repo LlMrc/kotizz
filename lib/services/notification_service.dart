@@ -77,12 +77,16 @@ class NotificationService {
 
   /// Active l'écoute des messages reçus lorsque l'application est OUVERTE (Foreground).
   static void setupForegroundListener(BuildContext context) {
+    // Capture du messenger avant tout gap asynchrone pour respecter
+    // la règle use_build_context_synchronously.
+    final messenger = ScaffoldMessenger.of(context);
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
       if (notification == null) return;
 
       // Affiche une bannière d'alerte élégante en haut de l'écran
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.ink,

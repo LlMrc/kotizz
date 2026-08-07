@@ -40,6 +40,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Plan courant de l'utilisateur ('free' ou 'pro'). Chargé depuis Supabase.
   String _plan = 'free';
+  String _fullName = '';
+  String _email = '';
+  String _phone = '';
+  int _trustScore = 92;
   bool _planLoading = true;
 
   @override
@@ -50,16 +54,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     try {
-      final uid = Supabase.instance.client.auth.currentUser?.id;
-      if (uid == null) return;
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+      
       final data = await Supabase.instance.client
           .from('profiles')
-          .select('plan, plan_expires_at, trust_score')
-          .eq('id', uid)
-          .single();
+          .select('full_name, phone, plan, plan_expires_at, trust_score')
+          .eq('id', user.id)
+          .maybeSingle();
+
       if (mounted) {
         setState(() {
-          _plan = (data['plan'] as String?) ?? 'free';
+          _email = user.email ?? '';
+          _phone = (data?['phone'] as String?) ?? user.phone ?? '';
+          _fullName = (data?['full_name'] as String?) ?? user.email?.split('@').first ?? 'Utilisateur';
+          _plan = (data?['plan'] as String?) ?? 'free';
+          _trustScore = (data?['trust_score'] as int?) ?? 92;
           _planLoading = false;
         });
       }
@@ -95,7 +105,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 18),
 
             // User Header Card
-            const _UserHeaderCard(),
+            _UserHeaderCard(
+              fullName: _fullName,
+              email: _email,
+              phone: _phone,
+            ),
             const SizedBox(height: 20),
 
             // Banner PRO / FREE
@@ -111,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Expanded(
                   child: _StatCard(
-                    value: '92',
+                    value: '$_trustScore',
                     unit: '/100',
                     label: t.profileTrustScore,
                     color: AppColors.marigold,
@@ -329,10 +343,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 class _UserHeaderCard extends StatelessWidget {
-  const _UserHeaderCard();
+  final String fullName;
+  final String email;
+  final String phone;
+
+  const _UserHeaderCard({
+    required this.fullName,
+    required this.email,
+    required this.phone,
+  });
+
+  String get _initials {
+    if (fullName.trim().isEmpty) return 'U';
+    final parts = fullName.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return fullName.substring(0, fullName.length >= 2 ? 2 : 1).toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final displayName = fullName.isNotEmpty ? fullName : 'Membre Kotizz';
+    final displayPhone = phone.isNotEmpty ? phone : (email.isNotEmpty ? email : 'Non renseigné');
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -360,7 +394,7 @@ class _UserHeaderCard extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  'LM',
+                  _initials,
                   style: GoogleFonts.bricolageGrotesque(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -390,21 +424,25 @@ class _UserHeaderCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      'Louis Monplaisir',
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.white,
+                    Expanded(
+                      child: Text(
+                        displayName,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.white,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     const Icon(Icons.verified_rounded, color: AppColors.marigold, size: 18),
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '@louis_m • Membre depuis Jan. 2024',
+                  email.isNotEmpty ? email : 'Membre Kotizz',
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     color: AppColors.white.withValues(alpha: 0.65),
@@ -418,7 +456,7 @@ class _UserHeaderCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    '+509 37 12 34 56',
+                    displayPhone,
                     style: GoogleFonts.ibmPlexMono(
                       fontSize: 11,
                       color: AppColors.white.withValues(alpha: 0.9),

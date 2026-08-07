@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_colors.dart';
-import '../l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'create_sol_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -12,86 +10,83 @@ class GroupsScreen extends StatefulWidget {
 
 class _GroupsScreenState extends State<GroupsScreen> {
   int _selectedFilter = 0; // 0: Toutes, 1: Actives, 2: Terminées
+  bool _isLoading = true;
+  List<_GroupData> _realGroups = [];
 
-  static const _groups = [
-    _GroupData(
-      id: '1',
-      name: 'Famille Monplaisir',
-      category: 'Famille & Proches',
-      organizer: 'Louis Monplaisir (Vous)',
-      contributionAmount: '15 000',
-      currency: 'HTG',
-      frequency: 'Mensuelle',
-      totalPot: '120 000 HTG',
-      currentTurn: 3,
-      totalTurns: 8,
-      nextTurnDate: '15 Fév 2026',
-      status: _GroupStatus.yourTurn,
-      members: ['Louis M.', 'Marie P.', 'David P.', 'Jean S.', 'Sophie J.', 'Alex R.', 'Katia B.', 'Claude L.'],
-      isActive: true,
-      color: AppColors.marigold,
-    ),
-    _GroupData(
-      id: '2',
-      name: 'Collègues Vinpassport',
-      category: 'Entreprise & Pro',
-      organizer: 'Marie Duplan',
-      contributionAmount: '100',
-      currency: 'USD',
-      frequency: 'Mensuelle',
-      totalPot: '500 USD',
-      currentTurn: 2,
-      totalTurns: 5,
-      nextTurnDate: '01 Mar 2026',
-      status: _GroupStatus.upToDate,
-      members: ['Marie D.', 'Louis M.', 'Patrick L.', 'Fabienne B.', 'Emmanuel R.'],
-      isActive: true,
-      color: AppColors.palm,
-    ),
-    _GroupData(
-      id: '3',
-      name: 'Quartier Turgeau',
-      category: 'Communauté',
-      organizer: 'Jean-Baptiste Pierre',
-      contributionAmount: '20 000',
-      currency: 'HTG',
-      frequency: 'Bi-hebdomadaire',
-      totalPot: '240 000 HTG',
-      currentTurn: 7,
-      totalTurns: 12,
-      nextTurnDate: '10 Fév 2026',
-      status: _GroupStatus.dueSoon,
-      members: ['Jean-B. P.', 'Louis M.', 'Roseline K.', 'Marc A.', 'Nathalie V.', 'Joseph T.', 'Luce B.', 'Wilfrid D.', 'Carole H.', 'Gérard M.', 'Fritz L.', 'Evelyne C.'],
-      isActive: true,
-      color: AppColors.coral,
-    ),
-    _GroupData(
-      id: '4',
-      name: 'Épargne Projets 2025',
-      category: 'Investissement',
-      organizer: 'Louis Monplaisir (Vous)',
-      contributionAmount: '10 000',
-      currency: 'HTG',
-      frequency: 'Mensuelle',
-      totalPot: '60 000 HTG',
-      currentTurn: 6,
-      totalTurns: 6,
-      nextTurnDate: 'Terminé',
-      status: _GroupStatus.completed,
-      members: ['Louis M.', 'Serge B.', 'Daphnée G.', 'Junior P.', 'Yolande F.', 'Hervé D.'],
-      isActive: false,
-      color: AppColors.ink,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadUserGroups();
+  }
+
+  Future<void> _loadUserGroups() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final response = await Supabase.instance.client
+          .from('groups')
+          .select('*, profiles!organizer_id(full_name)')
+          .or('organizer_id.eq.${user.id}')
+          .order('created_at', ascending: false);
+
+      final loaded = (response as List).map((map) {
+        final isDraft = map['status'] == 'draft';
+        final isCompleted = map['status'] == 'completed';
+        final organizerName = map['profiles'] != null && map['profiles']['full_name'] != null
+            ? map['profiles']['full_name'] as String
+            : 'Organisateur';
+
+        return _GroupData(
+          id: map['id'].toString(),
+          name: (map['name'] as String?) ?? 'Sòl sans nom',
+          category: isDraft ? 'Brouillon' : 'Tontine collective',
+          organizer: organizerName,
+          contributionAmount: map['contribution_amount'].toString(),
+          currency: (map['currency'] as String?) ?? 'HTG',
+          frequency: (map['frequency'] as String?) == 'monthly'
+              ? 'Mensuelle'
+              : (map['frequency'] as String?) == 'weekly'
+                  ? 'Hebdomadaire'
+                  : 'Bi-hebdomadaire',
+          totalPot: '${map['contribution_amount']} ${map['currency']}',
+          currentTurn: 1,
+          totalTurns: 5,
+          nextTurnDate: map['start_date'] as String? ?? 'À venir',
+          status: isDraft
+              ? _GroupStatus.dueSoon
+              : (isCompleted ? _GroupStatus.completed : _GroupStatus.upToDate),
+          members: [organizerName],
+          isActive: !isCompleted,
+          color: isDraft ? AppColors.marigold : AppColors.palm,
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _realGroups = loaded;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    final filteredGroups = _groups.where((g) {
+    final filteredGroups = _realGroups.where((g) {
       if (_selectedFilter == 1) return g.isActive;
       if (_selectedFilter == 2) return !g.isActive;
       return true;
     }).toList();
+
+    final activeCount = _realGroups.where((g) => g.isActive).length;
+    final completedCount = _realGroups.where((g) => !g.isActive).length;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -99,7 +94,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title & Search
+            // Title & Add
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -117,7 +112,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '4 tontines • 420 000 HTG circulés',
+                      '${_realGroups.length} tontines enregistrées',
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: AppColors.ash,
@@ -125,40 +120,31 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.paperDim),
-                  ),
-                  child: const Icon(Icons.search_rounded, color: AppColors.ink, size: 20),
+                IconButton(
+                  onPressed: _loadUserGroups,
+                  icon: const Icon(Icons.refresh_rounded, color: AppColors.ink),
                 ),
               ],
             ),
             const SizedBox(height: 18),
 
-            // Summary Savings Header Card
-            const _SavingsSummaryCard(),
-            const SizedBox(height: 20),
-
             // Filter Chips
             Row(
               children: [
                 _FilterChip(
-                  label: 'Toutes (4)',
+                  label: 'Toutes (${_realGroups.length})',
                   selected: _selectedFilter == 0,
                   onTap: () => setState(() => _selectedFilter = 0),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Actives (3)',
+                  label: 'Actives ($activeCount)',
                   selected: _selectedFilter == 1,
                   onTap: () => setState(() => _selectedFilter = 1),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Terminées (1)',
+                  label: 'Terminées ($completedCount)',
                   selected: _selectedFilter == 2,
                   onTap: () => setState(() => _selectedFilter = 2),
                 ),
@@ -166,14 +152,66 @@ class _GroupsScreenState extends State<GroupsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Group List
-            for (final group in filteredGroups) ...[
-              _GroupCardItem(
-                group: group,
-                onTap: () => _showGroupDetailModal(context, group),
-              ),
-              const SizedBox(height: 14),
-            ],
+            // Loading / Empty / List state
+            if (_isLoading)
+              const Center(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: CircularProgressIndicator(color: AppColors.marigold),
+              )
+            else if (filteredGroups.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.paperDim),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.groups_outlined, size: 48, color: AppColors.ash),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Aucune tontine trouvée',
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Créez votre premier groupe SOL pour démarrer l\'épargne collective.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 12.5, color: AppColors.ash),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const CreateSolScreen()),
+                        );
+                        _loadUserGroups();
+                      },
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('Créer ma première Sòl'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.marigold,
+                        foregroundColor: AppColors.ink,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              for (final group in filteredGroups) ...[
+                _GroupCardItem(
+                  group: group,
+                  onTap: () => _showGroupDetailModal(context, group),
+                ),
+                const SizedBox(height: 14),
+              ],
           ],
         ),
       ),

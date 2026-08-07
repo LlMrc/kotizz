@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 
@@ -30,8 +31,53 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _TopBar extends StatelessWidget {
+class _TopBar extends StatefulWidget {
   const _TopBar();
+
+  @override
+  State<_TopBar> createState() => _TopBarState();
+}
+
+class _TopBarState extends State<_TopBar> {
+  String _displayName = 'Membre';
+  String _initials = 'U';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final profile = await Supabase.instance.client
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      final fullName = (profile?['full_name'] as String?) ?? user.email?.split('@').first ?? 'Membre';
+      final nameParts = fullName.trim().split(' ');
+      final firstName = nameParts.first;
+
+      String initials = 'U';
+      if (nameParts.length >= 2) {
+        initials = '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
+      } else if (firstName.isNotEmpty) {
+        initials = firstName.substring(0, firstName.length >= 2 ? 2 : 1).toUpperCase();
+      }
+
+      if (mounted) {
+        setState(() {
+          _displayName = firstName;
+          _initials = initials;
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +98,7 @@ class _TopBar extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  'LM',
+                  _initials,
                   style: GoogleFonts.bricolageGrotesque(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -66,7 +112,7 @@ class _TopBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      t.greeting('Louis'),
+                      t.greeting(_displayName),
                       style: GoogleFonts.bricolageGrotesque(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,

@@ -48,8 +48,12 @@ class PlanService {
         final package = offerings.current!.availablePackages.first;
         final customerInfo = await Purchases.purchasePackage(package);
         
-        // Vérifie si l'utilisateur a l'entitlement actif (nommé 'pro' dans RevenueCat)
-        if (customerInfo.entitlements.active.containsKey('pro')) {
+        // Vérifie si l'utilisateur a l'entitlement actif (nommé 'Kotizz Pro' dans RevenueCat)
+        final isProActive = customerInfo.entitlements.active.containsKey('Kotizz Pro') ||
+            customerInfo.entitlements.active.containsKey('pro') ||
+            customerInfo.entitlements.active.containsKey('kotizz_pro');
+
+        if (isProActive) {
           // Mise à jour locale (le webhook s'en chargera aussi côté serveur)
           await _db.from('profiles').update({'plan': 'pro'}).eq('id', _uid!);
           return true;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 
@@ -12,78 +13,70 @@ class AlertsScreen extends StatefulWidget {
 
 class _AlertsScreenState extends State<AlertsScreen> {
   int _selectedFilter = 0; // 0: Toutes, 1: Non lues, 2: Cotisations
+  bool _isLoading = true;
+  List<_AlertItem> _realAlerts = [];
 
-  static final List<_AlertItem> _alerts = [
-    _AlertItem(
-      id: '1',
-      title: "C'est votre tour de recevoir le pot ! 🎉",
-      body: 'Le pot de 15 000 HTG du groupe Famille Monplaisir est prêt pour versement sur votre compte MonCash.',
-      groupName: 'Famille Monplaisir',
-      timeAgo: 'Il y a 15 min',
-      dateCategory: 'Aujourd\'hui',
-      type: _AlertType.payout,
-      isUnread: true,
-    ),
-    _AlertItem(
-      id: '2',
-      title: 'Cotisation reçue de Marie L. ✅',
-      body: 'Marie L. a validé son versement de 100 USD pour le cycle en cours.',
-      groupName: 'Collègues Vinpassport',
-      timeAgo: 'Il y a 2h',
-      dateCategory: 'Aujourd\'hui',
-      type: _AlertType.payment,
-      isUnread: true,
-    ),
-    _AlertItem(
-      id: '3',
-      title: 'Rappel : Cotisation due dans 2 jours ⏰',
-      body: 'N\'oubliez pas d\'effectuer votre virement de 20 000 HTG pour Quartier Turgeau avant le 10 Février.',
-      groupName: 'Quartier Turgeau',
-      timeAgo: 'Hier à 18:30',
-      dateCategory: 'Hier',
-      type: _AlertType.reminder,
-      isUnread: true,
-    ),
-    _AlertItem(
-      id: '4',
-      title: 'Nouveau membre dans la tontine 🤝',
-      body: 'Jean-Marc V. s\'est inscrit à Famille Monplaisir suite à votre invitation.',
-      groupName: 'Famille Monplaisir',
-      timeAgo: 'Hier à 14:15',
-      dateCategory: 'Hier',
-      type: _AlertType.memberJoined,
-      isUnread: false,
-    ),
-    _AlertItem(
-      id: '5',
-      title: 'Identité & Score de confiance validés 🛡️',
-      body: 'Votre pièce d\'identité a été vérifiée avec succès. Votre Score de Confiance passe à 92/100.',
-      groupName: 'Wonn Sécurité',
-      timeAgo: 'Il y a 3 jours',
-      dateCategory: 'Cette semaine',
-      type: _AlertType.system,
-      isUnread: false,
-    ),
-    _AlertItem(
-      id: '6',
-      title: 'Tontine clôturée avec succès 🏆',
-      body: 'Le groupe Épargne Projets 2025 a bouclé ses 6 tours de cotisation sans aucun retard !',
-      groupName: 'Épargne Projets 2025',
-      timeAgo: 'Il y a 5 jours',
-      dateCategory: 'Cette semaine',
-      type: _AlertType.completed,
-      isUnread: false,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadAlerts();
+  }
+
+  Future<void> _loadAlerts() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final data = await Supabase.instance.client
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+
+      final loaded = (data as List).map((map) {
+        final typeStr = (map['type'] as String?) ?? 'system';
+        _AlertType type = _AlertType.system;
+        if (typeStr == 'payment') type = _AlertType.payment;
+        if (typeStr == 'payout') type = _AlertType.payout;
+        if (typeStr == 'reminder') type = _AlertType.reminder;
+        if (typeStr == 'member') type = _AlertType.memberJoined;
+
+        return _AlertItem(
+          id: map['id'].toString(),
+          title: (map['title'] as String?) ?? 'Notification',
+          body: (map['body'] as String?) ?? '',
+          groupName: 'Kotizz',
+          timeAgo: 'Récemment',
+          dateCategory: 'Notification',
+          type: type,
+          isUnread: (map['read'] as bool?) == false,
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _realAlerts = loaded;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    final filteredAlerts = _alerts.where((a) {
+    final filteredAlerts = _realAlerts.where((a) {
       if (_selectedFilter == 1) return a.isUnread;
       if (_selectedFilter == 2) return a.type == _AlertType.payment || a.type == _AlertType.payout;
       return true;
     }).toList();
+
+    final unreadCount = _realAlerts.where((a) => a.isUnread).length;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -109,7 +102,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '3 notifications non lues',
+                      '$unreadCount notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}',
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: AppColors.ash,
@@ -120,7 +113,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 TextButton.icon(
                   onPressed: () {
                     setState(() {
-                      for (var a in _alerts) {
+                      for (var a in _realAlerts) {
                         a.isUnread = false;
                       }
                     });
@@ -143,37 +136,66 @@ class _AlertsScreenState extends State<AlertsScreen> {
             Row(
               children: [
                 _FilterChip(
-                  label: 'Toutes (${_alerts.length})',
+                  label: 'Toutes (${_realAlerts.length})',
                   selected: _selectedFilter == 0,
                   onTap: () => setState(() => _selectedFilter = 0),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Non lues (3)',
+                  label: 'Non lues ($unreadCount)',
                   selected: _selectedFilter == 1,
                   onTap: () => setState(() => _selectedFilter = 1),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: 'Cotisations (2)',
-                  selected: _selectedFilter == 2,
-                  onTap: () => setState(() => _selectedFilter = 2),
                 ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Alert List Grouped
-            for (final alert in filteredAlerts) ...[
-              _AlertCard(
-                alert: alert,
-                onTap: () {
-                  setState(() => alert.isUnread = false);
-                  _showAlertDetailSheet(context, alert);
-                },
-              ),
-              const SizedBox(height: 12),
-            ],
+            if (_isLoading)
+              const Center(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: CircularProgressIndicator(color: AppColors.marigold),
+              )
+            else if (filteredAlerts.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.paperDim),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.notifications_none_rounded, size: 48, color: AppColors.ash),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Aucune alerte pour le moment',
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Vous recevrez ici les rappels de cotisation et les alertes de votre tontine.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 12.5, color: AppColors.ash),
+                    ),
+                  ],
+                ),
+              )
+            else
+              for (final alert in filteredAlerts) ...[
+                _AlertCard(
+                  alert: alert,
+                  onTap: () {
+                    setState(() => alert.isUnread = false);
+                    _showAlertDetailSheet(context, alert);
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
           ],
         ),
       ),
