@@ -1,4 +1,4 @@
-# Sòl App — MVP Flutter
+# Kotizz — Épargne Collective (SOL)
 
 ## Mise en route
 
