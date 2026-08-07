@@ -1,10 +1,42 @@
 workflows:
-  ios-simulator:
-    name: Build and run Flutter app on iOS simulator
+  ios-release:
+    name: Build & Sign iOS IPA (Kotizz App Store)
     instance_type: mac_mini_m1
     max_build_duration: 60
     integrations:
-      app_store_connect: Codemagic pp Store Api key
+      app_store_connect: Codemagic App Store API key
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store # Options: app_store, ad_hoc, development
+        bundle_identifier: com.kotizz.app
+      vars:
+        BUNDLE_ID: "com.kotizz.app"
+
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+
+      - name: Build IPA for App Store
+        script: |
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+  ios-simulator:
+    name: Build Flutter app on iOS simulator
+    instance_type: mac_mini_m1
+    max_build_duration: 60
 
     environment:
       flutter: stable
@@ -14,34 +46,13 @@ workflows:
         BUNDLE_ID: "com.kotizz.app"
 
     scripts:
-      - name: Install Flutter dependencies
+      - name: Get Flutter packages
         script: |
           flutter pub get
-          flutter gen-l10n
-      - name: Build iOS app
 
+      - name: Build iOS App for Simulator
         script: |
-          flutter build ios --debug --no-codesign --simulator
-      - name: Install simulator runtime
-
-        script: |
-          xcrun simctl list devices available
-      - name: Run app on simulator
-
-        script: |
-          open -a Simulator
-          xcrun simctl boot "iPhone 15" || true
-          xcrun simctl install booted build/ios/iphoneos/Runner.app || true
-          xcrun simctl launch booted "$BUNDLE_ID" || true
-
-      - name: Setup VNC Workspace & Keep Alive
-        script: |
-          caffeinate -u -t 3600 &
-          xcrun simctl boot "iPhone 15" || true
-          open -a Simulator
-          open $CM_BUILD_DIR/ios/Runner.xcworkspace
-          echo "🚀 WORKSPACE READY: Connect via VNC to debug."
+          flutter build ios --simulator --debug
 
     artifacts:
-        - build/**/outputs/**/*.ipa
-        - build/**/outputs/**/*.app
+      - build/ios/iphonesimulator/*.app
