@@ -90,7 +90,7 @@ class _AuthScreenState extends State<AuthScreen>
       final supabase = Supabase.instance.client;
       await supabase.auth.signInWithOAuth(
         OAuthProvider.apple,
-        redirectTo: kIsWeb ? null : 'io.supabase.kotizz://login-callback',
+        redirectTo: kIsWeb ? null : 'kotizz.app://login-callback',
       );
     } on AuthException catch (e) {
       setState(() => _errorMsg = _mapAuthError(e.message));
@@ -115,7 +115,7 @@ class _AuthScreenState extends State<AuthScreen>
       final supabase = Supabase.instance.client;
       await supabase.auth.signInWithOtp(
         email: _emailCtrl.text.trim(),
-        emailRedirectTo: kIsWeb ? null : 'io.supabase.kotizz://login-callback',
+        emailRedirectTo: kIsWeb ? null : 'kotizz.app://login-callback',
       );
       setState(() => _magicLinkSent = true);
     } on AuthException catch (e) {
