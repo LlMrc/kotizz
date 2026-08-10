@@ -1,9 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import 'create_sol_screen.dart';
+
+String? normalizeWhatsAppLink(String? rawLink) {
+  final trimmed = rawLink?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null) return null;
+  if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+  if (!uri.host.toLowerCase().contains('whatsapp')) return null;
+
+  return uri.toString();
+}
+
+Future<void> openWhatsAppLink(String? rawLink) async {
+  final normalized = normalizeWhatsAppLink(rawLink);
+  if (normalized == null) return;
+
+  final uri = Uri.parse(normalized);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -40,7 +64,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
       final loaded = (response as List).map((map) {
         final isDraft = map['status'] == 'draft';
         final isCompleted = map['status'] == 'completed';
-        final organizerName = map['profiles'] != null && map['profiles']['full_name'] != null
+        final organizerName =
+            map['profiles'] != null && map['profiles']['full_name'] != null
             ? map['profiles']['full_name'] as String
             : 'Organisateur';
 
@@ -54,8 +79,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
           frequency: (map['frequency'] as String?) == 'monthly'
               ? 'Mensuelle'
               : (map['frequency'] as String?) == 'weekly'
-                  ? 'Hebdomadaire'
-                  : 'Bi-hebdomadaire',
+              ? 'Hebdomadaire'
+              : 'Bi-hebdomadaire',
           totalPot: '${map['contribution_amount']} ${map['currency']}',
           currentTurn: 1,
           totalTurns: 5,
@@ -66,6 +91,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
           members: [organizerName],
           isActive: !isCompleted,
           color: isDraft ? AppColors.marigold : AppColors.palm,
+          whatsappLink: map['whatsapp_link'] as String?,
         );
       }).toList();
 
@@ -175,7 +201,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.groups_outlined, size: 48, color: AppColors.ash),
+                    const Icon(
+                      Icons.groups_outlined,
+                      size: 48,
+                      color: AppColors.ash,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Aucune tontine trouvée',
@@ -189,13 +219,18 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     Text(
                       'Créez votre premier groupe SOL pour démarrer l\'épargne collective.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(fontSize: 12.5, color: AppColors.ash),
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12.5,
+                        color: AppColors.ash,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: () async {
                         await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const CreateSolScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const CreateSolScreen(),
+                          ),
                         );
                         _loadUserGroups();
                       },
@@ -204,7 +239,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.marigold,
                         foregroundColor: AppColors.ink,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ],
@@ -237,97 +274,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 }
 
-class _SavingsSummaryCard extends StatelessWidget {
-  const _SavingsSummaryCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.paperDim),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.marigold.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            alignment: Alignment.center,
-            child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.marigold, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ÉPARGNE GLOBALE EN COURS',
-                  style: GoogleFonts.ibmPlexMono(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                    color: AppColors.ash,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      '360 000',
-                      style: GoogleFonts.ibmPlexMono(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'HTG',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.ash,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.palm.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.arrow_upward_rounded, color: AppColors.palm, size: 14),
-                const SizedBox(width: 2),
-                Text(
-                  '+15% ce mois',
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.palm,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool selected;
@@ -349,7 +295,9 @@ class _FilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.ink : AppColors.white,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: selected ? AppColors.ink : AppColors.paperDim),
+          border: Border.all(
+            color: selected ? AppColors.ink : AppColors.paperDim,
+          ),
         ),
         child: Text(
           label,
@@ -367,12 +315,21 @@ class _FilterChip extends StatelessWidget {
 enum _GroupStatus { yourTurn, upToDate, dueSoon, completed }
 
 class _GroupData {
-  final String id, name, category, organizer, contributionAmount, currency, frequency, totalPot, nextTurnDate;
+  final String id,
+      name,
+      category,
+      organizer,
+      contributionAmount,
+      currency,
+      frequency,
+      totalPot,
+      nextTurnDate;
   final int currentTurn, totalTurns;
   final _GroupStatus status;
   final List<String> members;
   final bool isActive;
   final Color color;
+  final String? whatsappLink;
 
   const _GroupData({
     required this.id,
@@ -390,6 +347,7 @@ class _GroupData {
     required this.members,
     required this.isActive,
     required this.color,
+    this.whatsappLink,
   });
 }
 
@@ -427,7 +385,10 @@ class _GroupCardItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: group.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
@@ -509,7 +470,10 @@ class _GroupCardItem extends StatelessWidget {
                     children: [
                       Text(
                         'Cotisation / membre',
-                        style: GoogleFonts.ibmPlexSans(fontSize: 11, color: AppColors.ash),
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 11,
+                          color: AppColors.ash,
+                        ),
                       ),
                       Text(
                         '${group.contributionAmount} ${group.currency}',
@@ -527,7 +491,10 @@ class _GroupCardItem extends StatelessWidget {
                     children: [
                       Text(
                         'Cagnotte Totale',
-                        style: GoogleFonts.ibmPlexSans(fontSize: 11, color: AppColors.ash),
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 11,
+                          color: AppColors.ash,
+                        ),
                       ),
                       Text(
                         group.totalPot,
@@ -573,7 +540,9 @@ class _GroupCardItem extends StatelessWidget {
                 minHeight: 7,
                 backgroundColor: AppColors.paperDim,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  group.status == _GroupStatus.yourTurn ? AppColors.marigold : group.color,
+                  group.status == _GroupStatus.yourTurn
+                      ? AppColors.marigold
+                      : group.color,
                 ),
               ),
             ),
@@ -586,6 +555,42 @@ class _GroupCardItem extends StatelessWidget {
                 const Spacer(),
                 Row(
                   children: [
+                    if (normalizeWhatsAppLink(group.whatsappLink) != null) ...[
+                      GestureDetector(
+                        onTap: () => openWhatsAppLink(group.whatsappLink),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFF25D366,
+                            ).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.chat_rounded,
+                                size: 12,
+                                color: Color(0xFF25D366),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'WhatsApp',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF25D366),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     Text(
                       'Détails',
                       style: GoogleFonts.ibmPlexSans(
@@ -595,7 +600,11 @@ class _GroupCardItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.ink),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 12,
+                      color: AppColors.ink,
+                    ),
                   ],
                 ),
               ],
@@ -814,15 +823,24 @@ class _GroupDetailSheet extends StatelessWidget {
                 final turnNumber = index + 1;
                 final isCurrent = turnNumber == group.currentTurn;
                 final isPassed = turnNumber < group.currentTurn;
-                final isUser = group.members[index].contains('Vous') || group.members[index].contains('Louis M.');
+                final isUser =
+                    group.members[index].contains('Vous') ||
+                    group.members[index].contains('Louis M.');
 
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
-                    color: isCurrent ? AppColors.marigold.withValues(alpha: 0.12) : AppColors.white,
+                    color: isCurrent
+                        ? AppColors.marigold.withValues(alpha: 0.12)
+                        : AppColors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isCurrent ? AppColors.marigold : AppColors.paperDim,
+                      color: isCurrent
+                          ? AppColors.marigold
+                          : AppColors.paperDim,
                       width: isCurrent ? 1.5 : 1.0,
                     ),
                   ),
@@ -836,8 +854,8 @@ class _GroupDetailSheet extends StatelessWidget {
                           color: isPassed
                               ? AppColors.palm
                               : isCurrent
-                                  ? AppColors.marigold
-                                  : AppColors.paperDim,
+                              ? AppColors.marigold
+                              : AppColors.paperDim,
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -845,7 +863,9 @@ class _GroupDetailSheet extends StatelessWidget {
                           style: GoogleFonts.ibmPlexMono(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: isPassed || isCurrent ? AppColors.white : AppColors.ink,
+                            color: isPassed || isCurrent
+                                ? AppColors.white
+                                : AppColors.ink,
                           ),
                         ),
                       ),
@@ -860,14 +880,19 @@ class _GroupDetailSheet extends StatelessWidget {
                                   group.members[index],
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 14,
-                                    fontWeight: isUser ? FontWeight.w700 : FontWeight.w500,
+                                    fontWeight: isUser
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
                                     color: AppColors.ink,
                                   ),
                                 ),
                                 if (isUser) ...[
                                   const SizedBox(width: 6),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: AppColors.ink,
                                       borderRadius: BorderRadius.circular(6),
@@ -888,11 +913,15 @@ class _GroupDetailSheet extends StatelessWidget {
                               isPassed
                                   ? 'Pot perçu ✓'
                                   : isCurrent
-                                      ? 'Bénéficiaire du tour actuel'
-                                      : 'En attente',
+                                  ? 'Bénéficiaire du tour actuel'
+                                  : 'En attente',
                               style: GoogleFonts.ibmPlexSans(
                                 fontSize: 11.5,
-                                color: isPassed ? AppColors.palm : (isCurrent ? AppColors.marigold : AppColors.ash),
+                                color: isPassed
+                                    ? AppColors.palm
+                                    : (isCurrent
+                                          ? AppColors.marigold
+                                          : AppColors.ash),
                               ),
                             ),
                           ],
@@ -913,6 +942,131 @@ class _GroupDetailSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
+
+          // --- Section WhatsApp ---
+          if (group.whatsappLink != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF25D366).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF25D366).withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF25D366),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.chat_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Groupe WhatsApp',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                        Text(
+                          'Rejoignez le groupe de la tontine',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 11.5,
+                            color: AppColors.ash,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      // Bouton copier le lien
+                      GestureDetector(
+                        onTap: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: group.whatsappLink!),
+                          );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Lien copié !',
+                                  style: GoogleFonts.ibmPlexSans(),
+                                ),
+                                backgroundColor: const Color(0xFF25D366),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(
+                                0xFF25D366,
+                              ).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.copy_rounded,
+                            size: 16,
+                            color: Color(0xFF25D366),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Bouton ouvrir WhatsApp
+                      GestureDetector(
+                        onTap: () => openWhatsAppLink(group.whatsappLink),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF25D366),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Rejoindre',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
 
           // Action Button
           SizedBox(
@@ -939,4 +1093,3 @@ class _GroupDetailSheet extends StatelessWidget {
     );
   }
 }
-

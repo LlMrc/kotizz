@@ -23,9 +23,13 @@ class CreateSolScreen extends StatefulWidget {
 class _CreateSolScreenState extends State<CreateSolScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController(text: 'Tontine Entrepreneurs 2026');
-  final _descCtrl = TextEditingController(text: 'Épargne collective mensuelle pour le financement de projets et fonds de roulement.');
+  final _descCtrl = TextEditingController(
+    text:
+        'Épargne collective mensuelle pour le financement de projets et fonds de roulement.',
+  );
   final _amountCtrl = TextEditingController(text: '25000');
   final _membersCtrl = TextEditingController(text: '10');
+  final _whatsappCtrl = TextEditingController();
 
   String _currency = 'HTG';
   String _frequency = 'monthly';
@@ -52,6 +56,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
     _descCtrl.dispose();
     _amountCtrl.dispose();
     _membersCtrl.dispose();
+    _whatsappCtrl.dispose();
     super.dispose();
   }
 
@@ -92,6 +97,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
 
       // --- L'utilisateur qui crée le groupe devient automatiquement
       // --- l'organisateur : aucun champ à remplir pour ça.
+      final whatsappLink = _whatsappCtrl.text.trim();
       final inserted = await supabase
           .from('groups')
           .insert({
@@ -103,6 +109,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
             'order_type': 'random',
             'start_date': DateFormat('yyyy-MM-dd').format(_startDate),
             'status': 'draft',
+            if (whatsappLink.isNotEmpty) 'whatsapp_link': whatsappLink,
           })
           .select()
           .single();
@@ -140,9 +147,7 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
     if (!mounted) return;
 
     final isMemberLimit = reason == 'member';
-    final title = isMemberLimit
-        ? 'Limite de membres atteinte'
-        : t.paywallTitle;
+    final title = isMemberLimit ? 'Limite de membres atteinte' : t.paywallTitle;
     final body = isMemberLimit
         ? 'Le plan gratuit est limité à ${PlanService.freeMaxMembers} membres par groupe.\nPassez au PRO pour des membres illimités.'
         : t.paywallBody;
@@ -221,20 +226,26 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   Navigator.of(ctx).pop(); // Ferme le bottom sheet d'abord
-                  
+
                   // Lance l'achat
                   final success = await PlanService.purchasePro();
                   if (success) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Merci pour votre achat ! Vous êtes maintenant PRO.')),
+                      const SnackBar(
+                        content: Text(
+                          'Merci pour votre achat ! Vous êtes maintenant PRO.',
+                        ),
+                      ),
                     );
                     // Recharge le plan pour débloquer l'interface
                     _loadUserPlan();
                   } else {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('L\'achat n\'a pas pu être finalisé.')),
+                      const SnackBar(
+                        content: Text('L\'achat n\'a pas pu être finalisé.'),
+                      ),
                     );
                   }
                 },
@@ -350,7 +361,8 @@ $link
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => SharePlus.instance.share(ShareParams(text: message)),
+                onPressed: () =>
+                    SharePlus.instance.share(ShareParams(text: message)),
                 icon: const Icon(Icons.share_rounded, size: 18),
                 label: Text(t.shareInvite),
                 style: ElevatedButton.styleFrom(
@@ -487,6 +499,107 @@ $link
                 }
                 return null;
               },
+            ),
+            const SizedBox(height: 16),
+            // --- Lien WhatsApp (optionnel) ---
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF25D366).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.chat_rounded,
+                    color: Color(0xFF25D366),
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Lien du groupe WhatsApp',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.paperDim,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Optionnel',
+                    style: GoogleFonts.ibmPlexMono(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ash,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _whatsappCtrl,
+              keyboardType: TextInputType.url,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
+                color: AppColors.ink,
+              ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return null; // optionnel
+                if (!v.trim().startsWith('http')) {
+                  return 'Le lien doit commencer par https://';
+                }
+                return null;
+              },
+              decoration: InputDecoration(
+                hintText: 'https://chat.whatsapp.com/...',
+                hintStyle: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  color: AppColors.ash,
+                ),
+                prefixIcon: const Icon(
+                  Icons.link_rounded,
+                  color: Color(0xFF25D366),
+                  size: 20,
+                ),
+                filled: true,
+                fillColor: AppColors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.paperDim),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.paperDim),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF25D366),
+                    width: 1.5,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.coral),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             _label(t.fieldStartDate),
