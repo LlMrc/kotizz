@@ -18,8 +18,12 @@ class NotificationService {
   /// Initialise Firebase et configure les écouteurs de notifications.
   static Future<void> initialize() async {
     try {
-      await Firebase.initializeApp();
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
+      }
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
 
       // Demande de permission à l'utilisateur (obligatoire sur iOS et Android 13+)
       final settings = await _messaging.requestPermission(
@@ -90,10 +94,16 @@ class NotificationService {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.ink,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           content: Row(
             children: [
-              const Icon(Icons.notifications_active_rounded, color: AppColors.marigold, size: 22),
+              const Icon(
+                Icons.notifications_active_rounded,
+                color: AppColors.marigold,
+                size: 22,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -103,12 +113,18 @@ class NotificationService {
                     if (notification.title != null)
                       Text(
                         notification.title!,
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.white),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                        ),
                       ),
                     if (notification.body != null)
                       Text(
                         notification.body!,
-                        style: const TextStyle(fontSize: 12.5, color: AppColors.white),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.white,
+                        ),
                       ),
                   ],
                 ),

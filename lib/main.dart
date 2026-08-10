@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,7 +25,13 @@ const _revenueCatApiKey = 'appl_ndKqPUhQfqBsVRtPAAuzoaRsEAY';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization warning: $e');
+  }
+
   // Initialisation Supabase
   await Supabase.initialize(
     url: _supabaseUrl,
@@ -33,8 +40,14 @@ Future<void> main() async {
 
   // Initialisation RevenueCat
   await Purchases.setLogLevel(LogLevel.info);
-  PurchasesConfiguration configuration = PurchasesConfiguration(_revenueCatApiKey);
-  await Purchases.configure(configuration);
+  final PurchasesConfiguration configuration = PurchasesConfiguration(
+    _revenueCatApiKey,
+  );
+  try {
+    await Purchases.configure(configuration);
+  } catch (e) {
+    debugPrint('RevenueCat initialization warning: $e');
+  }
 
   // Initialisation Firebase Notifications
   await NotificationService.initialize();
