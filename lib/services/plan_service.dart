@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -45,9 +46,13 @@ class PlanService {
 
       // Récupère les offres disponibles depuis l'offre RevenueCat "default"
       final offerings = await Purchases.getOfferings();
-      final offering = offerings.getOffering(_defaultOfferingIdentifier) ?? offerings.current;
+      final offering =
+          offerings.getOffering(_defaultOfferingIdentifier) ??
+          offerings.current;
       if (offering == null || offering.availablePackages.isEmpty) {
-        debugPrint('No RevenueCat offering found for identifier: $_defaultOfferingIdentifier');
+        debugPrint(
+          'No RevenueCat offering found for identifier: $_defaultOfferingIdentifier',
+        );
         return false;
       }
 
@@ -56,7 +61,8 @@ class PlanService {
       final customerInfo = await Purchases.purchasePackage(package);
 
       // Vérifie si l'utilisateur a l'entitlement actif (nommé 'Kotizz Pro' dans RevenueCat)
-      final isProActive = customerInfo.entitlements.active.containsKey('Kotizz Pro') ||
+      final isProActive =
+          customerInfo.entitlements.active.containsKey('Kotizz Pro') ||
           customerInfo.entitlements.active.containsKey('pro') ||
           customerInfo.entitlements.active.containsKey('kotizz_pro');
 
@@ -81,10 +87,8 @@ class PlanService {
   static Future<bool> canCreateGroup() async {
     if (_uid == null) return false;
     try {
-      return await _db.rpc(
-        'can_create_group',
-        params: {'p_user_id': _uid},
-      ) as bool? ??
+      return await _db.rpc('can_create_group', params: {'p_user_id': _uid})
+              as bool? ??
           false;
     } catch (_) {
       return false;
@@ -98,12 +102,10 @@ class PlanService {
     if (_uid == null) return false;
     try {
       return await _db.rpc(
-        'can_add_member',
-        params: {
-          'p_group_id': groupId,
-          'p_organizer_id': _uid,
-        },
-      ) as bool? ??
+                'can_add_member',
+                params: {'p_group_id': groupId, 'p_organizer_id': _uid},
+              )
+              as bool? ??
           false;
     } catch (_) {
       return false;
