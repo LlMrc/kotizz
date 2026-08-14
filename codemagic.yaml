@@ -58,9 +58,6 @@ workflows:
         bundle_identifier: com.kotizz.app
       vars:
         BUNDLE_ID: "com.kotizz.app"
-      # Store these as encrypted env vars in the Codemagic dashboard:
-      app_store_connect:
-        auth: environment # reads APP_STORE_CONNECT_* vars automatically
 
     scripts:
       - name: Get Flutter packages
@@ -95,5 +92,5 @@ workflows:
 
     publishing:
       app_store_connect:
-        auth: environment
+        auth: integration
         submit_to_testflight: false   # set to true to auto-submit to TestFlight
