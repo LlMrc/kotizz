@@ -59,5 +59,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Firebase Messaging: disable method swizzling for manual APNS integration -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<!-- Enable background remote notifications -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
