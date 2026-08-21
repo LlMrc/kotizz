@@ -36,7 +36,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _pushNotifications = true;
-  bool _biometricEnabled = true;
 
   /// Plan courant de l'utilisateur ('free' ou 'pro'). Chargé depuis Supabase.
   String _plan = 'free';
@@ -278,25 +277,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     value: _pushNotifications,
                     onChanged: (v) => setState(() => _pushNotifications = v),
-                  ),
-                  const Divider(height: 1, color: AppColors.paperDim),
-                  SwitchListTile(
-                    activeTrackColor: AppColors.marigold,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      'Biométrie / Face ID',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Connexion sécurisée par empreinte',
-                      style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ash),
-                    ),
-                    value: _biometricEnabled,
-                    onChanged: (v) => setState(() => _biometricEnabled = v),
                   ),
                 ],
               ),

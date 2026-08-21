@@ -31,7 +31,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
     try {
       final data = await Supabase.instance.client
-          .from('notifications')
+          .from('alerts')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', ascending: false);
@@ -52,7 +52,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
           timeAgo: 'Récemment',
           dateCategory: 'Notification',
           type: type,
-          isUnread: (map['read'] as bool?) == false,
+          isUnread: (map['is_read'] as bool?) == false,
         );
       }).toList();
 
@@ -111,12 +111,21 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   ],
                 ),
                 TextButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
                     setState(() {
                       for (var a in _realAlerts) {
                         a.isUnread = false;
                       }
                     });
+                    final uid = Supabase.instance.client.auth.currentUser?.id;
+                    if (uid != null) {
+                      try {
+                        await Supabase.instance.client
+                            .from('alerts')
+                            .update({'is_read': true})
+                            .eq('user_id', uid);
+                      } catch (_) {}
+                    }
                   },
                   icon: const Icon(Icons.done_all_rounded, size: 16, color: AppColors.palm),
                   label: Text(

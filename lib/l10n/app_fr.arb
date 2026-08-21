@@ -1,6 +1,6 @@
 {
   "@@locale": "fr",
-  "appTitle": "Wonn",
+  "appTitle": "Kotizz",
   "@appTitle": {"description": "The title of the application"},
   "greeting": "Bonjour, {name}",
   "@greeting": {"description": "Greeting message with user name", "placeholders": {"name": {"type": "String", "example": "Louis"}}},
