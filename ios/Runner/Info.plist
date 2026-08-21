@@ -31,10 +31,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>kotizz.app</string>
+			<string>kotizz</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>kotizz.app</string>
+				<string>kotizz</string>
 			</array>
 		</dict>
 	</array>
