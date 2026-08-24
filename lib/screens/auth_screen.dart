@@ -53,6 +53,7 @@ class _AuthScreenState extends State<AuthScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
   bool _loading = false;
   bool _magicLinkSent = false;
   String? _errorMsg;
@@ -76,6 +77,7 @@ class _AuthScreenState extends State<AuthScreen>
   void dispose() {
     _fadeCtrl.dispose();
     _emailCtrl.dispose();
+    _otpCtrl.dispose();
     super.dispose();
   }
 
@@ -117,11 +119,43 @@ class _AuthScreenState extends State<AuthScreen>
         email: _emailCtrl.text.trim(),
         emailRedirectTo: kIsWeb ? null : 'kotizz://login-callback',
       );
-      setState(() => _magicLinkSent = true);
+      setState(() {
+        _magicLinkSent = true;
+        _otpCtrl.clear();
+      });
     } on AuthException catch (e) {
       setState(() => _errorMsg = _mapAuthError(e.message));
     } catch (e) {
       setState(() => _errorMsg = 'Une erreur est survenue lors de l\'envoi du lien.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Vérification du code OTP à 6 chiffres
+  Future<void> _verifyOtp() async {
+    final code = _otpCtrl.text.trim();
+    if (code.length != 6) {
+      setState(() => _errorMsg = 'Veuillez entrer le code à 6 chiffres complet.');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+    });
+
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.auth.verifyOTP(
+        email: _emailCtrl.text.trim(),
+        token: code,
+        type: OtpType.email,
+      );
+    } on AuthException catch (e) {
+      setState(() => _errorMsg = _mapAuthError(e.message));
+    } catch (e) {
+      setState(() => _errorMsg = 'Code invalide ou expiré. Veuillez réessayer.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -134,6 +168,12 @@ class _AuthScreenState extends State<AuthScreen>
     }
     if (msg.contains('Invalid email')) {
       return 'Adresse email invalide.';
+    }
+    if (msg.contains('Token has expired') || msg.contains('otp_expired') || msg.contains('expired')) {
+      return 'Le code a expiré. Veuillez en redemander un nouveau.';
+    }
+    if (msg.contains('invalid') || msg.contains('Invalid token') || msg.contains('Token is invalid')) {
+      return 'Code de confirmation incorrect.';
     }
     return msg;
   }
@@ -291,43 +331,226 @@ class _AuthScreenState extends State<AuthScreen>
                   if (_magicLinkSent) ...[
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(22),
                       decoration: BoxDecoration(
-                        color: AppColors.palm.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: AppColors.palm.withValues(alpha: 0.3)),
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.paperDim),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.ink.withValues(alpha: 0.04),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.mark_email_read_rounded, size: 44, color: AppColors.palm),
-                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.palm.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(Icons.mark_email_read_rounded, size: 24, color: AppColors.palm),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Code envoyé ! ✉️',
+                                      style: GoogleFonts.bricolageGrotesque(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.ink,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _emailCtrl.text.trim(),
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.ash,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
                           Text(
-                            'Lien de connexion envoyé ! ✉️',
-                            style: GoogleFonts.bricolageGrotesque(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                            'Entrez le code à 6 chiffres reçu par email :',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.ink,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Consultez la boîte de réception de ${_emailCtrl.text.trim()} et cliquez sur le lien pour vous connecter.',
+                          const SizedBox(height: 12),
+
+                          // Champ de saisie du code OTP
+                          TextField(
+                            controller: _otpCtrl,
+                            keyboardType: TextInputType.number,
+                            maxLength: 6,
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13.5,
-                              color: AppColors.ash,
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 8,
+                              color: AppColors.ink,
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () => setState(() => _magicLinkSent = false),
-                            child: Text(
-                              'Renvoyer un lien',
-                              style: GoogleFonts.ibmPlexSans(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.ink,
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: '000000',
+                              hintStyle: GoogleFonts.ibmPlexMono(
+                                fontSize: 24,
+                                letterSpacing: 8,
+                                color: AppColors.ash.withValues(alpha: 0.35),
+                              ),
+                              filled: true,
+                              fillColor: AppColors.paper,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(color: AppColors.paperDim),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(color: AppColors.paperDim),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(color: AppColors.marigold, width: 2),
                               ),
                             ),
+                            onChanged: (val) {
+                              if (val.trim().length == 6) {
+                                _verifyOtp();
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 14),
+
+                          if (_errorMsg != null) ...[
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: AppColors.coral.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error_outline_rounded, color: AppColors.coral, size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMsg!,
+                                      style: GoogleFonts.ibmPlexSans(
+                                        fontSize: 13,
+                                        color: AppColors.coral,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _loading ? null : _verifyOtp,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.ink,
+                                foregroundColor: AppColors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: _loading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.4,
+                                        color: AppColors.white,
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.check_circle_outline_rounded, size: 18, color: AppColors.marigold),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Valider mon code',
+                                          style: GoogleFonts.ibmPlexSans(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              TextButton.icon(
+                                onPressed: _loading
+                                    ? null
+                                    : () {
+                                        _otpCtrl.clear();
+                                        _sendMagicLink();
+                                      },
+                                icon: const Icon(Icons.refresh_rounded, size: 16, color: AppColors.ink),
+                                label: Text(
+                                  'Renvoyer un code',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.ink,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _loading
+                                    ? null
+                                    : () {
+                                        setState(() {
+                                          _magicLinkSent = false;
+                                          _otpCtrl.clear();
+                                          _errorMsg = null;
+                                        });
+                                      },
+                                child: Text(
+                                  'Changer d\'email',
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.ash,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
