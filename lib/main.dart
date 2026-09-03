@@ -16,12 +16,12 @@ import 'screens/profile_screen.dart';
 import 'screens/create_sol_screen.dart';
 import 'services/notification_service.dart';
 
-/// Clés d'accès au backend Supabase
-const _supabaseUrl = 'https://nwdgnbzpvoypzduzreec.supabase.co';
-const _supabaseAnonKey = 'sb_publishable_W2m9cj3XcDzNVJVIr9zd0g_r0aB0NMg';
-
-// Clé API RevenueCat
-const _revenueCatApiKey = 'appl_ndKqPUhQfqBsVRtPAAuzoaRsEAY';
+/// Clés d'accès injectées via --dart-define (jamais stockées dans le code).
+/// En local : flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_KEY=... --dart-define=REVENUECAT_KEY=...
+/// En CI/CD : variables d'environnement sécurisées Codemagic.
+const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const _supabaseAnonKey = String.fromEnvironment('SUPABASE_KEY');
+const _revenueCatApiKey = String.fromEnvironment('REVENUECAT_KEY');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,37 +1,113 @@
 workflows:
-  ios-vnc-simulator:
-    name: Interactive VNC iOS Simulator (Test App Live)
-    instance_type: mac_mini_m1
+  ios-production-build:
+    name: iOS Production Build (App Store)
     max_build_duration: 60
+    integrations:
+      app_store_connect: Codemagic pp Store Api key
 
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.kotizz.app
       vars:
         BUNDLE_ID: "com.kotizz.app"
+      # Variables secrètes à définir dans Codemagic → Project Settings → Environment variables :
+      #   SUPABASE_URL, SUPABASE_KEY, REVENUECAT_KEY
+      groups:
+        - kotizz_secrets
 
     scripts:
-      - name: Get Flutter packages
+      - name: Flutter clean & Prep
         script: |
+          flutter clean
+          rm -rf ios/Pods
+          rm -f ios/Podfile.lock
           flutter pub get
 
-      - name: Build iOS App for Simulator
+      - name: Install CocoaPods
         script: |
-          flutter build ios --simulator --debug
+          cd ios
+          pod install --repo-update
+          cd ..
 
-      - name: Boot Simulator & Install Kotizz App
+      - name: Build and Sign IPA
         script: |
-          xcrun simctl boot "iPhone 15" || true
-          open -a Simulator
-          xcrun simctl install booted build/ios/iphonesimulator/Runner.app || true
-          xcrun simctl launch booted "$BUNDLE_ID" || true
+          # 1. Prepare the project to use Codemagic's signing profiles
+          xcode-project use-profiles
 
-      - name: Setup VNC Workspace & Keep Alive for Testing
-        script: |
-          open $CM_BUILD_DIR/ios/Runner.xcworkspace
-          echo "🚀 SIMULATOR & KOTIZZ APP READY: Connect via VNC in CodeMagic UI to test!"
-          caffeinate -u -t 3600
+          # 2. Build the archive (No-codesign is correct here)
+          flutter build ipa --release --no-codesign \
+            --build-name=1.2.0 \
+            --build-number=$((1 + $PROJECT_BUILD_NUMBER)) \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_KEY=$SUPABASE_KEY \
+            --dart-define=REVENUECAT_KEY=$REVENUECAT_KEY
+
+          # 3. Sign and package the IPA
+          xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner
 
     artifacts:
-      - build/ios/iphonesimulator/*.app
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
+
+
+# workflows:
+#   ios-validation-vnc:
+#     name: iOS Test & Build with VNC
+#     integrations:
+#       app_store_connect: Codemagic pp Store Api key
+#
+#     environment:
+#       flutter: stable
+#       xcode: latest
+#       ios_signing:
+#         distribution_type: app_store
+#         bundle_identifier: com.kotizz.app
+#       vars:
+#         BUNDLE_ID: "com.kotizz.app"
+#       groups:
+#         - kotizz_secrets
+#
+#     scripts:
+#       - name: Flutter clean & pub get
+#         script: |
+#           flutter clean
+#           flutter pub get
+#
+#       - name: Install pods
+#         script: |
+#           cd ios
+#           pod install --repo-update
+#           cd ..
+#
+#       - name: Set up code signing settings
+#         script: |
+#           xcode-project use-profiles
+#
+#       - name: Build iOS for Simulator (Debug)
+#         script: |
+#           flutter build ios --debug --simulator --no-codesign \
+#             --dart-define=SUPABASE_URL=$SUPABASE_URL \
+#             --dart-define=SUPABASE_KEY=$SUPABASE_KEY \
+#             --dart-define=REVENUECAT_KEY=$REVENUECAT_KEY
+#
+#       - name: Setup VNC Workspace & Keep Alive
+#         script: |
+#           caffeinate -u -t 3600 &
+#           xcrun simctl boot "iPhone 15" || true
+#           open -a Simulator
+#           open $CM_BUILD_DIR/ios/Runner.xcworkspace
+#           echo "🚀 WORKSPACE READY: Connect via VNC to debug."
+#
+#     artifacts:
+#       - build/ios/iphonesimulator/*.app

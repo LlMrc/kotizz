@@ -22,13 +22,10 @@ class CreateSolScreen extends StatefulWidget {
 
 class _CreateSolScreenState extends State<CreateSolScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController(text: 'Tontine Entrepreneurs 2026');
-  final _descCtrl = TextEditingController(
-    text:
-        'Épargne collective mensuelle pour le financement de projets et fonds de roulement.',
-  );
-  final _amountCtrl = TextEditingController(text: '25000');
-  final _membersCtrl = TextEditingController(text: '10');
+  final _nameCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+  final _amountCtrl = TextEditingController();
+  final _membersCtrl = TextEditingController();
   final _whatsappCtrl = TextEditingController();
 
   String _currency = 'HTG';

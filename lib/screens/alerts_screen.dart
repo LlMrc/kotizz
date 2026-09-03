@@ -30,9 +30,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
     }
 
     try {
+      // Jointure avec groups pour récupérer le nom du groupe associé
       final data = await Supabase.instance.client
           .from('alerts')
-          .select('*')
+          .select('*, groups(name)')
           .eq('user_id', user.id)
           .order('created_at', ascending: false);
 
@@ -44,13 +45,24 @@ class _AlertsScreenState extends State<AlertsScreen> {
         if (typeStr == 'reminder') type = _AlertType.reminder;
         if (typeStr == 'member') type = _AlertType.memberJoined;
 
+        // Nom du groupe depuis la jointure (null si alerte système sans groupe)
+        final groupData = map['groups'] as Map<String, dynamic>?;
+        final groupName = (groupData?['name'] as String?) ?? 'Kotizz';
+
+        // Calcul dynamique du temps relatif depuis created_at
+        final createdAt = map['created_at'] != null
+            ? DateTime.tryParse(map['created_at'] as String)
+            : null;
+        final timeAgo = _formatTimeAgo(createdAt);
+        final dateCategory = _formatDateCategory(createdAt);
+
         return _AlertItem(
           id: map['id'].toString(),
           title: (map['title'] as String?) ?? 'Notification',
           body: (map['body'] as String?) ?? '',
-          groupName: 'Kotizz',
-          timeAgo: 'Récemment',
-          dateCategory: 'Notification',
+          groupName: groupName,
+          timeAgo: timeAgo,
+          dateCategory: dateCategory,
           type: type,
           isUnread: (map['is_read'] as bool?) == false,
         );
@@ -65,6 +77,38 @@ class _AlertsScreenState extends State<AlertsScreen> {
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Retourne une chaîne relative lisible depuis une date (ex: "Il y a 3 min").
+  static String _formatTimeAgo(DateTime? date) {
+    if (date == null) return 'Récemment';
+    final now = DateTime.now();
+    final diff = now.difference(date.toLocal());
+
+    if (diff.inSeconds < 60) return 'À l\'instant';
+    if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
+    if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
+    if (diff.inDays == 1) return 'Hier';
+    if (diff.inDays < 7) return 'Il y a ${diff.inDays} jours';
+    if (diff.inDays < 30) return 'Il y a ${(diff.inDays / 7).floor()} sem.';
+    if (diff.inDays < 365) return 'Il y a ${(diff.inDays / 30).floor()} mois';
+    return 'Il y a ${(diff.inDays / 365).floor()} an(s)';
+  }
+
+  /// Retourne la catégorie de date pour le regroupement (Aujourd'hui / Cette semaine / Plus ancien).
+  static String _formatDateCategory(DateTime? date) {
+    if (date == null) return 'Notifications';
+    final now = DateTime.now();
+    final local = date.toLocal();
+    final today = DateTime(now.year, now.month, now.day);
+    final alertDay = DateTime(local.year, local.month, local.day);
+    final diff = today.difference(alertDay).inDays;
+
+    if (diff == 0) return 'Aujourd\'hui';
+    if (diff == 1) return 'Hier';
+    if (diff < 7) return 'Cette semaine';
+    if (diff < 30) return 'Ce mois-ci';
+    return 'Plus ancien';
   }
 
   @override
