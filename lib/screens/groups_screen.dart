@@ -414,64 +414,104 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             final user = Supabase.instance.client.auth.currentUser;
                             if (user == null) return;
 
-                            // 1. Chercher le groupe avec ce code
-                            final groupResp = await Supabase.instance.client
-                                .from('groups')
-                                .select('id, name, max_members, organizer_id')
-                                .eq('invite_code', code)
-                                .maybeSingle();
-
-                            if (groupResp == null) {
-                              setModalState(() {
-                                isJoining = false;
-                                errorMessage = t.invalidInviteCode;
-                              });
-                              return;
+                            // Tentative via la fonction RPC sécurisée (SECURITY DEFINER)
+                            bool joinedViaRpc = false;
+                            try {
+                              final rpcResult = await Supabase.instance.client.rpc(
+                                'join_group_by_code',
+                                params: {'p_code': code},
+                              );
+                              if (rpcResult is Map) {
+                                if (rpcResult['success'] == true) {
+                                  joinedViaRpc = true;
+                                } else {
+                                  final err = rpcResult['error'];
+                                  if (err == 'invalid_code') {
+                                    setModalState(() {
+                                      isJoining = false;
+                                      errorMessage = t.invalidInviteCode;
+                                    });
+                                    return;
+                                  } else if (err == 'already_member') {
+                                    setModalState(() {
+                                      isJoining = false;
+                                      errorMessage = t.alreadyMember;
+                                    });
+                                    return;
+                                  } else if (err == 'group_full') {
+                                    setModalState(() {
+                                      isJoining = false;
+                                      errorMessage = t.groupFull;
+                                    });
+                                    return;
+                                  }
+                                }
+                              }
+                            } catch (_) {
+                              // Si la fonction RPC n'est pas encore créée côté DB, on passe au fallback direct
                             }
 
-                            final groupId = groupResp['id'] as String;
-                            final maxMembers = (groupResp['max_members'] as int?) ?? 5;
+                            if (!joinedViaRpc) {
+                              // Fallback direct
+                              // 1. Chercher le groupe avec ce code
+                              final groupResp = await Supabase.instance.client
+                                  .from('groups')
+                                  .select('id, name, max_members, organizer_id')
+                                  .eq('invite_code', code)
+                                  .maybeSingle();
 
-                            // 2. Vérifier si déjà membre
-                            final existingMember = await Supabase.instance.client
-                                .from('group_members')
-                                .select('id')
-                                .eq('group_id', groupId)
-                                .eq('user_id', user.id)
-                                .maybeSingle();
-
-                            if (existingMember != null) {
-                              setModalState(() {
-                                isJoining = false;
-                                errorMessage = t.alreadyMember;
-                              });
-                              return;
-                            }
-
-                            // 3. Compter les membres actuels
-                            final membersCountResp = await Supabase.instance.client
-                                .from('group_members')
-                                .select('id')
-                                .eq('group_id', groupId);
-
-                            final currentCount = (membersCountResp as List).length;
-                            if (currentCount >= maxMembers) {
-                              setModalState(() {
-                                isJoining = false;
-                                errorMessage = t.groupFull;
-                              });
-                              return;
-                            }
-
-                            // 4. Insérer le nouveau membre
-                            await Supabase.instance.client
-                                .from('group_members')
-                                .insert({
-                                  'group_id': groupId,
-                                  'user_id': user.id,
-                                  'turn_order': currentCount + 1,
-                                  'status': 'confirmed',
+                              if (groupResp == null) {
+                                setModalState(() {
+                                  isJoining = false;
+                                  errorMessage = t.invalidInviteCode;
                                 });
+                                return;
+                              }
+
+                              final groupId = groupResp['id'] as String;
+                              final maxMembers = (groupResp['max_members'] as int?) ?? 5;
+
+                              // 2. Vérifier si déjà membre
+                              final existingMember = await Supabase.instance.client
+                                  .from('group_members')
+                                  .select('id')
+                                  .eq('group_id', groupId)
+                                  .eq('user_id', user.id)
+                                  .maybeSingle();
+
+                              if (existingMember != null) {
+                                setModalState(() {
+                                  isJoining = false;
+                                  errorMessage = t.alreadyMember;
+                                });
+                                return;
+                              }
+
+                              // 3. Compter les membres actuels
+                              final membersCountResp = await Supabase.instance.client
+                                  .from('group_members')
+                                  .select('id')
+                                  .eq('group_id', groupId);
+
+                              final currentCount = (membersCountResp as List).length;
+                              if (currentCount >= maxMembers) {
+                                setModalState(() {
+                                  isJoining = false;
+                                  errorMessage = t.groupFull;
+                                });
+                                return;
+                              }
+
+                              // 4. Insérer le nouveau membre
+                              await Supabase.instance.client
+                                  .from('group_members')
+                                  .insert({
+                                    'group_id': groupId,
+                                    'user_id': user.id,
+                                    'turn_order': currentCount + 1,
+                                    'status': 'confirmed',
+                                  });
+                            }
 
                             if (ctx.mounted) {
                               Navigator.of(ctx).pop();
