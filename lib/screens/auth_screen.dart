@@ -132,11 +132,11 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
-  /// Vérification du code OTP à 6 chiffres
+  /// Vérification du code OTP (6 à 8 chiffres selon la configuration Supabase)
   Future<void> _verifyOtp() async {
     final code = _otpCtrl.text.trim();
-    if (code.length != 6) {
-      setState(() => _errorMsg = 'Veuillez entrer le code à 6 chiffres complet.');
+    if (code.length < 6 || code.length > 8) {
+      setState(() => _errorMsg = 'Veuillez entrer le code complet reçu par email.');
       return;
     }
 
@@ -389,7 +389,7 @@ class _AuthScreenState extends State<AuthScreen>
                           ),
                           const SizedBox(height: 18),
                           Text(
-                            'Entrez le code à 6 chiffres reçu par email :',
+                            'Entrez le code reçu par email :',
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w500,
@@ -398,24 +398,24 @@ class _AuthScreenState extends State<AuthScreen>
                           ),
                           const SizedBox(height: 12),
 
-                          // Champ de saisie du code OTP
+                          // Champ de saisie du code OTP (supporte 6 à 8 chiffres)
                           TextField(
                             controller: _otpCtrl,
                             keyboardType: TextInputType.number,
-                            maxLength: 6,
+                            maxLength: 8,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.ibmPlexMono(
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 8,
+                              letterSpacing: 4,
                               color: AppColors.ink,
                             ),
                             decoration: InputDecoration(
                               counterText: '',
-                              hintText: '000000',
+                              hintText: '••••••••',
                               hintStyle: GoogleFonts.ibmPlexMono(
-                                fontSize: 24,
-                                letterSpacing: 8,
+                                fontSize: 22,
+                                letterSpacing: 4,
                                 color: AppColors.ash.withValues(alpha: 0.35),
                               ),
                               filled: true,
@@ -435,7 +435,8 @@ class _AuthScreenState extends State<AuthScreen>
                               ),
                             ),
                             onChanged: (val) {
-                              if (val.trim().length == 6) {
+                              final trimmed = val.trim();
+                              if (trimmed.length == 8) {
                                 _verifyOtp();
                               }
                             },
