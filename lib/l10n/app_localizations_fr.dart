@@ -399,4 +399,59 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get changeEmail => 'Changer d\'email';
+
+  @override
+  String get joinSol => 'Rejoindre une Sòl';
+
+  @override
+  String get joinWithCode => 'Rejoindre avec un code';
+
+  @override
+  String get inviteCode => 'Code d\'invitation';
+
+  @override
+  String get enterInviteCodePrompt =>
+      'Entrez le code à 6 caractères pour rejoindre la tontine';
+
+  @override
+  String get joinGroupAction => 'Rejoindre la tontine';
+
+  @override
+  String get groupJoinedSuccess => 'Vous avez rejoint la tontine avec succès !';
+
+  @override
+  String get invalidInviteCode => 'Code d\'invitation invalide ou introuvable';
+
+  @override
+  String get alreadyMember => 'Vous êtes déjà membre de ce groupe';
+
+  @override
+  String get groupFull => 'Cette tontine est déjà complète';
+
+  @override
+  String get inviteMembers => 'Inviter des membres';
+
+  @override
+  String get copyCode => 'Copier le code';
+
+  @override
+  String get codeCopied => 'Code copié dans le presse-papiers !';
+
+  @override
+  String get freeSlot => 'Place libre';
+
+  @override
+  String get payoutSchedule => 'CALENDRIER ET ORDRE DES TOURS';
+
+  @override
+  String get youBadge => 'VOUS';
+
+  @override
+  String get potReceived => 'Pot perçu ✓';
+
+  @override
+  String get currentTurnBeneficiary => 'Bénéficiaire du tour actuel';
+
+  @override
+  String get waitingTurn => 'En attente';
 }

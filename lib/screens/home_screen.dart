@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -564,58 +565,64 @@ class _WheelCard extends StatelessWidget {
                       currentTurn: currentTurn,
                       totalTurns: totalTurns,
                     ),
-                    const SizedBox(width: 18),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: AppColors.marigold,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               t.yourTurn.toUpperCase(),
                               style: GoogleFonts.ibmPlexMono(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.ink,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 5),
                           Text(
                             t.confirmedCount(currentTurn, totalTurns),
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 12.5,
+                              fontSize: 12,
                               color: AppColors.white.withValues(alpha: 0.7),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 10),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                amount,
-                                style: GoogleFonts.ibmPlexMono(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.marigold,
+                          const SizedBox(height: 8),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  amount,
+                                  style: GoogleFonts.ibmPlexMono(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.marigold,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                currency,
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.white.withValues(alpha: 0.6),
+                                const SizedBox(width: 4),
+                                Text(
+                                  currency,
+                                  style: GoogleFonts.ibmPlexSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.white.withValues(alpha: 0.6),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -650,16 +657,11 @@ class _RotationWheelState extends State<_RotationWheel>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
 
-  static const _nodes = [
-    (top: 0.06, left: 0.50, label: '1'),
-    (top: 0.20, left: 0.79, label: '2'),
-    (top: 0.50, left: 0.93, label: '3'),
-    (top: 0.79, left: 0.79, label: '4'),
-    (top: 0.93, left: 0.50, label: '5'),
-    (top: 0.79, left: 0.21, label: '6'),
-    (top: 0.50, left: 0.07, label: '7'),
-    (top: 0.20, left: 0.21, label: '8'),
-  ];
+  static const double _wheelSize = 125.0;
+  static const double _center = _wheelSize / 2; // 62.5
+  static const double _radius = 46.0;
+  static const double _nodeSize = 24.0;
+  static const double _nodeRadius = _nodeSize / 2; // 12.0
 
   @override
   void initState() {
@@ -680,13 +682,14 @@ class _RotationWheelState extends State<_RotationWheel>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     return SizedBox(
-      width: 160,
-      height: 160,
+      width: _wheelSize,
+      height: _wheelSize,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Positioned.fill(
             child: CustomPaint(
-              painter: _RingTrackPainter(),
+              painter: _RingTrackPainter(radius: _radius),
             ),
           ),
           Center(
@@ -696,7 +699,7 @@ class _RotationWheelState extends State<_RotationWheel>
                 Text(
                   '${widget.currentTurn}/${widget.totalTurns}',
                   style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 22,
+                    fontSize: 19,
                     fontWeight: FontWeight.w800,
                     color: AppColors.white,
                     letterSpacing: -0.5,
@@ -705,69 +708,80 @@ class _RotationWheelState extends State<_RotationWheel>
                 Text(
                   t.currentTurnLabel,
                   style: GoogleFonts.ibmPlexMono(
-                    fontSize: 8,
+                    fontSize: 7.5,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
+                    letterSpacing: 0.6,
                     color: AppColors.marigold,
                   ),
                 ),
               ],
             ),
           ),
-          for (int i = 0; i < _nodes.length; i++)
-            Positioned(
-              top: _nodes[i].top * 160 - 15,
-              left: _nodes[i].left * 160 - 15,
-              child: (i + 1 == widget.currentTurn)
-                  ? AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, child) {
-                        return Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.marigold,
-                            border: Border.all(color: AppColors.ink, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.marigold.withValues(
-                                  alpha: 0.4 + 0.4 * _pulseController.value,
-                                ),
-                                blurRadius: 8 + 6 * _pulseController.value,
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            '${i + 1}',
-                            style: GoogleFonts.ibmPlexMono(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.ink,
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : _StaticNode(
-                      state: (i + 1 < widget.currentTurn)
-                          ? _NodeState.done
-                          : _NodeState.upcoming,
-                      label: '${i + 1}',
-                    ),
-            ),
+          for (int i = 0; i < 8; i++)
+            _buildNodePositioned(i),
         ],
       ),
+    );
+  }
+
+  Widget _buildNodePositioned(int i) {
+    final angle = i * (2 * math.pi / 8) - (math.pi / 2);
+    final left = _center + _radius * math.cos(angle) - _nodeRadius;
+    final top = _center + _radius * math.sin(angle) - _nodeRadius;
+
+    return Positioned(
+      top: top,
+      left: left,
+      child: (i + 1 == widget.currentTurn)
+          ? AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                return Container(
+                  width: _nodeSize,
+                  height: _nodeSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.marigold,
+                    border: Border.all(color: AppColors.ink, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.marigold.withValues(
+                          alpha: 0.4 + 0.4 * _pulseController.value,
+                        ),
+                        blurRadius: 6 + 4 * _pulseController.value,
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${i + 1}',
+                    style: GoogleFonts.ibmPlexMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                );
+              },
+            )
+          : _StaticNode(
+              state: (i + 1 < widget.currentTurn)
+                  ? _NodeState.done
+                  : _NodeState.upcoming,
+              label: '${i + 1}',
+              size: _nodeSize,
+            ),
     );
   }
 }
 
 class _RingTrackPainter extends CustomPainter {
+  final double radius;
+  const _RingTrackPainter({this.radius = 46.0});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.43;
 
     final trackPaint = Paint()
       ..color = AppColors.white.withValues(alpha: 0.12)
@@ -778,31 +792,38 @@ class _RingTrackPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _RingTrackPainter oldDelegate) =>
+      oldDelegate.radius != radius;
 }
 
 class _StaticNode extends StatelessWidget {
   final _NodeState state;
   final String label;
-  const _StaticNode({required this.state, required this.label});
+  final double size;
+
+  const _StaticNode({
+    required this.state,
+    required this.label,
+    this.size = 24.0,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDone = state == _NodeState.done;
     return Container(
-      width: 30,
-      height: 30,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color:
             isDone ? AppColors.palm : AppColors.white.withValues(alpha: 0.14),
-        border: Border.all(color: AppColors.ink, width: 2),
+        border: Border.all(color: AppColors.ink, width: 1.5),
       ),
       alignment: Alignment.center,
       child: Text(
         label,
         style: GoogleFonts.ibmPlexMono(
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w600,
           color:
               isDone ? AppColors.white : AppColors.white.withValues(alpha: 0.6),

@@ -4,7 +4,9 @@
 //   intl: ^0.19.0
 //   google_fonts: ^6.2.1
 
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -95,10 +97,15 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
       // --- L'utilisateur qui crée le groupe devient automatiquement
       // --- l'organisateur : aucun champ à remplir pour ça.
       final whatsappLink = _whatsappCtrl.text.trim();
+      final maxMembers = int.tryParse(_membersCtrl.text.trim()) ?? 5;
+      final inviteCode = _generateInviteCode();
+      final description = _descCtrl.text.trim();
+
       final inserted = await supabase
           .from('groups')
           .insert({
             'name': _nameCtrl.text.trim(),
+            if (description.isNotEmpty) 'description': description,
             'organizer_id': currentUser.id,
             'contribution_amount': double.parse(_amountCtrl.text.trim()),
             'currency': _currency,
@@ -106,13 +113,30 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
             'order_type': 'random',
             'start_date': DateFormat('yyyy-MM-dd').format(_startDate),
             'status': 'draft',
+            'max_members': maxMembers,
+            'invite_code': inviteCode,
             if (whatsappLink.isNotEmpty) 'whatsapp_link': whatsappLink,
           })
           .select()
           .single();
 
+      // Ajouter automatiquement l'organisateur comme premier membre
+      try {
+        await supabase.from('group_members').insert({
+          'group_id': inserted['id'],
+          'user_id': currentUser.id,
+          'turn_order': 1,
+          'status': 'confirmed',
+        });
+      } catch (_) {
+        // Ignorer si la politique s'en charge déjà
+      }
+
       if (!mounted) return;
-      await _showInviteSheet(groupId: inserted['id'] as String);
+      await _showInviteSheet(
+        groupId: inserted['id'] as String,
+        inviteCode: inviteCode,
+      );
     } on PostgrestException catch (e) {
       if (!mounted) return;
       // Filet de sécurité : si le trigger côté base a bloqué l'insert
@@ -280,7 +304,13 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
     );
   }
 
-  String _buildInviteMessage(AppLocalizations t) {
+  String _generateInviteCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rnd = math.Random();
+    return List.generate(6, (index) => chars[rnd.nextInt(chars.length)]).join();
+  }
+
+  String _buildInviteMessage(AppLocalizations t, {String? inviteCode}) {
     final amount = _amountCtrl.text.trim();
     final desc = _descCtrl.text.trim();
     final freqLabel = {
@@ -290,7 +320,6 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
     }[_frequency];
     // Formatage de la date compatible avec le Créole Haïtien (ht)
     final dateLabel = _formatLocalizedDate(_startDate, t.localeName);
-    const link = 'https://sol.app/join/demo';
 
     return '''
 ${t.inviteMessageIntro} "${_nameCtrl.text.trim()}" !
@@ -298,15 +327,13 @@ ${t.inviteMessageIntro} "${_nameCtrl.text.trim()}" !
 ${desc.isNotEmpty ? '$desc\n' : ''}${t.inviteMessageAmountLabel} : $amount $_currency
 ${t.inviteMessageFrequencyLabel} : $freqLabel
 ${t.inviteMessageStartLabel} : $dateLabel
-
-${t.inviteMessageJoinLabel}
-$link
+${inviteCode != null && inviteCode.isNotEmpty ? '\n${t.inviteCode} : $inviteCode' : ''}
 ''';
   }
 
-  Future<void> _showInviteSheet({required String groupId}) async {
-    final t = AppLocalizations.of(context);
-    final message = _buildInviteMessage(t!);
+  Future<void> _showInviteSheet({required String groupId, String? inviteCode}) async {
+    final t = AppLocalizations.of(context)!;
+    final message = _buildInviteMessage(t, inviteCode: inviteCode);
     if (!mounted) return;
 
     await showModalBottomSheet(
@@ -337,7 +364,67 @@ $link
                 color: AppColors.ash,
               ),
             ),
-            const SizedBox(height: 16),
+            if (inviteCode != null && inviteCode.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.marigold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.marigold),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.inviteCode.toUpperCase(),
+                          style: GoogleFonts.ibmPlexMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                            color: const Color(0xFFB87A1F),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          inviteCode,
+                          style: GoogleFonts.bricolageGrotesque(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2.0,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, color: AppColors.ink),
+                      tooltip: t.copyCode,
+                      onPressed: () async {
+                        await Clipboard.setData(ClipboardData(text: inviteCode));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(t.codeCopied),
+                              backgroundColor: AppColors.palm,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 14),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),

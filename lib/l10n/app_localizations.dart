@@ -819,6 +819,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change email'**
   String get changeEmail;
+
+  /// No description provided for @joinSol.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a Sòl'**
+  String get joinSol;
+
+  /// No description provided for @joinWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with code'**
+  String get joinWithCode;
+
+  /// No description provided for @inviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Code'**
+  String get inviteCode;
+
+  /// No description provided for @enterInviteCodePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-character code to join the group'**
+  String get enterInviteCodePrompt;
+
+  /// No description provided for @joinGroupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Group'**
+  String get joinGroupAction;
+
+  /// No description provided for @groupJoinedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'You have successfully joined the group!'**
+  String get groupJoinedSuccess;
+
+  /// No description provided for @invalidInviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid or non-existent invite code'**
+  String get invalidInviteCode;
+
+  /// No description provided for @alreadyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You are already a member of this group'**
+  String get alreadyMember;
+
+  /// No description provided for @groupFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This group is already full'**
+  String get groupFull;
+
+  /// No description provided for @inviteMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite members'**
+  String get inviteMembers;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get copyCode;
+
+  /// No description provided for @codeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied to clipboard!'**
+  String get codeCopied;
+
+  /// No description provided for @freeSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Free slot'**
+  String get freeSlot;
+
+  /// No description provided for @payoutSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'PAYOUT SCHEDULE & TURNS'**
+  String get payoutSchedule;
+
+  /// No description provided for @youBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get youBadge;
+
+  /// No description provided for @potReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Pot received ✓'**
+  String get potReceived;
+
+  /// No description provided for @currentTurnBeneficiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Current turn beneficiary'**
+  String get currentTurnBeneficiary;
+
+  /// No description provided for @waitingTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get waitingTurn;
 }
 
 class _AppLocalizationsDelegate

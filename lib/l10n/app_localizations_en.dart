@@ -397,4 +397,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changeEmail => 'Change email';
+
+  @override
+  String get joinSol => 'Join a Sòl';
+
+  @override
+  String get joinWithCode => 'Join with code';
+
+  @override
+  String get inviteCode => 'Invite Code';
+
+  @override
+  String get enterInviteCodePrompt =>
+      'Enter the 6-character code to join the group';
+
+  @override
+  String get joinGroupAction => 'Join Group';
+
+  @override
+  String get groupJoinedSuccess => 'You have successfully joined the group!';
+
+  @override
+  String get invalidInviteCode => 'Invalid or non-existent invite code';
+
+  @override
+  String get alreadyMember => 'You are already a member of this group';
+
+  @override
+  String get groupFull => 'This group is already full';
+
+  @override
+  String get inviteMembers => 'Invite members';
+
+  @override
+  String get copyCode => 'Copy code';
+
+  @override
+  String get codeCopied => 'Code copied to clipboard!';
+
+  @override
+  String get freeSlot => 'Free slot';
+
+  @override
+  String get payoutSchedule => 'PAYOUT SCHEDULE & TURNS';
+
+  @override
+  String get youBadge => 'YOU';
+
+  @override
+  String get potReceived => 'Pot received ✓';
+
+  @override
+  String get currentTurnBeneficiary => 'Current turn beneficiary';
+
+  @override
+  String get waitingTurn => 'Waiting';
 }

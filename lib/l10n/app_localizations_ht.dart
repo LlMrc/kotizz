@@ -396,4 +396,59 @@ class AppLocalizationsHt extends AppLocalizations {
 
   @override
   String get changeEmail => 'Chanje imèl';
+
+  @override
+  String get joinSol => 'Antre nan yon Sòl';
+
+  @override
+  String get joinWithCode => 'Antre ak yon kòd';
+
+  @override
+  String get inviteCode => 'Kòd envitasyon';
+
+  @override
+  String get enterInviteCodePrompt =>
+      'Mete kòd 6 karaktè a pou antre nan sòl la';
+
+  @override
+  String get joinGroupAction => 'Antre nan sòl la';
+
+  @override
+  String get groupJoinedSuccess => 'Ou antre nan sòl la avèk siksè !';
+
+  @override
+  String get invalidInviteCode => 'Kòd envitasyon an pa bon oswa pa egziste';
+
+  @override
+  String get alreadyMember => 'Ou deja manm nan gwoup sa a';
+
+  @override
+  String get groupFull => 'Sòl sa a deja plen';
+
+  @override
+  String get inviteMembers => 'Envite manm yo';
+
+  @override
+  String get copyCode => 'Kopye kòd la';
+
+  @override
+  String get codeCopied => 'Kòd la kopye nan papye-pòch ou !';
+
+  @override
+  String get freeSlot => 'Plas disponib';
+
+  @override
+  String get payoutSchedule => 'KALANDRIYE AK LÒD VIRE YO';
+
+  @override
+  String get youBadge => 'OU MENM';
+
+  @override
+  String get potReceived => 'Kòb la resevwa ✓';
+
+  @override
+  String get currentTurnBeneficiary => 'Moun k ap pran kòb la kounye a';
+
+  @override
+  String get waitingTurn => 'Ap tann';
 }
