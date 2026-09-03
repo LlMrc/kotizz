@@ -1,53 +1,30 @@
 -- =============================================================================
--- KOTIZZ — CORRECTIF RLS (version adaptée au schéma réel)
+-- KOTIZZ — CORRECTIF FINAL RLS (basé sur le schéma réel)
+-- Table des membres : group_members (avec s)
 -- =============================================================================
--- Exécutez d'abord ÉTAPE 1 pour voir vos tables et politiques réelles,
--- puis ÉTAPE 2 pour appliquer le correctif.
--- =============================================================================
-
--- ═══════════════════════════════════════════════════════════════════
--- ÉTAPE 1 : DIAGNOSTIC — Copiez uniquement cette section et faites RUN
---           pour voir vos tables et politiques existantes.
--- ═══════════════════════════════════════════════════════════════════
-
--- Liste de toutes vos tables publiques
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-ORDER BY table_name;
-
--- Liste de toutes les politiques RLS actives
-SELECT tablename, policyname, cmd, qual
-FROM pg_policies
-WHERE schemaname = 'public'
-ORDER BY tablename, policyname;
-
--- =============================================================================
--- ÉTAPE 2 : CORRECTIF — Après avoir identifié le vrai nom de la table,
---           exécutez UNIQUEMENT la section correspondante ci-dessous.
+-- Copiez l'intégralité de ce script dans Supabase → SQL Editor → RUN
 -- =============================================================================
 
--- ─────────────────────────────────────────────────────────────────────────────
--- CAS A : Si la table s'appelle "group_members" (avec s)
--- ─────────────────────────────────────────────────────────────────────────────
+-- ─── 1. Supprimer TOUTES les politiques sur groups et group_members ───────────
 
--- 2A-1. Supprimer toutes les politiques existantes sur les deux tables
-DO $$
-DECLARE
-  pol RECORD;
-BEGIN
-  FOR pol IN
-    SELECT policyname, tablename
-    FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename IN ('groups', 'group_members')
-  LOOP
-    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', pol.policyname, pol.tablename);
-    RAISE NOTICE 'Dropped policy % on %', pol.policyname, pol.tablename;
-  END LOOP;
-END $$;
+DROP POLICY IF EXISTS "groups: créer" ON public.groups;
+DROP POLICY IF EXISTS "groups: modifier (organisateur)" ON public.groups;
+DROP POLICY IF EXISTS "groups: supprimer (organisateur)" ON public.groups;
+DROP POLICY IF EXISTS "groups: voir (membres)" ON public.groups;
+DROP POLICY IF EXISTS "Organizers can update their groups" ON public.groups;
+DROP POLICY IF EXISTS "Users can view groups they are part of or organize" ON public.groups;
+DROP POLICY IF EXISTS "Organizers can create groups" ON public.groups;
 
--- 2A-2. Fonction helper SECURITY DEFINER (contourne la RLS → brise la boucle)
+DROP POLICY IF EXISTS "group_members: gérer (organisateur)" ON public.group_members;
+DROP POLICY IF EXISTS "group_members: voir (membres)" ON public.group_members;
+DROP POLICY IF EXISTS "Members can view participants of their groups" ON public.group_members;
+DROP POLICY IF EXISTS "Organizers or users can add members" ON public.group_members;
+
+-- ─── 2. Créer deux fonctions SECURITY DEFINER ────────────────────────────────
+-- Ces fonctions s'exécutent avec les droits du owner (contourne la RLS)
+-- et cassent la boucle infinie.
+
+-- Vérifie si un utilisateur est membre d'un groupe
 CREATE OR REPLACE FUNCTION public.is_group_member(p_group_id UUID, p_user_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -62,79 +39,105 @@ AS $$
   );
 $$;
 
--- 2A-3. Politiques sur `groups`
+-- Vérifie si un utilisateur est organisateur d'un groupe
+CREATE OR REPLACE FUNCTION public.is_group_organizer(p_group_id UUID, p_user_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.groups
+    WHERE id           = p_group_id
+      AND organizer_id = p_user_id
+  );
+$$;
+
+-- ─── 3. Nouvelles politiques propres sur `groups` ────────────────────────────
+
+-- SELECT : organisateur OU membre (via fonction SECURITY DEFINER → pas de boucle)
 CREATE POLICY "groups_select" ON public.groups
-  FOR SELECT USING (
+  FOR SELECT
+  TO authenticated
+  USING (
     organizer_id = auth.uid()
     OR public.is_group_member(id, auth.uid())
   );
 
+-- INSERT : seul l'organisateur peut créer
 CREATE POLICY "groups_insert" ON public.groups
-  FOR INSERT WITH CHECK (organizer_id = auth.uid());
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (organizer_id = auth.uid());
 
+-- UPDATE : seul l'organisateur peut modifier
 CREATE POLICY "groups_update" ON public.groups
-  FOR UPDATE USING (organizer_id = auth.uid());
+  FOR UPDATE
+  TO authenticated
+  USING (organizer_id = auth.uid());
 
+-- DELETE : seul l'organisateur peut supprimer
 CREATE POLICY "groups_delete" ON public.groups
-  FOR DELETE USING (organizer_id = auth.uid());
+  FOR DELETE
+  TO authenticated
+  USING (organizer_id = auth.uid());
 
--- 2A-4. Politiques sur `group_members`
+-- ─── 4. Nouvelles politiques propres sur `group_members` ─────────────────────
+
+-- SELECT : voir ses propres lignes OU les membres de ses groupes (organisateur)
+-- Utilise is_group_organizer (SECURITY DEFINER) pour éviter la récursion sur groups
 CREATE POLICY "group_members_select" ON public.group_members
-  FOR SELECT USING (
+  FOR SELECT
+  TO authenticated
+  USING (
     user_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM public.groups g
-      WHERE g.id = group_members.group_id
-        AND g.organizer_id = auth.uid()
-    )
+    OR public.is_group_organizer(group_id, auth.uid())
   );
 
+-- INSERT : l'utilisateur peut s'ajouter lui-même OU l'organisateur peut ajouter
 CREATE POLICY "group_members_insert" ON public.group_members
-  FOR INSERT WITH CHECK (
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
     user_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM public.groups g
-      WHERE g.id = group_members.group_id
-        AND g.organizer_id = auth.uid()
-    )
+    OR public.is_group_organizer(group_id, auth.uid())
   );
 
+-- UPDATE : seul l'organisateur peut modifier les membres
 CREATE POLICY "group_members_update" ON public.group_members
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.groups g
-      WHERE g.id = group_members.group_id
-        AND g.organizer_id = auth.uid()
-    )
+  FOR UPDATE
+  TO authenticated
+  USING (
+    public.is_group_organizer(group_id, auth.uid())
   );
 
+-- DELETE : l'utilisateur peut se retirer OU l'organisateur peut retirer un membre
 CREATE POLICY "group_members_delete" ON public.group_members
-  FOR DELETE USING (
+  FOR DELETE
+  TO authenticated
+  USING (
     user_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM public.groups g
-      WHERE g.id = group_members.group_id
-        AND g.organizer_id = auth.uid()
-    )
+    OR public.is_group_organizer(group_id, auth.uid())
   );
+
+-- ─── 5. S'assurer que RLS est bien activé ────────────────────────────────────
 
 ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
 
--- ─────────────────────────────────────────────────────────────────────────────
--- CAS B : Si vos groupes n'ont pas du tout de table membres séparée
---         et que l'erreur vient d'un TRIGGER ou d'une FONCTION
--- ─────────────────────────────────────────────────────────────────────────────
+-- ─── 6. Vérification finale ───────────────────────────────────────────────────
+-- Exécutez cette requête après le script pour confirmer les nouvelles politiques
 
--- Lister tous les triggers sur la table groups
--- SELECT trigger_name, event_manipulation, action_statement
--- FROM information_schema.triggers
--- WHERE event_object_schema = 'public'
---   AND event_object_table = 'groups';
-
--- Si vous voyez un trigger qui référence group_member (singulier), désactivez-le :
--- DROP TRIGGER IF EXISTS <nom_du_trigger> ON public.groups;
+SELECT tablename, policyname, cmd, roles
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename IN ('groups', 'group_members')
+ORDER BY tablename, policyname;
 
 -- =============================================================================
--- FIN DU SCRIPT
+-- Si tout s'est bien passé, vous devriez voir exactement 8 politiques :
+--   groups         → groups_delete, groups_insert, groups_select, groups_update
+--   group_members  → group_members_delete, group_members_insert,
+--                    group_members_select, group_members_update
 -- =============================================================================
