@@ -194,14 +194,14 @@ Future<void> showJoinGroupDialog(
                               return;
                             }
 
-                            // 4. Compter les membres actuels
+                            // 4. Compter les membres actuels et trouver le prochain tour
                             final membersCountResp = await Supabase.instance.client
                                 .from('group_members')
-                                .select('id')
+                                .select('id, turn_order')
                                 .eq('group_id', groupId);
 
-                            final currentCount = (membersCountResp as List).length;
-                            if (currentCount >= maxMembers) {
+                            final membersList = (membersCountResp as List);
+                            if (membersList.length >= maxMembers) {
                               setModalState(() {
                                 isJoining = false;
                                 errorMessage = t.groupFull;
@@ -209,13 +209,20 @@ Future<void> showJoinGroupDialog(
                               return;
                             }
 
+                            int maxTurn = 0;
+                            for (final m in membersList) {
+                              final to = m['turn_order'] as int? ?? 0;
+                              if (to > maxTurn) maxTurn = to;
+                            }
+                            final nextTurn = maxTurn > 0 ? maxTurn + 1 : membersList.length + 1;
+
                             // 5. Insérer le nouveau membre
                             await Supabase.instance.client
                                 .from('group_members')
                                 .insert({
                                   'group_id': groupId,
                                   'user_id': user.id,
-                                  'turn_order': currentCount + 1,
+                                  'turn_order': nextTurn,
                                   'status': 'confirmed',
                                 });
                           }
