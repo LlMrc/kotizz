@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/join_group_dialog.dart';
 import 'create_sol_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -150,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onGroupCreated: _loadHomeData,
               ),
               const SizedBox(height: 22),
-              const _QuickActionsSection(),
+              _QuickActionsSection(onRefresh: _loadHomeData),
             ],
           ),
         ),
@@ -447,22 +448,42 @@ class _WheelCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CreateSolScreen()),
-                );
-                onRefresh();
-              },
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: Text(t.createSol),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.marigold,
-                foregroundColor: AppColors.ink,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const CreateSolScreen()),
+                    );
+                    onRefresh();
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(t.createSol),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.marigold,
+                    foregroundColor: AppColors.ink,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
-              ),
+                OutlinedButton.icon(
+                  onPressed: () => showJoinGroupDialog(context, onGroupJoined: onRefresh),
+                  icon: const Icon(Icons.vpn_key_rounded, size: 16, color: AppColors.marigold),
+                  label: Text(
+                    t.joinWithCode,
+                    style: const TextStyle(color: AppColors.white),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.marigold),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1030,7 +1051,8 @@ class _GroupCard extends StatelessWidget {
 }
 
 class _QuickActionsSection extends StatelessWidget {
-  const _QuickActionsSection();
+  final VoidCallback onRefresh;
+  const _QuickActionsSection({required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -1050,20 +1072,36 @@ class _QuickActionsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
+              flex: 5,
+              child: _ActionTile(
+                icon: Icons.vpn_key_rounded,
+                iconColor: const Color(0xFFB87A1F),
+                bgColor: AppColors.marigold.withValues(alpha: 0.15),
+                borderColor: AppColors.marigold.withValues(alpha: 0.6),
+                label: t.joinSol,
+                tag: 'CODE',
+                onTap: () => showJoinGroupDialog(context, onGroupJoined: onRefresh),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 4,
               child: _ActionTile(
                 icon: Icons.add_circle_outline_rounded,
                 label: t.createSol,
-                onTap: () {
-                  Navigator.of(context).push(
+                onTap: () async {
+                  await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const CreateSolScreen(),
                     ),
                   );
+                  onRefresh();
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(
+              flex: 4,
               child: _ActionTile(
                 icon: Icons.check_circle_outline_rounded,
                 label: t.iPaid,
@@ -1081,11 +1119,19 @@ class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color? iconColor;
+  final Color? bgColor;
+  final Color? borderColor;
+  final String? tag;
 
   const _ActionTile({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.iconColor,
+    this.bgColor,
+    this.borderColor,
+    this.tag,
   });
 
   @override
@@ -1093,26 +1139,52 @@ class _ActionTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: bgColor ?? AppColors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.paperDim),
+          border: Border.all(color: borderColor ?? AppColors.paperDim),
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: AppColors.ink),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.ink,
-                ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, size: 22, color: iconColor ?? AppColors.ink),
+                if (tag != null)
+                  Positioned(
+                    top: -6,
+                    right: -14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: AppColors.marigold,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        tag!,
+                        style: GoogleFonts.ibmPlexMono(
+                          fontSize: 7.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.ink,
               ),
             ),
           ],

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/join_group_dialog.dart';
 import 'create_sol_screen.dart';
 
 String? normalizeWhatsAppLink(String? rawLink) {
@@ -138,436 +139,203 @@ class _GroupsScreenState extends State<GroupsScreen> {
     final activeCount = _realGroups.where((g) => g.isActive).length;
     final completedCount = _realGroups.where((g) => !g.isActive).length;
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title & Actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.groupsTitle,
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      t.registeredGroupsCount(_realGroups.length),
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 13,
-                        color: AppColors.ash,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: t.joinWithCode,
-                      onPressed: () => _showJoinGroupDialog(context),
-                      icon: const Icon(Icons.group_add_rounded, color: AppColors.ink),
-                    ),
-                    IconButton(
-                      tooltip: t.createSol,
-                      onPressed: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const CreateSolScreen(),
-                          ),
-                        );
-                        _loadUserGroups();
-                      },
-                      icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.marigold, size: 28),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-
-            // Filter Chips
-            Row(
-              children: [
-                _FilterChip(
-                  label: '${t.filterAll} (${_realGroups.length})',
-                  selected: _selectedFilter == 0,
-                  onTap: () => setState(() => _selectedFilter = 0),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: '${t.filterActive} ($activeCount)',
-                  selected: _selectedFilter == 1,
-                  onTap: () => setState(() => _selectedFilter = 1),
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  label: '${t.filterCompleted} ($completedCount)',
-                  selected: _selectedFilter == 2,
-                  onTap: () => setState(() => _selectedFilter = 2),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Loading / Empty / List state
-            if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.marigold),
-                ),
-              )
-            else if (filteredGroups.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.paperDim),
-                ),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.groups_outlined,
-                      size: 48,
-                      color: AppColors.ash,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      t.noGroupsFound,
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      t.createFirstGroupPrompt,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 12.5,
-                        color: AppColors.ash,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const CreateSolScreen(),
-                              ),
-                            );
-                            _loadUserGroups();
-                          },
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: Text(t.createSol),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.marigold,
-                            foregroundColor: AppColors.ink,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        OutlinedButton.icon(
-                          onPressed: () => _showJoinGroupDialog(context),
-                          icon: const Icon(Icons.vpn_key_rounded, size: 18),
-                          label: Text(t.joinWithCode),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.ink,
-                            side: const BorderSide(color: AppColors.ink),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              )
-            else
-              for (final group in filteredGroups) ...[
-                _GroupCardItem(
-                  group: group,
-                  onTap: () => _showGroupDetailModal(context, group),
-                ),
-                const SizedBox(height: 14),
-              ],
-          ],
+    return Scaffold(
+      backgroundColor: AppColors.paper,
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.marigold,
+        foregroundColor: AppColors.ink,
+        elevation: 3,
+        onPressed: () => _showJoinGroupDialog(context),
+        icon: const Icon(Icons.vpn_key_rounded, size: 20),
+        label: Text(
+          t.joinSol,
+          style: GoogleFonts.ibmPlexSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 13.5,
+          ),
         ),
       ),
-    );
-  }
-
-  Future<void> _showJoinGroupDialog(BuildContext context) async {
-    final t = AppLocalizations.of(context)!;
-    final codeCtrl = TextEditingController();
-    bool isJoining = false;
-    String? errorMessage;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 24,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
-          ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                t.joinWithCode,
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
-                ),
+              // Title & Actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.groupsTitle,
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        t.registeredGroupsCount(_realGroups.length),
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          color: AppColors.ash,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        tooltip: t.joinWithCode,
+                        onPressed: () => _showJoinGroupDialog(context),
+                        icon: const Icon(Icons.group_add_rounded, color: AppColors.ink),
+                      ),
+                      IconButton(
+                        tooltip: t.createSol,
+                        onPressed: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const CreateSolScreen(),
+                            ),
+                          );
+                          _loadUserGroups();
+                        },
+                        icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.marigold, size: 28),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
-              Text(
-                t.enterInviteCodePrompt,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 13.5,
-                  color: AppColors.ash,
-                ),
+              const SizedBox(height: 18),
+
+              // Filter Chips
+              Row(
+                children: [
+                  _FilterChip(
+                    label: '${t.filterAll} (${_realGroups.length})',
+                    selected: _selectedFilter == 0,
+                    onTap: () => setState(() => _selectedFilter = 0),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: '${t.filterActive} ($activeCount)',
+                    selected: _selectedFilter == 1,
+                    onTap: () => setState(() => _selectedFilter = 1),
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: '${t.filterCompleted} ($completedCount)',
+                    selected: _selectedFilter == 2,
+                    onTap: () => setState(() => _selectedFilter = 2),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: codeCtrl,
-                autofocus: true,
-                textCapitalization: TextCapitalization.characters,
-                maxLength: 8,
-                style: GoogleFonts.ibmPlexMono(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 4.0,
-                  color: AppColors.ink,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'EX: 8A3F29',
-                  counterText: '',
-                  filled: true,
-                  fillColor: AppColors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.paperDim),
+
+              // Loading / Empty / List state
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.marigold),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.marigold, width: 2),
+                )
+              else if (filteredGroups.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.paperDim),
                   ),
-                ),
-              ),
-              if (errorMessage != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  errorMessage!,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 12.5,
-                    color: AppColors.coral,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: isJoining
-                      ? null
-                      : () async {
-                          final code = codeCtrl.text.trim().toUpperCase();
-                          if (code.isEmpty) return;
-
-                          setModalState(() {
-                            isJoining = true;
-                            errorMessage = null;
-                          });
-
-                          try {
-                            final user = Supabase.instance.client.auth.currentUser;
-                            if (user == null) return;
-
-                            // Tentative via la fonction RPC sécurisée (SECURITY DEFINER)
-                            bool joinedViaRpc = false;
-                            try {
-                              final rpcResult = await Supabase.instance.client.rpc(
-                                'join_group_by_code',
-                                params: {'p_code': code},
-                              );
-                              if (rpcResult is Map) {
-                                if (rpcResult['success'] == true) {
-                                  joinedViaRpc = true;
-                                } else {
-                                  final err = rpcResult['error'];
-                                  if (err == 'invalid_code') {
-                                    setModalState(() {
-                                      isJoining = false;
-                                      errorMessage = t.invalidInviteCode;
-                                    });
-                                    return;
-                                  } else if (err == 'already_member') {
-                                    setModalState(() {
-                                      isJoining = false;
-                                      errorMessage = t.alreadyMember;
-                                    });
-                                    return;
-                                  } else if (err == 'group_full') {
-                                    setModalState(() {
-                                      isJoining = false;
-                                      errorMessage = t.groupFull;
-                                    });
-                                    return;
-                                  }
-                                }
-                              }
-                            } catch (_) {
-                              // Si la fonction RPC n'est pas encore créée côté DB, on passe au fallback direct
-                            }
-
-                            if (!joinedViaRpc) {
-                              // Fallback direct
-                              // 1. Chercher le groupe avec ce code
-                              final groupResp = await Supabase.instance.client
-                                  .from('groups')
-                                  .select('id, name, max_members, organizer_id')
-                                  .eq('invite_code', code)
-                                  .maybeSingle();
-
-                              if (groupResp == null) {
-                                setModalState(() {
-                                  isJoining = false;
-                                  errorMessage = t.invalidInviteCode;
-                                });
-                                return;
-                              }
-
-                              final groupId = groupResp['id'] as String;
-                              final maxMembers = (groupResp['max_members'] as int?) ?? 5;
-
-                              // 2. Vérifier si déjà membre
-                              final existingMember = await Supabase.instance.client
-                                  .from('group_members')
-                                  .select('id')
-                                  .eq('group_id', groupId)
-                                  .eq('user_id', user.id)
-                                  .maybeSingle();
-
-                              if (existingMember != null) {
-                                setModalState(() {
-                                  isJoining = false;
-                                  errorMessage = t.alreadyMember;
-                                });
-                                return;
-                              }
-
-                              // 3. Compter les membres actuels
-                              final membersCountResp = await Supabase.instance.client
-                                  .from('group_members')
-                                  .select('id')
-                                  .eq('group_id', groupId);
-
-                              final currentCount = (membersCountResp as List).length;
-                              if (currentCount >= maxMembers) {
-                                setModalState(() {
-                                  isJoining = false;
-                                  errorMessage = t.groupFull;
-                                });
-                                return;
-                              }
-
-                              // 4. Insérer le nouveau membre
-                              await Supabase.instance.client
-                                  .from('group_members')
-                                  .insert({
-                                    'group_id': groupId,
-                                    'user_id': user.id,
-                                    'turn_order': currentCount + 1,
-                                    'status': 'confirmed',
-                                  });
-                            }
-
-                            if (ctx.mounted) {
-                              Navigator.of(ctx).pop();
-                            }
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(t.groupJoinedSuccess),
-                                  backgroundColor: AppColors.palm,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.groups_outlined,
+                        size: 48,
+                        color: AppColors.ash,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        t.noGroupsFound,
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        t.createFirstGroupPrompt,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 12.5,
+                          color: AppColors.ash,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const CreateSolScreen(),
                                 ),
                               );
                               _loadUserGroups();
-                            }
-                          } catch (e) {
-                            setModalState(() {
-                              isJoining = false;
-                              errorMessage = '$e';
-                            });
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.marigold,
-                    foregroundColor: AppColors.ink,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: Text(t.createSol),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.marigold,
+                              foregroundColor: AppColors.ink,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          OutlinedButton.icon(
+                            onPressed: () => _showJoinGroupDialog(context),
+                            icon: const Icon(Icons.vpn_key_rounded, size: 18),
+                            label: Text(t.joinWithCode),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.ink,
+                              side: const BorderSide(color: AppColors.ink),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  child: isJoining
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.ink,
-                          ),
-                        )
-                      : Text(
-                          t.joinGroupAction,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                ),
-              ),
+                )
+              else
+                for (final group in filteredGroups) ...[
+                  _GroupCardItem(
+                    group: group,
+                    onTap: () => _showGroupDetailModal(context, group),
+                  ),
+                  const SizedBox(height: 14),
+                ],
             ],
           ),
         ),
       ),
     );
   }
+
+  Future<void> _showJoinGroupDialog(BuildContext context) =>
+      showJoinGroupDialog(context, onGroupJoined: _loadUserGroups);
 
   void _showGroupDetailModal(BuildContext context, _GroupData group) {
     showModalBottomSheet(
