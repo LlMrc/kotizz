@@ -128,14 +128,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     unit: '/100',
                     label: t.profileTrustScore,
                     color: AppColors.marigold,
-                    badge: _plan == 'pro' ? '⭐ PRO' : '🆓 Gratuit',
+                    badge: _plan == 'pro' ? '⭐ PRO' : '🆓 ${t.badgeFree}',
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StatCard(
                     value: '5',
-                    unit: ' cycles',
+                    unit: ' ${t.cyclesUnit}',
                     label: t.profileCompletedCycles,
                     color: AppColors.palm,
                     badge: '🏆 100%',
@@ -157,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Section Label
             Text(
-              'VÉRIFICATIONS ET SÉCURITÉ',
+              t.sectionSecurity,
               style: GoogleFonts.ibmPlexMono(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -177,14 +177,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
             _VerificationRow(
               icon: Icons.badge_outlined,
-              title: t.profileVerifyId,
-              subtitle: 'Carte d\'Identité (CNI/Passeport)',
+              title: t.identityVerified,
+              subtitle: 'CNI / Passeport',
               done: true,
             ),
             const SizedBox(height: 10),
             _VerificationRow(
               icon: Icons.account_balance_wallet_rounded,
-              title: 'Moyen de réception',
+              title: t.bankAccount,
               subtitle: 'MonCash: +509 37 12 34 56',
               done: true,
             ),
@@ -192,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Section Label Preferences
             Text(
-              'PRÉFÉRENCES ET REGLAGES',
+              t.sectionSettings,
               style: GoogleFonts.ibmPlexMono(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -264,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     activeTrackColor: AppColors.marigold,
                     contentPadding: EdgeInsets.zero,
                     title: Text(
-                      'Notifications Push',
+                      t.pushNotifications,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -272,7 +272,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      'Alertes de tour et relances',
+                      t.alertsTitle,
                       style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ash),
                     ),
                     value: _pushNotifications,

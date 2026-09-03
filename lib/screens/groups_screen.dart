@@ -142,7 +142,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${_realGroups.length} tontines enregistrées',
+                      t.registeredGroupsCount(_realGroups.length),
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: AppColors.ash,
@@ -162,19 +162,19 @@ class _GroupsScreenState extends State<GroupsScreen> {
             Row(
               children: [
                 _FilterChip(
-                  label: 'Toutes (${_realGroups.length})',
+                  label: '${t.filterAll} (${_realGroups.length})',
                   selected: _selectedFilter == 0,
                   onTap: () => setState(() => _selectedFilter = 0),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Actives ($activeCount)',
+                  label: '${t.filterActive} ($activeCount)',
                   selected: _selectedFilter == 1,
                   onTap: () => setState(() => _selectedFilter = 1),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Terminées ($completedCount)',
+                  label: '${t.filterCompleted} ($completedCount)',
                   selected: _selectedFilter == 2,
                   onTap: () => setState(() => _selectedFilter = 2),
                 ),
@@ -208,7 +208,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Aucune tontine trouvée',
+                      t.noGroupsFound,
                       style: GoogleFonts.bricolageGrotesque(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -217,7 +217,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Créez votre premier groupe SOL pour démarrer l\'épargne collective.',
+                      t.createFirstGroupPrompt,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 12.5,
@@ -235,7 +235,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                         _loadUserGroups();
                       },
                       icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('Créer ma première Sòl'),
+                      label: Text(t.createSol),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.marigold,
                         foregroundColor: AppColors.ink,

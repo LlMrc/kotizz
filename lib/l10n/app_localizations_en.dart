@@ -12,18 +12,125 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Kotizz';
 
   @override
+  String get homeNavLabel => 'Home';
+
+  @override
   String greeting(String name) {
     return 'Hey, $name';
   }
 
   @override
+  String get welcomeSubtitle => 'Welcome to Kotizz';
+
+  @override
   String get trustScoreSuffix => 'trust';
+
+  @override
+  String get globalSavingsTitle => 'GLOBAL SAVINGS';
+
+  @override
+  String activeTontinesCount(int count) {
+    return '$count active groups';
+  }
+
+  @override
+  String get nextPotTitle => 'NEXT POT';
+
+  @override
+  String nextPotReceivedSub(String date, String recipient) {
+    return 'Received on $date ($recipient)';
+  }
+
+  @override
+  String get trustScoreTitle => 'TRUST SCORE';
+
+  @override
+  String get verifiedStatus => 'Verified Status ✓';
+
+  @override
+  String get featuredTontine => 'FEATURED GROUP';
+
+  @override
+  String turnIndicator(int current, int total) {
+    return 'TURN $current/$total';
+  }
 
   @override
   String get alertsTitle => 'Alerts';
 
   @override
   String get alertsEmpty => 'No alerts at the moment';
+
+  @override
+  String unreadAlertsCount(int count) {
+    return '$count unread notifications';
+  }
+
+  @override
+  String get markAllRead => 'Read all';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterActive => 'Active';
+
+  @override
+  String get filterCompleted => 'Completed';
+
+  @override
+  String get filterUnread => 'Unread';
+
+  @override
+  String get filterContributions => 'Contributions';
+
+  @override
+  String get timeJustNow => 'Just now';
+
+  @override
+  String timeMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String timeHoursAgo(int hours) {
+    return '$hours h ago';
+  }
+
+  @override
+  String get timeYesterday => 'Yesterday';
+
+  @override
+  String timeDaysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String timeWeeksAgo(int weeks) {
+    return '$weeks w. ago';
+  }
+
+  @override
+  String timeMonthsAgo(int months) {
+    return '$months mo. ago';
+  }
+
+  @override
+  String timeYearsAgo(int years) {
+    return '$years yr. ago';
+  }
+
+  @override
+  String get dateToday => 'Today';
+
+  @override
+  String get dateThisWeek => 'This week';
+
+  @override
+  String get dateThisMonth => 'This month';
+
+  @override
+  String get dateOlder => 'Older';
 
   @override
   String get profileTitle => 'Profile';
@@ -36,6 +143,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileDisputes => 'Disputes';
+
+  @override
+  String get sectionSecurity => 'VERIFICATIONS & SECURITY';
+
+  @override
+  String get sectionSettings => 'ACCOUNT SETTINGS';
+
+  @override
+  String get phoneVerified => 'Phone verified';
+
+  @override
+  String get identityVerified => 'ID Card / Passport';
+
+  @override
+  String get bankAccount => 'Bank Account / MonCash';
+
+  @override
+  String get appLanguage => 'App Language';
+
+  @override
+  String get pushNotifications => 'Push notifications';
+
+  @override
+  String get privacySecurity => 'Privacy and security';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get cyclesUnit => 'cycles';
+
+  @override
+  String get badgeFree => 'Free';
 
   @override
   String get profileVerifyPhone => 'Verify Phone';
@@ -121,6 +261,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldStartDate => 'Start Date';
 
   @override
+  String get optional => 'Optional';
+
+  @override
+  String get whatsappGroupLink => 'WhatsApp group link';
+
+  @override
   String get submitCreate => 'Create Group';
 
   @override
@@ -171,6 +317,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupsEmpty => 'You haven\'t joined any groups yet';
 
   @override
+  String registeredGroupsCount(int count) {
+    return '$count registered groups';
+  }
+
+  @override
+  String get noGroupsFound => 'No groups found';
+
+  @override
+  String get createFirstGroupPrompt => 'Create your first group to get started';
+
+  @override
+  String get openWhatsAppGroup => 'Open WhatsApp group';
+
+  @override
   String turnCounter(int current, int total) {
     return '$current/$total';
   }
@@ -201,4 +361,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get iPaid => 'I Paid';
+
+  @override
+  String get authTagline => 'Collective savings, simplified.';
+
+  @override
+  String get authWelcome => 'Welcome!';
+
+  @override
+  String get authApplePrompt => 'Sign in instantly with your Apple account.';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get orEmail => 'OR BY EMAIL';
+
+  @override
+  String get emailAddressLabel => 'Your email address';
+
+  @override
+  String get emailHint => 'name@example.com';
+
+  @override
+  String get sendLoginCode => 'Send login code';
+
+  @override
+  String get enterEmailCodePrompt => 'Enter the code received by email:';
+
+  @override
+  String get validateMyCode => 'Verify my code';
+
+  @override
+  String get resendCode => 'Resend';
+
+  @override
+  String get changeEmail => 'Change email';
 }

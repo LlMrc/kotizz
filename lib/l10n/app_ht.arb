@@ -1,127 +1,235 @@
 {
   "@@locale": "ht",
   "appTitle": "Kotizz",
-  "@appTitle": {"description": "The title of the application"},
+  "homeNavLabel": "Akèy",
   "greeting": "Bonjou, {name}",
-  "@greeting": {"description": "Greeting message with user name", "placeholders": {"name": {"type": "String", "example": "Louis"}}},
+  "@greeting": {
+    "description": "Greeting message with user name",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Louis"
+      }
+    }
+  },
+  "welcomeSubtitle": "Byenveni sou Kotizz",
   "trustScoreSuffix": "kofyans",
-  "@trustScoreSuffix": {"description": "Suffix for trust score display"},
-  "alertsTitle": "Avètisman",
-  "@alertsTitle": {"description": "Title for alerts screen"},
+  "globalSavingsTitle": "EKONOMI TOTAL",
+  "activeTontinesCount": "{count} sòl aktif",
+  "@activeTontinesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nextPotTitle": "PWOCHÈN KÒB LA",
+  "nextPotReceivedSub": "Resevwa {date} ({recipient})",
+  "@nextPotReceivedSub": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "trustScoreTitle": "NÒT KOFYANS",
+  "verifiedStatus": "Estati Verifye ✓",
+  "featuredTontine": "SÒL VEDÈT",
+  "turnIndicator": "VIRE {current}/{total}",
+  "@turnIndicator": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "alertsTitle": "Notifikasyon",
   "alertsEmpty": "Pa gen avètisman nan moman sa",
-  "@alertsEmpty": {"description": "Message when there are no alerts"},
+  "unreadAlertsCount": "{count} notifikasyon ki pa li",
+  "@unreadAlertsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markAllRead": "Li tout",
+  "filterAll": "Tout",
+  "filterActive": "Aktif",
+  "filterCompleted": "Fini",
+  "filterUnread": "Pa li",
+  "filterContributions": "Kotizasyon",
+  "timeJustNow": "Kounye a",
+  "timeMinutesAgo": "Sa gen {minutes} min",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "Sa gen {hours} èdtan",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "Yè",
+  "timeDaysAgo": "Sa gen {days} jou",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeeksAgo": "Sa gen {weeks} semèn",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthsAgo": "Sa gen {months} mwa",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearsAgo": "Sa gen {years} lane",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "dateToday": "Jodi a",
+  "dateThisWeek": "Semèn sa a",
+  "dateThisMonth": "Mwa sa a",
+  "dateOlder": "Pi ansyen",
   "profileTitle": "Pwofil",
-  "@profileTitle": {"description": "Title for profile screen"},
   "profileTrustScore": "Nòt kofyans",
-  "@profileTrustScore": {"description": "Label for trust score stat"},
   "profileCompletedCycles": "Finalize",
-  "@profileCompletedCycles": {"description": "Label for completed cycles stat"},
   "profileDisputes": "Dispit",
-  "@profileDisputes": {"description": "Label for disputes stat"},
+  "sectionSecurity": "VERIFIKASYON AK SEKIRITE",
+  "sectionSettings": "PARAMÈT KONT LA",
+  "phoneVerified": "Telefòn verifye",
+  "identityVerified": "Pyès idantite",
+  "bankAccount": "Kont labank / MonCash",
+  "appLanguage": "Lang aplikasyon an",
+  "pushNotifications": "Notifikasyon push",
+  "privacySecurity": "Konfidansyalite ak sekirite",
+  "termsOfService": "Kondisyon itilizasyon",
+  "cyclesUnit": "sik",
+  "badgeFree": "Gratis",
   "profileVerifyPhone": "Verifye telefòn",
-  "@profileVerifyPhone": {"description": "Action to verify phone number"},
   "profileVerifyId": "Verifye idantite",
-  "@profileVerifyId": {"description": "Action to verify ID"},
   "profileLanguage": "Lang",
-  "@profileLanguage": {"description": "Language selection label"},
   "logOut": "Dekonekte",
-  "@logOut": {"description": "Button label to log out"},
   "wheelGroupExample": "Gwoup egzanp",
-  "@wheelGroupExample": {"description": "Example group name on wheel card"},
   "wheelSectionLabel": "Pwochèn kontribisyon ou",
-  "@wheelSectionLabel": {"description": "Label for wheel section"},
   "yourTurn": "Se vire ou !",
-  "@yourTurn": {"description": "Message indicating it's the user's turn"},
   "confirmedCount": "{confirmed}/{total} konfime",
-  "@confirmedCount": {"description": "Count of confirmed members", "placeholders": {"confirmed": {"type": "int"}, "total": {"type": "int"}}},
-  "createSolTitle": "Kreye yon gwoup",
-  "@createSolTitle": {"description": "Title for create group screen"},
-  "fieldName": "Non gwoup",
-  "@fieldName": {"description": "Label for group name field"},
+  "@confirmedCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "createSolTitle": "Kreye yon sòl",
+  "fieldName": "Non sòl la",
   "fieldNameHint": "egz. Klib ekonomi chak mwa",
-  "@fieldNameHint": {"description": "Hint for group name field"},
-  "validationNameRequired": "Non gwoup la oblije",
-  "@validationNameRequired": {"description": "Validation error for missing group name"},
+  "validationNameRequired": "Non sòl la obligatwa",
   "fieldDescription": "Deskripsyon",
-  "@fieldDescription": {"description": "Label for description field"},
-  "fieldDescriptionHint": "Kisa gwoup sa ye?",
-  "@fieldDescriptionHint": {"description": "Hint for description field"},
+  "fieldDescriptionHint": "Kisa sòl sa a ye?",
   "fieldAmount": "Montan kontribisyon",
-  "@fieldAmount": {"description": "Label for contribution amount field"},
   "fieldAmountHint": "0.00",
-  "@fieldAmountHint": {"description": "Hint for amount field"},
   "validationAmountRequired": "Montan an obligatwa",
-  "@validationAmountRequired": {"description": "Validation error for missing amount"},
   "validationAmountInvalid": "Tanpri antre yon montan valid",
-  "@validationAmountInvalid": {"description": "Validation error for invalid amount"},
   "fieldFrequency": "Frekans kontribisyon",
-  "@fieldFrequency": {"description": "Label for frequency field"},
   "freqWeekly": "Chak semèn",
-  "@freqWeekly": {"description": "Weekly frequency option"},
   "freqBiweekly": "Chak de semèn",
-  "@freqBiweekly": {"description": "Bi-weekly frequency option"},
   "freqMonthly": "Chak mwa",
-  "@freqMonthly": {"description": "Monthly frequency option"},
-  "fieldMembers": "Nimewo manm",
-  "@fieldMembers": {"description": "Label for members field"},
+  "fieldMembers": "Kantite manm",
   "fieldMembersHint": "egz. 8",
-  "@fieldMembersHint": {"description": "Hint for members field"},
-  "validationMembersRequired": "Nimewo manm la obligatwa",
-  "@validationMembersRequired": {"description": "Validation error for missing members count"},
+  "validationMembersRequired": "Kantite manm obligatwa",
   "validationMembersInvalid": "Tanpri antre yon nimewo valid",
-  "@validationMembersInvalid": {"description": "Validation error for invalid members count"},
   "fieldStartDate": "Dat kòmansman",
-  "@fieldStartDate": {"description": "Label for start date field"},
-  "submitCreate": "Kreye gwoup",
-  "@submitCreate": {"description": "Button label to create group"},
+  "optional": "Opsyonèl",
+  "whatsappGroupLink": "Lyen gwoup WhatsApp la",
+  "submitCreate": "Kreye sòl la",
   "paywallTitle": "Pase a Premium",
-  "@paywallTitle": {"description": "Title for paywall modal"},
-  "paywallBody": "Ou ka kreye se yon gwoup ak yon kont gratis. Pase a Premium pou kreye gwoup san limit.",
-  "@paywallBody": {"description": "Body text for paywall modal"},
+  "paywallBody": "Ou ka sèlman kreye yon sèl gwoup ak yon kont gratis. Pase a Premium pou kreye gwoup san limit.",
   "paywallPlanName": "Plan Premium",
-  "@paywallPlanName": {"description": "Premium plan name"},
   "paywallCta": "Pase a Premium",
-  "@paywallCta": {"description": "Call-to-action button for paywall"},
-  "inviteMessageIntro": "Rantre nan gwoup mwen",
-  "@inviteMessageIntro": {"description": "Introduction to invite message"},
+  "inviteMessageIntro": "Rantre nan sòl mwen an",
   "inviteMessageAmountLabel": "Montan kontribisyon",
-  "@inviteMessageAmountLabel": {"description": "Label in invite message for amount"},
   "inviteMessageFrequencyLabel": "Frekans",
-  "@inviteMessageFrequencyLabel": {"description": "Label in invite message for frequency"},
   "inviteMessageStartLabel": "Dat kòmansman",
-  "@inviteMessageStartLabel": {"description": "Label in invite message for start date"},
-  "inviteMessageJoinLabel": "Rantre nan gwoup la isit",
-  "@inviteMessageJoinLabel": {"description": "Label in invite message for joining"},
+  "inviteMessageJoinLabel": "Rantre nan sòl la isit",
   "inviteSheetTitle": "Envite manm",
-  "@inviteSheetTitle": {"description": "Title for invite sheet"},
-  "inviteSheetSubtitle": "Pataje mesaj sa a ak manm gwoup ou",
-  "@inviteSheetSubtitle": {"description": "Subtitle for invite sheet"},
+  "inviteSheetSubtitle": "Pataje mesaj sa a ak lòt manm yo",
   "shareInvite": "Pataje envitasyon",
-  "@shareInvite": {"description": "Button label to share invite"},
   "later": "Pita",
-  "@later": {"description": "Button label for later/dismiss action"},
-  "groupsTitle": "Gwoup",
-  "@groupsTitle": {"description": "Title for groups screen"},
-  "groupsEmpty": "Ou pa rantre nan okenn gwoup",
-  "@groupsEmpty": {"description": "Message when there are no groups"},
+  "groupsTitle": "Sòl yo",
+  "groupsEmpty": "Ou pa rantre nan okenn sòl pou kounye a",
+  "registeredGroupsCount": "{count} sòl anrejistre",
+  "@registeredGroupsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noGroupsFound": "Nou pa jwenn okenn sòl",
+  "createFirstGroupPrompt": "Kreye premye sòl ou pou w kòmanse",
+  "openWhatsAppGroup": "Louvri gwoup WhatsApp la",
   "turnCounter": "{current}/{total}",
-  "@turnCounter": {"description": "Counter showing current turn and total", "placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@turnCounter": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "currentTurnLabel": "VIRE AKTYÈL",
-  "@currentTurnLabel": {"description": "Label indicating current turn"},
-  "activeGroups": "Gwoup aktif",
-  "@activeGroups": {"description": "Label for active groups section"},
+  "activeGroups": "Sòl aktif",
   "seeAll": "Gade tout",
-  "@seeAll": {"description": "Link to see all items"},
   "statusPending": "Tann",
-  "@statusPending": {"description": "Status badge for pending"},
   "statusUpToDate": "A jou",
-  "@statusUpToDate": {"description": "Status badge for up to date"},
   "statusDispute": "Dispit",
-  "@statusDispute": {"description": "Status badge for dispute"},
   "quickActions": "Aksyon rapid",
-  "@quickActions": {"description": "Label for quick actions section"},
-  "createSol": "Kreye Sol",
-  "@createSol": {"description": "Action button to create a new Sol group"},
-  "iPaid": "M peye",
-  "@iPaid": {"description": "Action button to mark payment"}
+  "createSol": "Kreye Sòl",
+  "iPaid": "Mwen peye",
+  "authTagline": "Ekonomi an gwoup, san tèt chaje.",
+  "authWelcome": "Byenveni !",
+  "authApplePrompt": "Konekte rapidman ak kont Apple ou.",
+  "continueWithApple": "Kontinye ak Apple",
+  "orEmail": "OSWA PA IMÈL",
+  "emailAddressLabel": "Adrès imèl ou",
+  "emailHint": "non@egzanp.com",
+  "sendLoginCode": "Voye kòd koneksyon an",
+  "enterEmailCodePrompt": "Antre kòd ou resevwa pa imèl la :",
+  "validateMyCode": "Valide kòd mwen",
+  "resendCode": "Voye ankò",
+  "changeEmail": "Chanje imèl"
 }

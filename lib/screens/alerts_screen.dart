@@ -61,8 +61,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
           title: (map['title'] as String?) ?? 'Notification',
           body: (map['body'] as String?) ?? '',
           groupName: groupName,
-          timeAgo: timeAgo,
-          dateCategory: dateCategory,
+          createdAt: createdAt,
           type: type,
           isUnread: (map['is_read'] as bool?) == false,
         );
@@ -79,36 +78,36 @@ class _AlertsScreenState extends State<AlertsScreen> {
     }
   }
 
-  /// Retourne une chaîne relative lisible depuis une date (ex: "Il y a 3 min").
-  static String _formatTimeAgo(DateTime? date) {
-    if (date == null) return 'Récemment';
+  /// Retourne une chaîne relative lisible selon la langue active (ex: "Sa gen 3 min").
+  static String _formatTimeAgo(DateTime? date, AppLocalizations t) {
+    if (date == null) return t.timeJustNow;
     final now = DateTime.now();
     final diff = now.difference(date.toLocal());
 
-    if (diff.inSeconds < 60) return 'À l\'instant';
-    if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
-    if (diff.inDays == 1) return 'Hier';
-    if (diff.inDays < 7) return 'Il y a ${diff.inDays} jours';
-    if (diff.inDays < 30) return 'Il y a ${(diff.inDays / 7).floor()} sem.';
-    if (diff.inDays < 365) return 'Il y a ${(diff.inDays / 30).floor()} mois';
-    return 'Il y a ${(diff.inDays / 365).floor()} an(s)';
+    if (diff.inSeconds < 60) return t.timeJustNow;
+    if (diff.inMinutes < 60) return t.timeMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return t.timeHoursAgo(diff.inHours);
+    if (diff.inDays == 1) return t.timeYesterday;
+    if (diff.inDays < 7) return t.timeDaysAgo(diff.inDays);
+    if (diff.inDays < 30) return t.timeWeeksAgo((diff.inDays / 7).floor());
+    if (diff.inDays < 365) return t.timeMonthsAgo((diff.inDays / 30).floor());
+    return t.timeYearsAgo((diff.inDays / 365).floor());
   }
 
-  /// Retourne la catégorie de date pour le regroupement (Aujourd'hui / Cette semaine / Plus ancien).
-  static String _formatDateCategory(DateTime? date) {
-    if (date == null) return 'Notifications';
+  /// Retourne la catégorie de date selon la langue active (ex: "Jodi a", "Semèn sa a").
+  static String _formatDateCategory(DateTime? date, AppLocalizations t) {
+    if (date == null) return t.alertsTitle;
     final now = DateTime.now();
     final local = date.toLocal();
     final today = DateTime(now.year, now.month, now.day);
     final alertDay = DateTime(local.year, local.month, local.day);
     final diff = today.difference(alertDay).inDays;
 
-    if (diff == 0) return 'Aujourd\'hui';
-    if (diff == 1) return 'Hier';
-    if (diff < 7) return 'Cette semaine';
-    if (diff < 30) return 'Ce mois-ci';
-    return 'Plus ancien';
+    if (diff == 0) return t.dateToday;
+    if (diff == 1) return t.timeYesterday;
+    if (diff < 7) return t.dateThisWeek;
+    if (diff < 30) return t.dateThisMonth;
+    return t.dateOlder;
   }
 
   @override
@@ -146,7 +145,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$unreadCount notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}',
+                      t.unreadAlertsCount(unreadCount),
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13,
                         color: AppColors.ash,
@@ -173,7 +172,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   },
                   icon: const Icon(Icons.done_all_rounded, size: 16, color: AppColors.palm),
                   label: Text(
-                    'Tout lire',
+                    t.markAllRead,
                     style: GoogleFonts.ibmPlexSans(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -189,13 +188,13 @@ class _AlertsScreenState extends State<AlertsScreen> {
             Row(
               children: [
                 _FilterChip(
-                  label: 'Toutes (${_realAlerts.length})',
+                  label: '${t.filterAll} (${_realAlerts.length})',
                   selected: _selectedFilter == 0,
                   onTap: () => setState(() => _selectedFilter = 0),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
-                  label: 'Non lues ($unreadCount)',
+                  label: '${t.filterUnread} ($unreadCount)',
                   selected: _selectedFilter == 1,
                   onTap: () => setState(() => _selectedFilter = 1),
                 ),
@@ -224,18 +223,12 @@ class _AlertsScreenState extends State<AlertsScreen> {
                     const Icon(Icons.notifications_none_rounded, size: 48, color: AppColors.ash),
                     const SizedBox(height: 12),
                     Text(
-                      'Aucune alerte pour le moment',
+                      t.alertsEmpty,
                       style: GoogleFonts.bricolageGrotesque(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.ink,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Vous recevrez ici les rappels de cotisation et les alertes de votre tontine.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(fontSize: 12.5, color: AppColors.ash),
                     ),
                   ],
                 ),
@@ -298,7 +291,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                         ),
                       ),
                       Text(
-                        alert.timeAgo,
+                        _formatTimeAgo(alert.createdAt, AppLocalizations.of(context)!),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           color: AppColors.ash,
@@ -392,7 +385,8 @@ class _FilterChip extends StatelessWidget {
 enum _AlertType { payout, payment, reminder, memberJoined, system, completed }
 
 class _AlertItem {
-  final String id, title, body, groupName, timeAgo, dateCategory;
+  final String id, title, body, groupName;
+  final DateTime? createdAt;
   final _AlertType type;
   bool isUnread;
 
@@ -401,8 +395,7 @@ class _AlertItem {
     required this.title,
     required this.body,
     required this.groupName,
-    required this.timeAgo,
-    required this.dateCategory,
+    required this.createdAt,
     required this.type,
     required this.isUnread,
   });
@@ -416,6 +409,7 @@ class _AlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -458,7 +452,7 @@ class _AlertCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        alert.timeAgo,
+                        _AlertsScreenState._formatTimeAgo(alert.createdAt, t),
                         style: GoogleFonts.ibmPlexSans(
                           fontSize: 11,
                           color: AppColors.ash,

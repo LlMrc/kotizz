@@ -1,127 +1,235 @@
 {
   "@@locale": "fr",
   "appTitle": "Kotizz",
-  "@appTitle": {"description": "The title of the application"},
+  "homeNavLabel": "Accueil",
   "greeting": "Bonjour, {name}",
-  "@greeting": {"description": "Greeting message with user name", "placeholders": {"name": {"type": "String", "example": "Louis"}}},
+  "@greeting": {
+    "description": "Greeting message with user name",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Louis"
+      }
+    }
+  },
+  "welcomeSubtitle": "Bienvenue sur Kotizz",
   "trustScoreSuffix": "confiance",
-  "@trustScoreSuffix": {"description": "Suffix for trust score display"},
+  "globalSavingsTitle": "ÉPARGNE GLOBALE",
+  "activeTontinesCount": "{count} tontines actives",
+  "@activeTontinesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nextPotTitle": "PROCHAIN POT",
+  "nextPotReceivedSub": "Reçu le {date} ({recipient})",
+  "@nextPotReceivedSub": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "trustScoreTitle": "SCORE CONFIANCE",
+  "verifiedStatus": "Statut Vérifié ✓",
+  "featuredTontine": "TONTINE VEDETTE",
+  "turnIndicator": "TOUR {current}/{total}",
+  "@turnIndicator": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "alertsTitle": "Alertes",
-  "@alertsTitle": {"description": "Title for alerts screen"},
   "alertsEmpty": "Aucune alerte pour le moment",
-  "@alertsEmpty": {"description": "Message when there are no alerts"},
+  "unreadAlertsCount": "{count} notifications non lues",
+  "@unreadAlertsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markAllRead": "Tout lire",
+  "filterAll": "Toutes",
+  "filterActive": "Actives",
+  "filterCompleted": "Terminées",
+  "filterUnread": "Non lues",
+  "filterContributions": "Cotisations",
+  "timeJustNow": "À l'instant",
+  "timeMinutesAgo": "Il y a {minutes} min",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "Il y a {hours} h",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "Hier",
+  "timeDaysAgo": "Il y a {days} jours",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "timeWeeksAgo": "Il y a {weeks} sem.",
+  "@timeWeeksAgo": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMonthsAgo": "Il y a {months} mois",
+  "@timeMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYearsAgo": "Il y a {years} an(s)",
+  "@timeYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "dateToday": "Aujourd'hui",
+  "dateThisWeek": "Cette semaine",
+  "dateThisMonth": "Ce mois-ci",
+  "dateOlder": "Plus ancien",
   "profileTitle": "Profil",
-  "@profileTitle": {"description": "Title for profile screen"},
   "profileTrustScore": "Score de confiance",
-  "@profileTrustScore": {"description": "Label for trust score stat"},
   "profileCompletedCycles": "Complétés",
-  "@profileCompletedCycles": {"description": "Label for completed cycles stat"},
   "profileDisputes": "Litiges",
-  "@profileDisputes": {"description": "Label for disputes stat"},
+  "sectionSecurity": "VÉRIFICATIONS ET SÉCURITÉ",
+  "sectionSettings": "PARAMÈTRES DU COMPTE",
+  "phoneVerified": "Téléphone vérifié",
+  "identityVerified": "Pièce d'identité",
+  "bankAccount": "Compte bancaire / MonCash",
+  "appLanguage": "Langue de l'application",
+  "pushNotifications": "Notifications push",
+  "privacySecurity": "Confidentialité et sécurité",
+  "termsOfService": "Conditions d'utilisation",
+  "cyclesUnit": "cycles",
+  "badgeFree": "Gratuit",
   "profileVerifyPhone": "Vérifier téléphone",
-  "@profileVerifyPhone": {"description": "Action to verify phone number"},
   "profileVerifyId": "Vérifier identité",
-  "@profileVerifyId": {"description": "Action to verify ID"},
   "profileLanguage": "Langue",
-  "@profileLanguage": {"description": "Language selection label"},
   "logOut": "Se déconnecter",
-  "@logOut": {"description": "Button label to log out"},
   "wheelGroupExample": "Groupe exemple",
-  "@wheelGroupExample": {"description": "Example group name on wheel card"},
   "wheelSectionLabel": "Votre prochaine contribution",
-  "@wheelSectionLabel": {"description": "Label for wheel section"},
   "yourTurn": "C'est votre tour !",
-  "@yourTurn": {"description": "Message indicating it's the user's turn"},
   "confirmedCount": "{confirmed}/{total} confirmés",
-  "@confirmedCount": {"description": "Count of confirmed members", "placeholders": {"confirmed": {"type": "int"}, "total": {"type": "int"}}},
+  "@confirmedCount": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "createSolTitle": "Créer un groupe",
-  "@createSolTitle": {"description": "Title for create group screen"},
   "fieldName": "Nom du groupe",
-  "@fieldName": {"description": "Label for group name field"},
   "fieldNameHint": "ex. Club d'épargne mensuel",
-  "@fieldNameHint": {"description": "Hint for group name field"},
   "validationNameRequired": "Le nom du groupe est requis",
-  "@validationNameRequired": {"description": "Validation error for missing group name"},
   "fieldDescription": "Description",
-  "@fieldDescription": {"description": "Label for description field"},
   "fieldDescriptionHint": "À quoi sert ce groupe ?",
-  "@fieldDescriptionHint": {"description": "Hint for description field"},
   "fieldAmount": "Montant de contribution",
-  "@fieldAmount": {"description": "Label for contribution amount field"},
   "fieldAmountHint": "0.00",
-  "@fieldAmountHint": {"description": "Hint for amount field"},
   "validationAmountRequired": "Le montant est requis",
-  "@validationAmountRequired": {"description": "Validation error for missing amount"},
   "validationAmountInvalid": "Veuillez entrer un montant valide",
-  "@validationAmountInvalid": {"description": "Validation error for invalid amount"},
   "fieldFrequency": "Fréquence de contribution",
-  "@fieldFrequency": {"description": "Label for frequency field"},
   "freqWeekly": "Hebdomadaire",
-  "@freqWeekly": {"description": "Weekly frequency option"},
   "freqBiweekly": "Bi-hebdomadaire",
-  "@freqBiweekly": {"description": "Bi-weekly frequency option"},
   "freqMonthly": "Mensuel",
-  "@freqMonthly": {"description": "Monthly frequency option"},
   "fieldMembers": "Nombre de membres",
-  "@fieldMembers": {"description": "Label for members field"},
   "fieldMembersHint": "ex. 8",
-  "@fieldMembersHint": {"description": "Hint for members field"},
   "validationMembersRequired": "Le nombre de membres est requis",
-  "@validationMembersRequired": {"description": "Validation error for missing members count"},
   "validationMembersInvalid": "Veuillez entrer un nombre valide",
-  "@validationMembersInvalid": {"description": "Validation error for invalid members count"},
   "fieldStartDate": "Date de début",
-  "@fieldStartDate": {"description": "Label for start date field"},
+  "optional": "Optionnel",
+  "whatsappGroupLink": "Lien du groupe WhatsApp",
   "submitCreate": "Créer le groupe",
-  "@submitCreate": {"description": "Button label to create group"},
   "paywallTitle": "Passer à Premium",
-  "@paywallTitle": {"description": "Title for paywall modal"},
   "paywallBody": "Vous ne pouvez créer qu'un groupe avec un compte gratuit. Passez à Premium pour créer des groupes illimités.",
-  "@paywallBody": {"description": "Body text for paywall modal"},
   "paywallPlanName": "Abonnement Premium",
-  "@paywallPlanName": {"description": "Premium plan name"},
   "paywallCta": "Passer à Premium",
-  "@paywallCta": {"description": "Call-to-action button for paywall"},
   "inviteMessageIntro": "Rejoignez mon groupe",
-  "@inviteMessageIntro": {"description": "Introduction to invite message"},
   "inviteMessageAmountLabel": "Montant de contribution",
-  "@inviteMessageAmountLabel": {"description": "Label in invite message for amount"},
   "inviteMessageFrequencyLabel": "Fréquence",
-  "@inviteMessageFrequencyLabel": {"description": "Label in invite message for frequency"},
   "inviteMessageStartLabel": "Date de début",
-  "@inviteMessageStartLabel": {"description": "Label in invite message for start date"},
   "inviteMessageJoinLabel": "Rejoignez le groupe ici",
-  "@inviteMessageJoinLabel": {"description": "Label in invite message for joining"},
   "inviteSheetTitle": "Inviter des membres",
-  "@inviteSheetTitle": {"description": "Title for invite sheet"},
   "inviteSheetSubtitle": "Partagez ce message avec les membres de votre groupe",
-  "@inviteSheetSubtitle": {"description": "Subtitle for invite sheet"},
   "shareInvite": "Partager l'invitation",
-  "@shareInvite": {"description": "Button label to share invite"},
   "later": "Plus tard",
-  "@later": {"description": "Button label for later/dismiss action"},
   "groupsTitle": "Groupes",
-  "@groupsTitle": {"description": "Title for groups screen"},
   "groupsEmpty": "Vous n'avez rejoint aucun groupe",
-  "@groupsEmpty": {"description": "Message when there are no groups"},
+  "registeredGroupsCount": "{count} tontines enregistrées",
+  "@registeredGroupsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noGroupsFound": "Aucune tontine trouvée",
+  "createFirstGroupPrompt": "Créez votre première tontine pour commencer",
+  "openWhatsAppGroup": "Ouvrir le groupe WhatsApp",
   "turnCounter": "{current}/{total}",
-  "@turnCounter": {"description": "Counter showing current turn and total", "placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@turnCounter": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "currentTurnLabel": "TOUR ACTUEL",
-  "@currentTurnLabel": {"description": "Label indicating current turn"},
   "activeGroups": "Groupes actifs",
-  "@activeGroups": {"description": "Label for active groups section"},
   "seeAll": "Voir tout",
-  "@seeAll": {"description": "Link to see all items"},
   "statusPending": "En attente",
-  "@statusPending": {"description": "Status badge for pending"},
   "statusUpToDate": "À jour",
-  "@statusUpToDate": {"description": "Status badge for up to date"},
   "statusDispute": "Litige",
-  "@statusDispute": {"description": "Status badge for dispute"},
   "quickActions": "Actions rapides",
-  "@quickActions": {"description": "Label for quick actions section"},
   "createSol": "Créer un Sol",
-  "@createSol": {"description": "Action button to create a new Sol group"},
   "iPaid": "J'ai payé",
-  "@iPaid": {"description": "Action button to mark payment"}
+  "authTagline": "L'épargne collective, simplifiée.",
+  "authWelcome": "Bienvenue !",
+  "authApplePrompt": "Connectez-vous en un instant avec votre compte Apple.",
+  "continueWithApple": "Continuer avec Apple",
+  "orEmail": "OU PAR EMAIL",
+  "emailAddressLabel": "Votre adresse email",
+  "emailHint": "nom@exemple.com",
+  "sendLoginCode": "Envoyer le code de connexion",
+  "enterEmailCodePrompt": "Entrez le code reçu par email :",
+  "validateMyCode": "Valider mon code",
+  "resendCode": "Renvoyer",
+  "changeEmail": "Changer d'email"
 }

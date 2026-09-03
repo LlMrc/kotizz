@@ -122,7 +122,7 @@ class _TopBarState extends State<_TopBar> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      'Bienvenue sur Kotizz',
+                      t.welcomeSubtitle,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 12,
                         color: AppColors.ash,
@@ -174,30 +174,31 @@ class _SummaryStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: const [
+        children: [
           _MiniStatCard(
-            title: 'ÉPARGNE GLOBALE',
+            title: t.globalSavingsTitle,
             value: '360 000 HTG',
-            sub: '3 tontines actives',
+            sub: t.activeTontinesCount(3),
             icon: Icons.account_balance_wallet_rounded,
             iconColor: AppColors.marigold,
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           _MiniStatCard(
-            title: 'PROCHAIN POT',
+            title: t.nextPotTitle,
             value: '15 000 HTG',
-            sub: 'Reçu le 15 Fév. (Vous)',
+            sub: t.nextPotReceivedSub('15 Fév.', 'Vous'),
             icon: Icons.savings_rounded,
             iconColor: AppColors.palm,
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           _MiniStatCard(
-            title: 'SCORE CONFIANCE',
+            title: t.trustScoreTitle,
             value: '92 / 100',
-            sub: 'Statut Vérifié ✓',
+            sub: t.verifiedStatus,
             icon: Icons.verified_user_rounded,
             iconColor: AppColors.coral,
           ),
@@ -323,7 +324,7 @@ class _WheelCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'TONTINE VEDETTE: FAMILLE MONPLAISIR',
+                        '${t.featuredTontine}: FAMILLE MONPLAISIR',
                         style: GoogleFonts.ibmPlexMono(
                           fontSize: 10.5,
                           letterSpacing: 1.1,
@@ -341,7 +342,7 @@ class _WheelCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        'TOUR 3/8',
+                        t.turnIndicator(3, 8),
                         style: GoogleFonts.ibmPlexMono(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w700,

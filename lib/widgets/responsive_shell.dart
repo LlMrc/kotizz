@@ -27,7 +27,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final destinations = [
-      (icon: Icons.grid_view_rounded, label: t.appTitle == 'Kotizz' ? 'Accueil' : 'Home'),
+      (icon: Icons.grid_view_rounded, label: t.homeNavLabel),
       (icon: Icons.groups_rounded, label: t.groupsTitle),
       (icon: Icons.notifications_rounded, label: t.alertsTitle),
       (icon: Icons.person_rounded, label: t.profileTitle),

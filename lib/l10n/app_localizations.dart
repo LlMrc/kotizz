@@ -100,11 +100,17 @@ abstract class AppLocalizations {
     Locale('ht'),
   ];
 
-  /// The title of the application
+  /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
   /// **'Kotizz'**
   String get appTitle;
+
+  /// No description provided for @homeNavLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeNavLabel;
 
   /// Greeting message with user name
   ///
@@ -112,365 +118,707 @@ abstract class AppLocalizations {
   /// **'Hey, {name}'**
   String greeting(String name);
 
-  /// Suffix for trust score display
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Kotizz'**
+  String get welcomeSubtitle;
+
+  /// No description provided for @trustScoreSuffix.
   ///
   /// In en, this message translates to:
   /// **'trust'**
   String get trustScoreSuffix;
 
-  /// Title for alerts screen
+  /// No description provided for @globalSavingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'GLOBAL SAVINGS'**
+  String get globalSavingsTitle;
+
+  /// No description provided for @activeTontinesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active groups'**
+  String activeTontinesCount(int count);
+
+  /// No description provided for @nextPotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'NEXT POT'**
+  String get nextPotTitle;
+
+  /// No description provided for @nextPotReceivedSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Received on {date} ({recipient})'**
+  String nextPotReceivedSub(String date, String recipient);
+
+  /// No description provided for @trustScoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TRUST SCORE'**
+  String get trustScoreTitle;
+
+  /// No description provided for @verifiedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified Status ✓'**
+  String get verifiedStatus;
+
+  /// No description provided for @featuredTontine.
+  ///
+  /// In en, this message translates to:
+  /// **'FEATURED GROUP'**
+  String get featuredTontine;
+
+  /// No description provided for @turnIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'TURN {current}/{total}'**
+  String turnIndicator(int current, int total);
+
+  /// No description provided for @alertsTitle.
   ///
   /// In en, this message translates to:
   /// **'Alerts'**
   String get alertsTitle;
 
-  /// Message when there are no alerts
+  /// No description provided for @alertsEmpty.
   ///
   /// In en, this message translates to:
   /// **'No alerts at the moment'**
   String get alertsEmpty;
 
-  /// Title for profile screen
+  /// No description provided for @unreadAlertsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread notifications'**
+  String unreadAlertsCount(int count);
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read all'**
+  String get markAllRead;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get filterActive;
+
+  /// No description provided for @filterCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get filterCompleted;
+
+  /// No description provided for @filterUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get filterUnread;
+
+  /// No description provided for @filterContributions.
+  ///
+  /// In en, this message translates to:
+  /// **'Contributions'**
+  String get filterContributions;
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get timeJustNow;
+
+  /// No description provided for @timeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String timeMinutesAgo(int minutes);
+
+  /// No description provided for @timeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h ago'**
+  String timeHoursAgo(int hours);
+
+  /// No description provided for @timeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get timeYesterday;
+
+  /// No description provided for @timeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String timeDaysAgo(int days);
+
+  /// No description provided for @timeWeeksAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks} w. ago'**
+  String timeWeeksAgo(int weeks);
+
+  /// No description provided for @timeMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} mo. ago'**
+  String timeMonthsAgo(int months);
+
+  /// No description provided for @timeYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} yr. ago'**
+  String timeYearsAgo(int years);
+
+  /// No description provided for @dateToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get dateToday;
+
+  /// No description provided for @dateThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get dateThisWeek;
+
+  /// No description provided for @dateThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get dateThisMonth;
+
+  /// No description provided for @dateOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Older'**
+  String get dateOlder;
+
+  /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
   /// **'Profile'**
   String get profileTitle;
 
-  /// Label for trust score stat
+  /// No description provided for @profileTrustScore.
   ///
   /// In en, this message translates to:
   /// **'Trust Score'**
   String get profileTrustScore;
 
-  /// Label for completed cycles stat
+  /// No description provided for @profileCompletedCycles.
   ///
   /// In en, this message translates to:
   /// **'Completed'**
   String get profileCompletedCycles;
 
-  /// Label for disputes stat
+  /// No description provided for @profileDisputes.
   ///
   /// In en, this message translates to:
   /// **'Disputes'**
   String get profileDisputes;
 
-  /// Action to verify phone number
+  /// No description provided for @sectionSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'VERIFICATIONS & SECURITY'**
+  String get sectionSecurity;
+
+  /// No description provided for @sectionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT SETTINGS'**
+  String get sectionSettings;
+
+  /// No description provided for @phoneVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone verified'**
+  String get phoneVerified;
+
+  /// No description provided for @identityVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'ID Card / Passport'**
+  String get identityVerified;
+
+  /// No description provided for @bankAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Account / MonCash'**
+  String get bankAccount;
+
+  /// No description provided for @appLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'App Language'**
+  String get appLanguage;
+
+  /// No description provided for @pushNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get pushNotifications;
+
+  /// No description provided for @privacySecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy and security'**
+  String get privacySecurity;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @cyclesUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'cycles'**
+  String get cyclesUnit;
+
+  /// No description provided for @badgeFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get badgeFree;
+
+  /// No description provided for @profileVerifyPhone.
   ///
   /// In en, this message translates to:
   /// **'Verify Phone'**
   String get profileVerifyPhone;
 
-  /// Action to verify ID
+  /// No description provided for @profileVerifyId.
   ///
   /// In en, this message translates to:
   /// **'Verify ID'**
   String get profileVerifyId;
 
-  /// Language selection label
+  /// No description provided for @profileLanguage.
   ///
   /// In en, this message translates to:
   /// **'Language'**
   String get profileLanguage;
 
-  /// Button label to log out
+  /// No description provided for @logOut.
   ///
   /// In en, this message translates to:
   /// **'Log Out'**
   String get logOut;
 
-  /// Example group name on wheel card
+  /// No description provided for @wheelGroupExample.
   ///
   /// In en, this message translates to:
   /// **'Example Group'**
   String get wheelGroupExample;
 
-  /// Label for wheel section
+  /// No description provided for @wheelSectionLabel.
   ///
   /// In en, this message translates to:
   /// **'Your next contribution'**
   String get wheelSectionLabel;
 
-  /// Message indicating it's the user's turn
+  /// No description provided for @yourTurn.
   ///
   /// In en, this message translates to:
   /// **'It\'s your turn!'**
   String get yourTurn;
 
-  /// Count of confirmed members
+  /// No description provided for @confirmedCount.
   ///
   /// In en, this message translates to:
   /// **'{confirmed}/{total} confirmed'**
   String confirmedCount(int confirmed, int total);
 
-  /// Title for create group screen
+  /// No description provided for @createSolTitle.
   ///
   /// In en, this message translates to:
   /// **'Create a Group'**
   String get createSolTitle;
 
-  /// Label for group name field
+  /// No description provided for @fieldName.
   ///
   /// In en, this message translates to:
   /// **'Group Name'**
   String get fieldName;
 
-  /// Hint for group name field
+  /// No description provided for @fieldNameHint.
   ///
   /// In en, this message translates to:
   /// **'e.g. Monthly Savings Club'**
   String get fieldNameHint;
 
-  /// Validation error for missing group name
+  /// No description provided for @validationNameRequired.
   ///
   /// In en, this message translates to:
   /// **'Group name is required'**
   String get validationNameRequired;
 
-  /// Label for description field
+  /// No description provided for @fieldDescription.
   ///
   /// In en, this message translates to:
   /// **'Description'**
   String get fieldDescription;
 
-  /// Hint for description field
+  /// No description provided for @fieldDescriptionHint.
   ///
   /// In en, this message translates to:
   /// **'What is this group for?'**
   String get fieldDescriptionHint;
 
-  /// Label for contribution amount field
+  /// No description provided for @fieldAmount.
   ///
   /// In en, this message translates to:
   /// **'Contribution Amount'**
   String get fieldAmount;
 
-  /// Hint for amount field
+  /// No description provided for @fieldAmountHint.
   ///
   /// In en, this message translates to:
   /// **'0.00'**
   String get fieldAmountHint;
 
-  /// Validation error for missing amount
+  /// No description provided for @validationAmountRequired.
   ///
   /// In en, this message translates to:
   /// **'Amount is required'**
   String get validationAmountRequired;
 
-  /// Validation error for invalid amount
+  /// No description provided for @validationAmountInvalid.
   ///
   /// In en, this message translates to:
   /// **'Please enter a valid amount'**
   String get validationAmountInvalid;
 
-  /// Label for frequency field
+  /// No description provided for @fieldFrequency.
   ///
   /// In en, this message translates to:
   /// **'Contribution Frequency'**
   String get fieldFrequency;
 
-  /// Weekly frequency option
+  /// No description provided for @freqWeekly.
   ///
   /// In en, this message translates to:
   /// **'Weekly'**
   String get freqWeekly;
 
-  /// Bi-weekly frequency option
+  /// No description provided for @freqBiweekly.
   ///
   /// In en, this message translates to:
   /// **'Bi-weekly'**
   String get freqBiweekly;
 
-  /// Monthly frequency option
+  /// No description provided for @freqMonthly.
   ///
   /// In en, this message translates to:
   /// **'Monthly'**
   String get freqMonthly;
 
-  /// Label for members field
+  /// No description provided for @fieldMembers.
   ///
   /// In en, this message translates to:
   /// **'Number of Members'**
   String get fieldMembers;
 
-  /// Hint for members field
+  /// No description provided for @fieldMembersHint.
   ///
   /// In en, this message translates to:
   /// **'e.g. 8'**
   String get fieldMembersHint;
 
-  /// Validation error for missing members count
+  /// No description provided for @validationMembersRequired.
   ///
   /// In en, this message translates to:
   /// **'Number of members is required'**
   String get validationMembersRequired;
 
-  /// Validation error for invalid members count
+  /// No description provided for @validationMembersInvalid.
   ///
   /// In en, this message translates to:
   /// **'Please enter a valid number'**
   String get validationMembersInvalid;
 
-  /// Label for start date field
+  /// No description provided for @fieldStartDate.
   ///
   /// In en, this message translates to:
   /// **'Start Date'**
   String get fieldStartDate;
 
-  /// Button label to create group
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
+  /// No description provided for @whatsappGroupLink.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp group link'**
+  String get whatsappGroupLink;
+
+  /// No description provided for @submitCreate.
   ///
   /// In en, this message translates to:
   /// **'Create Group'**
   String get submitCreate;
 
-  /// Title for paywall modal
+  /// No description provided for @paywallTitle.
   ///
   /// In en, this message translates to:
   /// **'Upgrade to Premium'**
   String get paywallTitle;
 
-  /// Body text for paywall modal
+  /// No description provided for @paywallBody.
   ///
   /// In en, this message translates to:
   /// **'You can only create one group with a free account. Upgrade to Premium to create unlimited groups.'**
   String get paywallBody;
 
-  /// Premium plan name
+  /// No description provided for @paywallPlanName.
   ///
   /// In en, this message translates to:
   /// **'Premium Plan'**
   String get paywallPlanName;
 
-  /// Call-to-action button for paywall
+  /// No description provided for @paywallCta.
   ///
   /// In en, this message translates to:
   /// **'Upgrade Now'**
   String get paywallCta;
 
-  /// Introduction to invite message
+  /// No description provided for @inviteMessageIntro.
   ///
   /// In en, this message translates to:
   /// **'Join my group'**
   String get inviteMessageIntro;
 
-  /// Label in invite message for amount
+  /// No description provided for @inviteMessageAmountLabel.
   ///
   /// In en, this message translates to:
   /// **'Contribution Amount'**
   String get inviteMessageAmountLabel;
 
-  /// Label in invite message for frequency
+  /// No description provided for @inviteMessageFrequencyLabel.
   ///
   /// In en, this message translates to:
   /// **'Frequency'**
   String get inviteMessageFrequencyLabel;
 
-  /// Label in invite message for start date
+  /// No description provided for @inviteMessageStartLabel.
   ///
   /// In en, this message translates to:
   /// **'Start Date'**
   String get inviteMessageStartLabel;
 
-  /// Label in invite message for joining
+  /// No description provided for @inviteMessageJoinLabel.
   ///
   /// In en, this message translates to:
   /// **'Join the group here'**
   String get inviteMessageJoinLabel;
 
-  /// Title for invite sheet
+  /// No description provided for @inviteSheetTitle.
   ///
   /// In en, this message translates to:
   /// **'Invite Members'**
   String get inviteSheetTitle;
 
-  /// Subtitle for invite sheet
+  /// No description provided for @inviteSheetSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Share this message with your group members'**
   String get inviteSheetSubtitle;
 
-  /// Button label to share invite
+  /// No description provided for @shareInvite.
   ///
   /// In en, this message translates to:
   /// **'Share Invite'**
   String get shareInvite;
 
-  /// Button label for later/dismiss action
+  /// No description provided for @later.
   ///
   /// In en, this message translates to:
   /// **'Later'**
   String get later;
 
-  /// Title for groups screen
+  /// No description provided for @groupsTitle.
   ///
   /// In en, this message translates to:
   /// **'Groups'**
   String get groupsTitle;
 
-  /// Message when there are no groups
+  /// No description provided for @groupsEmpty.
   ///
   /// In en, this message translates to:
   /// **'You haven\'t joined any groups yet'**
   String get groupsEmpty;
 
-  /// Counter showing current turn and total
+  /// No description provided for @registeredGroupsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} registered groups'**
+  String registeredGroupsCount(int count);
+
+  /// No description provided for @noGroupsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups found'**
+  String get noGroupsFound;
+
+  /// No description provided for @createFirstGroupPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first group to get started'**
+  String get createFirstGroupPrompt;
+
+  /// No description provided for @openWhatsAppGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Open WhatsApp group'**
+  String get openWhatsAppGroup;
+
+  /// No description provided for @turnCounter.
   ///
   /// In en, this message translates to:
   /// **'{current}/{total}'**
   String turnCounter(int current, int total);
 
-  /// Label indicating current turn
+  /// No description provided for @currentTurnLabel.
   ///
   /// In en, this message translates to:
   /// **'CURRENT TURN'**
   String get currentTurnLabel;
 
-  /// Label for active groups section
+  /// No description provided for @activeGroups.
   ///
   /// In en, this message translates to:
   /// **'Active Groups'**
   String get activeGroups;
 
-  /// Link to see all items
+  /// No description provided for @seeAll.
   ///
   /// In en, this message translates to:
   /// **'See all'**
   String get seeAll;
 
-  /// Status badge for pending
+  /// No description provided for @statusPending.
   ///
   /// In en, this message translates to:
   /// **'Pending'**
   String get statusPending;
 
-  /// Status badge for up to date
+  /// No description provided for @statusUpToDate.
   ///
   /// In en, this message translates to:
   /// **'Up to date'**
   String get statusUpToDate;
 
-  /// Status badge for dispute
+  /// No description provided for @statusDispute.
   ///
   /// In en, this message translates to:
   /// **'Dispute'**
   String get statusDispute;
 
-  /// Label for quick actions section
+  /// No description provided for @quickActions.
   ///
   /// In en, this message translates to:
   /// **'Quick Actions'**
   String get quickActions;
 
-  /// Action button to create a new Sol group
+  /// No description provided for @createSol.
   ///
   /// In en, this message translates to:
   /// **'Create Sol'**
   String get createSol;
 
-  /// Action button to mark payment
+  /// No description provided for @iPaid.
   ///
   /// In en, this message translates to:
   /// **'I Paid'**
   String get iPaid;
+
+  /// No description provided for @authTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Collective savings, simplified.'**
+  String get authTagline;
+
+  /// No description provided for @authWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome!'**
+  String get authWelcome;
+
+  /// No description provided for @authApplePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in instantly with your Apple account.'**
+  String get authApplePrompt;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// No description provided for @orEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'OR BY EMAIL'**
+  String get orEmail;
+
+  /// No description provided for @emailAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email address'**
+  String get emailAddressLabel;
+
+  /// No description provided for @emailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'name@example.com'**
+  String get emailHint;
+
+  /// No description provided for @sendLoginCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send login code'**
+  String get sendLoginCode;
+
+  /// No description provided for @enterEmailCodePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code received by email:'**
+  String get enterEmailCodePrompt;
+
+  /// No description provided for @validateMyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify my code'**
+  String get validateMyCode;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get resendCode;
+
+  /// No description provided for @changeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get changeEmail;
 }
 
 class _AppLocalizationsDelegate

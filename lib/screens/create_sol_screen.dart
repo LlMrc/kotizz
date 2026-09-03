@@ -288,8 +288,8 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
       'biweekly': t.freqBiweekly,
       'monthly': t.freqMonthly,
     }[_frequency];
-    // AppLocalizations provides localeName rather than a Locale getter
-    final dateLabel = DateFormat.yMMMMd(t.localeName).format(_startDate);
+    // Formatage de la date compatible avec le Créole Haïtien (ht)
+    final dateLabel = _formatLocalizedDate(_startDate, t.localeName);
     const link = 'https://sol.app/join/demo';
 
     return '''
@@ -517,7 +517,7 @@ $link
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Lien du groupe WhatsApp',
+                  t.whatsappGroupLink,
                   style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -535,7 +535,7 @@ $link
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    'Optionnel',
+                    t.optional,
                     style: GoogleFonts.ibmPlexMono(
                       fontSize: 9,
                       fontWeight: FontWeight.w600,
@@ -623,9 +623,10 @@ $link
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      DateFormat.yMMMMd(
+                      _formatLocalizedDate(
+                        _startDate,
                         Localizations.localeOf(context).languageCode,
-                      ).format(_startDate),
+                      ),
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         color: AppColors.ink,
@@ -758,5 +759,40 @@ $link
         ),
       ),
     );
+  }
+
+  /// Formate une date selon la langue choisie (Créole Haïtien, Français, Anglais).
+  /// Évite l'exception "Invalid locale ht" de la bibliothèque intl.
+  static String _formatLocalizedDate(DateTime date, String languageCode) {
+    if (languageCode.toLowerCase() == 'ht') {
+      const monthsHt = [
+        'janvye',
+        'fevriye',
+        'mas',
+        'avril',
+        'me',
+        'jen',
+        'jiyè',
+        'out',
+        'septanm',
+        'oktòb',
+        'novanm',
+        'desanm',
+      ];
+      final month = (date.month >= 1 && date.month <= 12)
+          ? monthsHt[date.month - 1]
+          : '';
+      return '${date.day} $month ${date.year}';
+    }
+
+    try {
+      return DateFormat.yMMMMd(languageCode).format(date);
+    } catch (_) {
+      try {
+        return DateFormat.yMMMMd('fr').format(date);
+      } catch (_) {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    }
   }
 }

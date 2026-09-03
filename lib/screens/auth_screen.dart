@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
+import '../l10n/app_localizations.dart';
 
 /// Garde d'authentification.
 ///
@@ -180,6 +181,7 @@ class _AuthScreenState extends State<AuthScreen>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.paper,
       body: SafeArea(
@@ -233,7 +235,7 @@ class _AuthScreenState extends State<AuthScreen>
                   const SizedBox(height: 6),
                   Center(
                     child: Text(
-                      'L\'épargne collective, simplifiée.',
+                      t.authTagline,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         color: AppColors.ash,
@@ -245,7 +247,7 @@ class _AuthScreenState extends State<AuthScreen>
                   // ── iOS Mode : Bouton Apple prioritaire ────────
                   if (_isIOS) ...[
                     Text(
-                      'Bienvenue !',
+                      t.authWelcome,
                       style: GoogleFonts.bricolageGrotesque(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -254,7 +256,7 @@ class _AuthScreenState extends State<AuthScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Connectez-vous en un instant avec votre compte Apple.',
+                      t.authApplePrompt,
                       style: GoogleFonts.ibmPlexSans(
                         fontSize: 13.5,
                         color: AppColors.ash,
@@ -268,7 +270,7 @@ class _AuthScreenState extends State<AuthScreen>
                         onPressed: _loading ? null : _signInWithApple,
                         icon: const Icon(Icons.apple, size: 24, color: AppColors.white),
                         label: Text(
-                          'Continuer avec Apple',
+                          t.continueWithApple,
                           style: GoogleFonts.ibmPlexSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -293,7 +295,7 @@ class _AuthScreenState extends State<AuthScreen>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                            'OU PAR EMAIL',
+                            t.orEmail,
                             style: GoogleFonts.ibmPlexMono(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -389,7 +391,7 @@ class _AuthScreenState extends State<AuthScreen>
                           ),
                           const SizedBox(height: 18),
                           Text(
-                            'Entrez le code reçu par email :',
+                            t.enterEmailCodePrompt,
                             style: GoogleFonts.ibmPlexSans(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w500,
@@ -500,7 +502,7 @@ class _AuthScreenState extends State<AuthScreen>
                                         const Icon(Icons.check_circle_outline_rounded, size: 18, color: AppColors.marigold),
                                         const SizedBox(width: 8),
                                         Text(
-                                          'Valider mon code',
+                                          t.validateMyCode,
                                           style: GoogleFonts.ibmPlexSans(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
@@ -524,7 +526,7 @@ class _AuthScreenState extends State<AuthScreen>
                                       },
                                 icon: const Icon(Icons.refresh_rounded, size: 16, color: AppColors.ink),
                                 label: Text(
-                                  'Renvoyer un code',
+                                  t.resendCode,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -543,7 +545,7 @@ class _AuthScreenState extends State<AuthScreen>
                                         });
                                       },
                                 child: Text(
-                                  'Changer d\'email',
+                                  t.changeEmail,
                                   style: GoogleFonts.ibmPlexSans(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -561,13 +563,13 @@ class _AuthScreenState extends State<AuthScreen>
                       key: _formKey,
                       child: _AuthField(
                         controller: _emailCtrl,
-                        label: 'Votre adresse email',
-                        hint: 'vous@exemple.com',
+                        label: t.emailAddressLabel,
+                        hint: t.emailHint,
                         icon: Icons.mail_outline_rounded,
                         keyboardType: TextInputType.emailAddress,
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
-                            return 'L\'email est requis';
+                            return t.validationAmountRequired;
                           }
                           if (!v.contains('@')) {
                             return 'Email invalide';
@@ -636,7 +638,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   const Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.marigold),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Recevoir mon lien de connexion',
+                                    t.sendLoginCode,
                                     style: GoogleFonts.ibmPlexSans(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
