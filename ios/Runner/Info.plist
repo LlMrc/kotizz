@@ -67,5 +67,8 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<!-- App uses standard encryption only (HTTPS/TLS) -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
