@@ -680,8 +680,8 @@ class _RotationWheelState extends State<_RotationWheel>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     return SizedBox(
-      width: 140,
-      height: 140,
+      width: 160,
+      height: 160,
       child: Stack(
         children: [
           Positioned.fill(
@@ -716,8 +716,8 @@ class _RotationWheelState extends State<_RotationWheel>
           ),
           for (int i = 0; i < _nodes.length; i++)
             Positioned(
-              top: _nodes[i].top * 140 - 15,
-              left: _nodes[i].left * 140 - 15,
+              top: _nodes[i].top * 160 - 15,
+              left: _nodes[i].left * 160 - 15,
               child: (i + 1 == widget.currentTurn)
                   ? AnimatedBuilder(
                       animation: _pulseController,
