@@ -1,5 +1,5 @@
 -- =============================================================================
--- KOTIZZ — CRÉATION D'UN GROUPE FICTIF DE TEST
+-- KOTIZZ — CRÉATION D'UN GROUPE FICTIF DE TEST (avec clés FK auth.users)
 -- Code d'invitation à tester dans l'app : TEST99
 -- =============================================================================
 -- Copiez et exécutez ce script dans Supabase → SQL Editor → RUN.
@@ -9,8 +9,8 @@
 
 DO $$
 DECLARE
-  v_organizer_id UUID := gen_random_uuid();
-  v_member2_id   UUID := gen_random_uuid();
+  v_organizer_id UUID := 'a1111111-1111-1111-1111-111111111111';
+  v_member2_id   UUID := 'b2222222-2222-2222-2222-222222222222';
   v_group_id     UUID := gen_random_uuid();
 BEGIN
 
@@ -20,7 +20,44 @@ BEGIN
   );
   DELETE FROM public.groups WHERE invite_code = 'TEST99';
 
-  -- 2. Créer deux faux profils membres (Organisateur + 1er membre)
+  -- 2. Insérer dans auth.users d'abord (pour satisfaire la clé étrangère profiles_id_fkey)
+  INSERT INTO auth.users (
+    id,
+    instance_id,
+    aud,
+    role,
+    email,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at
+  )
+  VALUES 
+    (
+      v_organizer_id,
+      '00000000-0000-0000-0000-000000000000',
+      'authenticated',
+      'authenticated',
+      'marc.aurele@kotizz-demo.app',
+      '{"provider":"email","providers":["email"]}',
+      '{"full_name":"Marc Aurèle"}',
+      NOW(),
+      NOW()
+    ),
+    (
+      v_member2_id,
+      '00000000-0000-0000-0000-000000000000',
+      'authenticated',
+      'authenticated',
+      'nadine.petit@kotizz-demo.app',
+      '{"provider":"email","providers":["email"]}',
+      '{"full_name":"Nadine Petit"}',
+      NOW(),
+      NOW()
+    )
+  ON CONFLICT (id) DO NOTHING;
+
+  -- 3. Insérer les profils correspondants
   INSERT INTO public.profiles (
     id, username, full_name, phone, trust_score, phone_verified, id_verified,
     completed_cycles, plan, language
@@ -50,9 +87,11 @@ BEGIN
       'free',
       'fr'
     )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    trust_score = EXCLUDED.trust_score;
 
-  -- 3. Créer le groupe de test avec le code 'TEST99'
+  -- 4. Créer le groupe de test avec le code 'TEST99'
   INSERT INTO public.groups (
     id,
     organizer_id,
@@ -88,7 +127,7 @@ BEGIN
     'https://chat.whatsapp.com/test-kotizz-groupe'
   );
 
-  -- 4. Ajouter les 2 premiers membres dans group_members
+  -- 5. Ajouter les 2 premiers membres dans group_members
   -- Tour 1 : Marc Aurèle (Organisateur)
   INSERT INTO public.group_members (
     id, group_id, user_id, turn_order, status, joined_at
