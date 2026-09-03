@@ -42,7 +42,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _fullName = '';
   String _email = '';
   String _phone = '';
-  int _trustScore = 92;
+  int _trustScore = 50;
+  int _completedCycles = 0;
+  bool _phoneVerified = false;
+  bool _idVerified = false;
   bool _planLoading = true;
 
   @override
@@ -58,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       final data = await Supabase.instance.client
           .from('profiles')
-          .select('full_name, phone, plan, plan_expires_at, trust_score')
+          .select('full_name, phone, plan, plan_expires_at, trust_score, completed_cycles, phone_verified, id_verified')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -66,9 +69,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _email = user.email ?? '';
           _phone = (data?['phone'] as String?) ?? user.phone ?? '';
-          _fullName = (data?['full_name'] as String?) ?? user.email?.split('@').first ?? 'Utilisateur';
+          _fullName = (data?['full_name'] as String?) ?? user.email?.split('@').first ?? 'Membre';
           _plan = (data?['plan'] as String?) ?? 'free';
-          _trustScore = (data?['trust_score'] as int?) ?? 92;
+          _trustScore = (data?['trust_score'] as int?) ?? 50;
+          _completedCycles = (data?['completed_cycles'] as int?) ?? 0;
+          _phoneVerified = (data?['phone_verified'] as bool?) ?? false;
+          _idVerified = (data?['id_verified'] as bool?) ?? false;
           _planLoading = false;
         });
       }
@@ -134,11 +140,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StatCard(
-                    value: '5',
+                    value: '$_completedCycles',
                     unit: ' ${t.cyclesUnit}',
                     label: t.profileCompletedCycles,
                     color: AppColors.palm,
-                    badge: '🏆 100%',
+                    badge: _completedCycles > 0 ? '🏆 100%' : 'Nouveau',
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -171,22 +177,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _VerificationRow(
               icon: Icons.phone_iphone_rounded,
               title: t.profileVerifyPhone,
-              subtitle: '+509 37 12 34 56',
-              done: true,
+              subtitle: _phone.isNotEmpty ? _phone : 'Non renseigné',
+              done: _phoneVerified,
             ),
             const SizedBox(height: 10),
             _VerificationRow(
               icon: Icons.badge_outlined,
               title: t.identityVerified,
-              subtitle: 'CNI / Passeport',
-              done: true,
+              subtitle: _idVerified ? 'Pièce vérifiée ✓' : 'Non vérifié',
+              done: _idVerified,
             ),
             const SizedBox(height: 10),
             _VerificationRow(
               icon: Icons.account_balance_wallet_rounded,
               title: t.bankAccount,
-              subtitle: 'MonCash: +509 37 12 34 56',
-              done: true,
+              subtitle: _phone.isNotEmpty ? 'MonCash: $_phone' : 'Non configuré',
+              done: _phone.isNotEmpty,
             ),
             const SizedBox(height: 24),
 

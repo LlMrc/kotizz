@@ -49,12 +49,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
         final groupData = map['groups'] as Map<String, dynamic>?;
         final groupName = (groupData?['name'] as String?) ?? 'Kotizz';
 
-        // Calcul dynamique du temps relatif depuis created_at
+        // Date de création pour le formatage dynamique dans l'UI
         final createdAt = map['created_at'] != null
             ? DateTime.tryParse(map['created_at'] as String)
             : null;
-        final timeAgo = _formatTimeAgo(createdAt);
-        final dateCategory = _formatDateCategory(createdAt);
 
         return _AlertItem(
           id: map['id'].toString(),
@@ -92,22 +90,6 @@ class _AlertsScreenState extends State<AlertsScreen> {
     if (diff.inDays < 30) return t.timeWeeksAgo((diff.inDays / 7).floor());
     if (diff.inDays < 365) return t.timeMonthsAgo((diff.inDays / 30).floor());
     return t.timeYearsAgo((diff.inDays / 365).floor());
-  }
-
-  /// Retourne la catégorie de date selon la langue active (ex: "Jodi a", "Semèn sa a").
-  static String _formatDateCategory(DateTime? date, AppLocalizations t) {
-    if (date == null) return t.alertsTitle;
-    final now = DateTime.now();
-    final local = date.toLocal();
-    final today = DateTime(now.year, now.month, now.day);
-    final alertDay = DateTime(local.year, local.month, local.day);
-    final diff = today.difference(alertDay).inDays;
-
-    if (diff == 0) return t.dateToday;
-    if (diff == 1) return t.timeYesterday;
-    if (diff < 7) return t.dateThisWeek;
-    if (diff < 30) return t.dateThisMonth;
-    return t.dateOlder;
   }
 
   @override
