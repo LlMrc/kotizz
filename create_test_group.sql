@@ -1,5 +1,5 @@
 -- =============================================================================
--- KOTIZZ — CRÉATION D'UN GROUPE FICTIF DE TEST (avec clés FK auth.users)
+-- KOTIZZ — CRÉATION D'UN GROUPE FICTIF DE TEST (Gère le trigger auto-member)
 -- Code d'invitation à tester dans l'app : TEST99
 -- =============================================================================
 -- Copiez et exécutez ce script dans Supabase → SQL Editor → RUN.
@@ -20,7 +20,7 @@ BEGIN
   );
   DELETE FROM public.groups WHERE invite_code = 'TEST99';
 
-  -- 2. Insérer dans auth.users d'abord (pour satisfaire la clé étrangère profiles_id_fkey)
+  -- 2. Insérer dans auth.users d'abord
   INSERT INTO auth.users (
     id,
     instance_id,
@@ -127,8 +127,8 @@ BEGIN
     'https://chat.whatsapp.com/test-kotizz-groupe'
   );
 
-  -- 5. Ajouter les 2 premiers membres dans group_members
-  -- Tour 1 : Marc Aurèle (Organisateur)
+  -- 5. Assurer les membres dans group_members avec ON CONFLICT
+  -- Tour 1 : Marc Aurèle (Organisateur) - créé par trigger ou inséré ici
   INSERT INTO public.group_members (
     id, group_id, user_id, turn_order, status, joined_at
   )
@@ -139,7 +139,10 @@ BEGIN
     1,
     'confirmed',
     NOW() - INTERVAL '2 days'
-  );
+  )
+  ON CONFLICT (group_id, user_id) DO UPDATE SET
+    turn_order = 1,
+    status = 'confirmed';
 
   -- Tour 2 : Nadine Petit
   INSERT INTO public.group_members (
@@ -152,7 +155,10 @@ BEGIN
     2,
     'confirmed',
     NOW() - INTERVAL '1 day'
-  );
+  )
+  ON CONFLICT (group_id, user_id) DO UPDATE SET
+    turn_order = 2,
+    status = 'confirmed';
 
   RAISE NOTICE '✅ Groupe créé avec succès ! Code d''invitation : TEST99';
 
