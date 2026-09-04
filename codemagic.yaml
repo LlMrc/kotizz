@@ -1,112 +1,157 @@
+# workflows:
+#   ios-production-build:
+#     name: iOS Production Build (App Store)
+#     max_build_duration: 60
+#     integrations:
+#       app_store_connect: Codemagic pp Store Api key
+
+#     environment:
+#       flutter: stable
+#       xcode: latest
+#       ios_signing:
+#         distribution_type: app_store
+#         bundle_identifier: com.kotizz.app
+#       vars:
+#         BUNDLE_ID: "com.kotizz.app"
+#       # Variables secrètes à définir dans Codemagic → Project Settings → Environment variables :
+#       #   SUPABASE_URL, SUPABASE_KEY, REVENUECAT_KEY
+#       groups:
+#         - kotizz_secrets
+
+#     scripts:
+#       - name: Flutter clean & Prep
+#         script: |
+#           flutter clean
+#           rm -rf ios/Pods
+#           rm -f ios/Podfile.lock
+#           flutter pub get
+
+#       - name: Install CocoaPods
+#         script: |
+#           cd ios
+#           pod install --repo-update
+#           cd ..
+
+#       - name: Build and Sign IPA
+#         script: |
+#           # 1. Prepare the project to use Codemagic's signing profiles
+#           xcode-project use-profiles
+
+#           # 2. Build the archive (No-codesign is correct here)
+#           flutter build ipa --release --no-codesign \
+#             --build-name=1.2.0 \
+#             --build-number=$((1 + $PROJECT_BUILD_NUMBER)) \
+#             --dart-define=SUPABASE_URL=$SUPABASE_URL \
+#             --dart-define=SUPABASE_KEY=$SUPABASE_KEY \
+#             --dart-define=REVENUECAT_KEY=$REVENUECAT_KEY
+
+#           # 3. Sign and package the IPA
+#           xcode-project build-ipa \
+#             --workspace ios/Runner.xcworkspace \
+#             --scheme Runner
+
+#     artifacts:
+#       - build/ios/ipa/*.ipa
+
+#     publishing:
+#       app_store_connect:
+#         auth: integration
+#         submit_to_testflight: true
+#         beta_groups:
+#           - Internal Testers
+
+
+#   ios-validation-vnc:
+#     name: iOS Test & Build with VNC
+#     integrations:
+#       app_store_connect: Codemagic pp Store Api key
+
+#     environment:
+#       flutter: stable
+#       xcode: latest
+#       ios_signing:
+#         distribution_type: app_store
+#         bundle_identifier: com.kotizz.app
+#       vars:
+#         BUNDLE_ID: "com.kotizz.app"
+#       groups:
+#         - kotizz_secrets
+
+#     scripts:
+#       - name: Flutter clean & pub get
+#         script: |
+#           flutter clean
+#           flutter pub get
+
+#       - name: Install pods
+#         script: |
+#           cd ios
+#           pod install --repo-update
+#           cd ..
+
+#       - name: Set up code signing settings
+#         script: |
+#           xcode-project use-profiles
+
+#       - name: Build iOS for Simulator (Debug)
+#         script: |
+#           flutter build ios --debug --simulator --no-codesign \
+#             --dart-define=SUPABASE_URL=$SUPABASE_URL \
+#             --dart-define=SUPABASE_KEY=$SUPABASE_KEY \
+#             --dart-define=REVENUECAT_KEY=$REVENUECAT_KEY
+
+#       - name: Setup VNC Workspace & Keep Alive
+#         script: |
+#           caffeinate -u -t 3600 &
+#           xcrun simctl boot "iPhone 15" || true
+#           open -a Simulator
+#           open $CM_BUILD_DIR/ios/Runner.xcworkspace
+#           echo "🚀 WORKSPACE READY: Connect via VNC to debug."
+
+#     artifacts:
+#       - build/ios/iphonesimulator/*.app
+
 workflows:
-  ios-production-build:
-    name: iOS Production Build (App Store)
-    max_build_duration: 60
-    integrations:
-      app_store_connect: Codemagic pp Store Api key
+  ios-vnc-testing:
+    name: iPad Pro 13-inch VNC Testing (1 Hour)
+    max_build_duration: 70
+    instance_type: mac_mini_m2
 
     environment:
       flutter: stable
       xcode: latest
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.kotizz.app
-      vars:
-        BUNDLE_ID: "com.kotizz.app"
-      # Variables secrètes à définir dans Codemagic → Project Settings → Environment variables :
-      #   SUPABASE_URL, SUPABASE_KEY, REVENUECAT_KEY
       groups:
         - kotizz_secrets
 
     scripts:
-      - name: Flutter clean & Prep
-        script: |
-          flutter clean
-          rm -rf ios/Pods
-          rm -f ios/Podfile.lock
-          flutter pub get
-
-      - name: Install CocoaPods
-        script: |
-          cd ios
-          pod install --repo-update
-          cd ..
-
-      - name: Build and Sign IPA
-        script: |
-          # 1. Prepare the project to use Codemagic's signing profiles
-          xcode-project use-profiles
-
-          # 2. Build the archive (No-codesign is correct here)
-          flutter build ipa --release --no-codesign \
-            --build-name=1.2.0 \
-            --build-number=$((1 + $PROJECT_BUILD_NUMBER)) \
-            --dart-define=SUPABASE_URL=$SUPABASE_URL \
-            --dart-define=SUPABASE_KEY=$SUPABASE_KEY \
-            --dart-define=REVENUECAT_KEY=$REVENUECAT_KEY
-
-          # 3. Sign and package the IPA
-          xcode-project build-ipa \
-            --workspace ios/Runner.xcworkspace \
-            --scheme Runner
-
-    artifacts:
-      - build/ios/ipa/*.ipa
-
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        beta_groups:
-          - Internal Testers
-
-
-  ios-validation-vnc:
-    name: iOS Test & Build with VNC
-    integrations:
-      app_store_connect: Codemagic pp Store Api key
-
-    environment:
-      flutter: stable
-      xcode: latest
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.kotizz.app
-      vars:
-        BUNDLE_ID: "com.kotizz.app"
-      groups:
-        - kotizz_secrets
-
-    scripts:
-      - name: Flutter clean & pub get
+      - name: Prepare Flutter project
         script: |
           flutter clean
           flutter pub get
 
-      - name: Install pods
-        script: |
-          cd ios
-          pod install --repo-update
-          cd ..
-
-      - name: Set up code signing settings
-        script: |
-          xcode-project use-profiles
-
-      - name: Build iOS for Simulator (Debug)
+      - name: Build iOS simulator app
         script: |
           flutter build ios --debug --simulator --no-codesign \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
             --dart-define=SUPABASE_KEY=$SUPABASE_KEY \
             --dart-define=REVENUECAT_KEY=$REVENUECAT_KEY
 
-      - name: Setup VNC Workspace & Keep Alive
+      - name: Start simulator and keep VNC session alive
         script: |
-          caffeinate -u -t 3600 &
-          xcrun simctl boot "iPhone 15" || true
+          caffeinate -dimsu &
+          DEVICE_ID=$(xcrun simctl list devices available | grep -m 1 'iPad Pro 13-inch' | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/')
+          if [ -z "$DEVICE_ID" ]; then
+            DEVICE_ID=$(xcrun simctl list devices available | grep -m 1 'iPad Pro (12.9-inch)' | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/')
+          fi
+          if [ -z "$DEVICE_ID" ]; then
+            echo "No 13-inch iPad Pro simulator is available."
+            exit 1
+          fi
+          xcrun simctl boot "$DEVICE_ID" || true
           open -a Simulator
-          open $CM_BUILD_DIR/ios/Runner.xcworkspace
-          echo "🚀 WORKSPACE READY: Connect via VNC to debug."
+          open "$CM_BUILD_DIR/ios/Runner.xcworkspace"
+          echo "VNC workspace ready for 1 hour."
+          sleep 3600
 
     artifacts:
       - build/ios/iphonesimulator/*.app
