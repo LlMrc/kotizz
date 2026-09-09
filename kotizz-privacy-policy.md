@@ -1,83 +1,210 @@
 # Kotizz — Privacy Policy
 
-**Last updated:** 8/14/2026
+**Last updated: September 9, 2026**
 
-This Privacy Policy explains what information Kotizz ("we," "us") collects when you use the Kotizz app (iOS app and web app), why we collect it, and how it's handled. By using Kotizz, you agree to this Policy.
+This Privacy Policy explains how Kotizz ("Kotizz", "we", "us", or "our") collects, uses, stores, and protects information when you use the Kotizz mobile application or related web services.
+
+Kotizz is a platform that helps people organize and manage sòl (susu) savings groups.
 
 ## 1. Information We Collect
 
-### 1.1 From Organizers
-- **Sign-in data:** If you sign in with Sign in with Apple, we receive a unique Apple identifier and, if you choose to share it, your name and a private relay or real email address. If you sign in via Magic Link, we collect the email address you provide.
-- **Group data:** Group name, description, contribution amount, payment frequency, payout order, and member list.
-- **Subscription status:** Whether you're on the Free or Pro plan, and billing status as reported to us by Apple or our payment processor (we do not receive or store your full card number).
+### 1.1 Information from Organizers
 
-### 1.2 From Participants
-- **Identity document:** A photo or scan of an identity document (e.g., national ID, passport) that you upload so the group Organizer can confirm who you are before approving you into the group.
-- **Basic profile info:** Name and any contact info you provide to be listed in the group.
-- **Device/contact info needed to receive the group link** you were invited with (e.g., phone number or messaging handle used to send you the invite, which is provided by the Organizer, not collected by us directly from you unless you interact with the App).
+When you create or manage a Kotizz group, we may collect:
 
-Participants do not create a Kotizz account, do not set a password, and are not required to sign in to view their group.
+* **Account information:** If you use Sign in with Apple, we receive a unique Apple user identifier and, depending on your choices, your name and email address or Apple's private relay email address.
+* **Magic Link information:** If you use email-based authentication, we collect the email address you provide.
+* **Group information:** Group name, description, contribution amount, payment frequency, payout order, and member information.
+* **Subscription information:** Your Kotizz plan (Free or Pro) and subscription status associated with your Apple Account.
+* **Usage and technical information:** App version, device type, crash information, and information necessary to maintain the security and functionality of the service.
 
-### 1.3 Automatically Collected
-- Push notification token (via OneSignal) so we can send you payment reminders.
-- Basic device and usage data (app version, device type, crash logs) to keep the App working properly.
+We do not receive or store your full payment card number when you purchase a Kotizz subscription through Apple's App Store.
 
-## 2. How We Use Information
+### 1.2 Information from Participants
 
-We use the information above to:
-- Let Organizers create and manage sòl groups;
-- Let Participants be identified and approved by their Organizer;
-- Send one monthly payment reminder (10 days before the end of the payment cycle) to participants who haven't yet marked their contribution as paid;
-- Process and manage subscription billing;
-- Maintain and secure the App, and investigate abuse or fraud reports.
+Participants who join a sòl group may provide:
 
-**We do not sell your personal information, and we do not use identity documents for any purpose other than the verification your Organizer performs.**
+* **Identity information:** A photo or scan of an identity document, such as a national identification card or passport, when required by the group Organizer for identity verification.
+* **Basic profile information:** Your name and other contact information that you choose to provide for display within the group.
+* **Group information:** Information related to your membership, contribution status, payment status, and position in the group's payout order.
 
-## 3. Who Can See Your Identity Document
+Participants do not need to create a Kotizz account or password to access a group through an invitation link.
 
-Only the Organizer of the specific group you're joining can view the identity document you submit, through their private approval dashboard. Kotizz staff do not routinely review identity documents; we may access them only if required to investigate a fraud report, a legal request, or a security incident.
+### 1.3 Information Collected Automatically
 
-## 4. How Long We Keep Data
+Depending on the features you use, Kotizz may collect:
 
-- **Identity documents:** Retained for as long as you remain a member of the group, plus a limited period afterward (e.g., 90 days) to resolve any disputes, after which they are deleted. You may request earlier deletion — see Section 7.
-- **Group and payment-status data:** Retained for the life of the group and for a reasonable period afterward for record-keeping, unless you request deletion.
-- **Account/subscription data:** Retained while your account is active and as required for billing, tax, or legal record-keeping after that.
+* Push notification tokens, provided through OneSignal, to deliver relevant notifications and payment reminders.
+* Basic device information, such as device type and operating system version.
+* App version and crash or diagnostic information.
+* Basic usage information necessary to maintain, secure, and improve the service.
 
-## 5. Third Parties We Use
+## 2. How We Use Your Information
 
-- **Apple (Sign in with Apple, App Store subscriptions):** handles authentication and/or billing for iOS users, governed by Apple's own privacy policy.
-- **OneSignal:** delivers push notifications; receives a device token, not your identity documents.
-- **[Web payment processor — insert name once chosen]:** handles billing for web subscriptions, if offered.
-- **Hosting/infrastructure provider(s):** [insert, e.g., Supabase] store App data on our behalf under contractual confidentiality and security obligations.
+We use the information we collect to:
 
-We do not share identity documents with any third party for advertising or marketing purposes.
+* Create and manage sòl groups.
+* Allow Organizers to invite and manage participants.
+* Allow Organizers to verify participants when identity verification is required.
+* Display group membership, contribution status, payment status, and payout order.
+* Send payment reminders and other necessary service notifications.
+* Provide and manage Kotizz Pro subscriptions.
+* Maintain, secure, troubleshoot, and improve Kotizz.
+* Detect, investigate, and prevent fraud, abuse, unauthorized access, and security incidents.
+* Comply with applicable legal obligations and respond to valid legal requests.
 
-## 6. Security
+We do **not** sell your personal information.
 
-We use reasonable technical and organizational measures (encrypted storage and transmission, access controls limiting document visibility to the relevant group's Organizer) to protect your information. No system is 100% secure, and we cannot guarantee absolute security.
+We do not use identity documents for advertising or marketing purposes.
 
-## 7. Your Rights and Choices
+## 3. Identity Documents
 
-You may:
-- Ask us what data we hold about you;
-- Ask an Organizer or Kotizz to delete your identity document once verification is no longer needed;
-- Withdraw from a group (contact your Organizer);
-- Disable push notifications in your device settings.
+Identity documents submitted through Kotizz are provided for the purpose of identity verification within a specific sòl group.
 
-To exercise these rights, contact us at gravityleap73@gmail.com.
+The identity document is made available to the Organizer of the relevant group through the Organizer's private management interface.
 
-## 8. Children
+Kotizz staff do not routinely review identity documents. Access by authorized personnel may occur only when reasonably necessary to:
 
-Kotizz is not directed at children under 18 and identity-document based verification is intended for adult financial participants. We do not knowingly collect data from children.
+* Investigate a fraud or abuse report.
+* Respond to a valid legal request.
+* Investigate or resolve a security incident.
+* Maintain or protect the security and operation of the service.
 
-## 9. International Users
+Identity documents are not sold or shared with third parties for advertising or marketing purposes.
 
-Kotizz is operated from Haiti. If you use the App from another country, your information will be processed in Haiti and/or the countries where our service providers (e.g., hosting, Apple, OneSignal) operate, which may have different data protection laws than your home country.
+## 4. Data Retention and Deletion
 
-## 10. Changes to This Policy
+We retain personal information only for as long as reasonably necessary for the purposes described in this Privacy Policy.
 
-We may update this Privacy Policy from time to time. Material changes will be announced in the App or via push notification before they take effect.
+### Identity documents
 
-## 11. Contact
+Identity documents are retained while they are needed for membership verification and for up to **90 days after the participant leaves the relevant group**, where necessary to resolve disputes, investigate fraud, or address security issues.
 
-Questions or requests about this Privacy Policy can be sent to: gravityleap73@gmail.com
+After the applicable retention period, identity documents are deleted from our active systems, subject to any legal requirement that requires longer retention.
+
+You may request earlier deletion of your identity document where applicable by contacting us at:
+
+**[gravityleap73@gmail.com](mailto:gravityleap73@gmail.com)**
+
+### Group and payment information
+
+Group membership, contribution, payment-status, and payout-order information may be retained for the life of the group and for a reasonable period afterward for operational, security, dispute-resolution, or legal purposes.
+
+### Account and subscription information
+
+Account and subscription information may be retained while your account is active and for as long as reasonably necessary to process subscriptions, maintain records, comply with tax or accounting obligations, resolve disputes, or comply with applicable law.
+
+## 5. Third-Party Services
+
+Kotizz uses selected third-party service providers to operate and provide its services.
+
+### Apple
+
+Apple provides services including Sign in with Apple and App Store subscription billing for iOS users.
+
+Apple processes information according to Apple's own privacy policies and terms.
+
+### Supabase
+
+Supabase provides backend infrastructure used by Kotizz, including database, authentication, storage, and related services.
+
+Information processed through Supabase is handled according to the services and security controls configured by Kotizz.
+
+### OneSignal
+
+OneSignal provides push notification delivery services.
+
+OneSignal may receive information such as a device or push notification identifier required to deliver notifications.
+
+Identity documents are not sent to OneSignal for push notification delivery.
+
+### Service Providers
+
+Kotizz may use additional infrastructure, hosting, security, analytics, or technical service providers when reasonably necessary to operate and maintain the service.
+
+Where such providers process personal information on our behalf, we require appropriate confidentiality and security protections consistent with applicable requirements.
+
+We do not share identity documents with third parties for advertising or marketing purposes.
+
+## 6. International Data Processing
+
+Kotizz is operated from Haiti.
+
+Depending on the services used, your information may be processed or stored in Haiti or in other countries where Kotizz or its service providers operate.
+
+These countries may have data protection laws that differ from those in your country of residence.
+
+By using Kotizz, you acknowledge that your information may be processed in these locations as necessary to provide the service.
+
+## 7. Data Security
+
+We use reasonable technical and organizational measures designed to protect personal information against unauthorized access, alteration, disclosure, or destruction.
+
+These measures may include:
+
+* Encrypted transmission of information.
+* Secure storage mechanisms.
+* Access controls.
+* Restricted access to identity documents.
+* Authentication and authorization controls.
+* Monitoring and investigation of security incidents.
+
+However, no online service or storage system can be guaranteed to be completely secure.
+
+## 8. Your Rights and Choices
+
+Depending on applicable law, you may have rights concerning your personal information, including the ability to:
+
+* Request information about personal data we hold about you.
+* Request correction of inaccurate information.
+* Request deletion of certain personal information.
+* Request deletion of your identity document when it is no longer required.
+* Withdraw from a sòl group.
+* Disable push notifications through your device settings.
+* Contact us regarding questions or concerns about our handling of your information.
+
+To make a privacy-related request, contact:
+
+**[gravityleap73@gmail.com](mailto:gravityleap73@gmail.com)**
+
+We may need to verify your request before taking action in order to protect your information and prevent unauthorized requests.
+
+## 9. Subscriptions
+
+Kotizz offers an optional Kotizz Pro subscription through Apple's App Store.
+
+Subscription purchases made through the App Store are processed by Apple. Kotizz receives information necessary to determine the user's subscription status and provide the corresponding features.
+
+Kotizz does not receive or store the user's full Apple payment card information.
+
+Subscription management and cancellation are handled through the user's Apple Account and App Store settings.
+
+For more information about Apple's handling of subscription and payment information, please refer to Apple's privacy policies and terms.
+
+## 10. Children
+
+Kotizz is not directed toward children under 18 years of age.
+
+The service involves financial group-management features and may involve identity-document verification. We do not knowingly collect personal information from children under 18.
+
+If you believe that a child has provided personal information to Kotizz, please contact us at:
+
+**[gravityleap73@gmail.com](mailto:gravityleap73@gmail.com)**
+
+## 11. Changes to This Privacy Policy
+
+We may update this Privacy Policy from time to time to reflect changes to Kotizz, our services, or applicable legal requirements.
+
+When we make material changes, we may provide notice through the app, our website, or other appropriate communication channels.
+
+The "Last updated" date at the top of this Privacy Policy indicates when the policy was most recently revised.
+
+## 12. Contact Us
+
+If you have questions, concerns, or requests regarding this Privacy Policy or the handling of your personal information, please contact us:
+
+**Email:** [gravityleap73@gmail.com](mailto:gravityleap73@gmail.com)
+
+**Kotizz**
+
+Haiti
