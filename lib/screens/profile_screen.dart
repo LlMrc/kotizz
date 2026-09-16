@@ -45,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _trustScore = 50;
   int _completedCycles = 0;
   bool _phoneVerified = false;
-  bool _idVerified = false;
   bool _planLoading = true;
 
   @override
@@ -61,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       final data = await Supabase.instance.client
           .from('profiles')
-          .select('full_name, phone, plan, plan_expires_at, trust_score, completed_cycles, phone_verified, id_verified')
+          .select('full_name, phone, plan, plan_expires_at, trust_score, completed_cycles, phone_verified')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -74,7 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _trustScore = (data?['trust_score'] as int?) ?? 50;
           _completedCycles = (data?['completed_cycles'] as int?) ?? 0;
           _phoneVerified = (data?['phone_verified'] as bool?) ?? false;
-          _idVerified = (data?['id_verified'] as bool?) ?? false;
           _planLoading = false;
         });
       }
@@ -179,13 +177,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: t.profileVerifyPhone,
               subtitle: _phone.isNotEmpty ? _phone : 'Non renseigné',
               done: _phoneVerified,
-            ),
-            const SizedBox(height: 10),
-            _VerificationRow(
-              icon: Icons.badge_outlined,
-              title: t.identityVerified,
-              subtitle: _idVerified ? 'Pièce vérifiée ✓' : 'Non vérifié',
-              done: _idVerified,
             ),
             const SizedBox(height: 10),
             _VerificationRow(

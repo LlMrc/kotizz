@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
@@ -59,6 +60,13 @@ class _AuthScreenState extends State<AuthScreen>
   bool _magicLinkSent = false;
   String? _errorMsg;
 
+  // ── Reviewer demo access (hidden: tap logo 7 times) ──────────────────────
+  static const _demoEmail = 'reviewer@kotizz-demo.app';
+  static const _demoPassword = 'K0t1zz#Rev!ew2026';
+  int _logoTapCount = 0;
+  DateTime? _firstLogoTap;
+  bool _showReviewerButton = false;
+
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
 
@@ -82,7 +90,8 @@ class _AuthScreenState extends State<AuthScreen>
     super.dispose();
   }
 
-  /// Authentification Apple (sur iOS)
+  /// Authentification Apple native (iOS/iPadOS) via ASAuthorizationAppleIDProvider.
+  /// Utilise signInWithIdToken pour éviter le redirect web qui échoue sur iPad.
   Future<void> _signInWithApple() async {
     setState(() {
       _loading = true;
@@ -90,15 +99,73 @@ class _AuthScreenState extends State<AuthScreen>
     });
 
     try {
-      final supabase = Supabase.instance.client;
-      await supabase.auth.signInWithOAuth(
-        OAuthProvider.apple,
-        redirectTo: kIsWeb ? null : 'kotizz://login-callback',
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
       );
+
+      final idToken = appleCredential.identityToken;
+      if (idToken == null) {
+        setState(() => _errorMsg = 'Apple n\'a pas retourné de jeton. Veuillez réessayer.');
+        return;
+      }
+
+      final supabase = Supabase.instance.client;
+      await supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        // authorizationCode sert de nonce côté Supabase
+        nonce: appleCredential.authorizationCode,
+      );
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        // L'utilisateur a annulé → pas d'erreur à afficher
+        return;
+      }
+      setState(() => _errorMsg = 'Connexion Apple échouée : ${e.message}');
     } on AuthException catch (e) {
       setState(() => _errorMsg = _mapAuthError(e.message));
     } catch (e) {
       setState(() => _errorMsg = 'Impossible de se connecter avec Apple.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Gère les tapotements sur le logo (7 taps en moins de 4 secondes
+  /// → révèle le bouton de démonstration pour les évaluateurs App Store).
+  void _onLogoTap() {
+    final now = DateTime.now();
+    if (_firstLogoTap == null ||
+        now.difference(_firstLogoTap!) > const Duration(seconds: 4)) {
+      _firstLogoTap = now;
+      _logoTapCount = 1;
+    } else {
+      _logoTapCount++;
+    }
+    if (_logoTapCount >= 7 && !_showReviewerButton) {
+      setState(() => _showReviewerButton = true);
+    }
+  }
+
+  /// Connexion silencieuse avec le compte de démonstration pour les évaluateurs.
+  Future<void> _signInAsReviewer() async {
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+    });
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.auth.signInWithPassword(
+        email: _demoEmail,
+        password: _demoPassword,
+      );
+    } on AuthException catch (e) {
+      setState(() => _errorMsg = 'Demo login failed: ${e.message}');
+    } catch (e) {
+      setState(() => _errorMsg = 'Demo login unavailable. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -195,27 +262,30 @@ class _AuthScreenState extends State<AuthScreen>
                 children: [
                   // ── Logo / En-tête ─────────────────────────────
                   Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: AppColors.ink,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.ink.withValues(alpha: 0.18),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                    child: GestureDetector(
+                      onTap: _onLogoTap,
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: AppColors.ink,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.ink.withValues(alpha: 0.18),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'K',
+                          style: GoogleFonts.bricolageGrotesque(
+                            fontSize: 38,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.marigold,
                           ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'K',
-                        style: GoogleFonts.bricolageGrotesque(
-                          fontSize: 38,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.marigold,
                         ),
                       ),
                     ),
@@ -694,6 +764,34 @@ class _AuthScreenState extends State<AuthScreen>
                       ],
                     ),
                   ),
+
+                  // ── Bouton de démonstration évaluateurs (caché) ─────────
+                  // Visible uniquement après 7 tapotements sur le logo.
+                  if (_showReviewerButton) ...[
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _loading ? null : _signInAsReviewer,
+                        icon: const Icon(Icons.preview_rounded, size: 16),
+                        label: Text(
+                          'App Review — Demo Access',
+                          style: GoogleFonts.ibmPlexMono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.ash,
+                          side: const BorderSide(color: AppColors.paperDim),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
