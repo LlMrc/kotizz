@@ -134,19 +134,25 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
-  /// Gère les tapotements sur le logo (7 taps en moins de 4 secondes
+  /// Gère les tapotements sur le logo (5 taps en moins de 6 secondes
   /// → révèle le bouton de démonstration pour les évaluateurs App Store).
   void _onLogoTap() {
     final now = DateTime.now();
     if (_firstLogoTap == null ||
-        now.difference(_firstLogoTap!) > const Duration(seconds: 4)) {
+        now.difference(_firstLogoTap!) > const Duration(seconds: 6)) {
       _firstLogoTap = now;
       _logoTapCount = 1;
     } else {
       _logoTapCount++;
     }
-    if (_logoTapCount >= 7 && !_showReviewerButton) {
+    if (_logoTapCount >= 5 && !_showReviewerButton) {
       setState(() => _showReviewerButton = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mode Démo activé (App Review)'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -263,6 +269,7 @@ class _AuthScreenState extends State<AuthScreen>
                   // ── Logo / En-tête ─────────────────────────────
                   Center(
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: _onLogoTap,
                       child: Container(
                         width: 72,
@@ -766,25 +773,25 @@ class _AuthScreenState extends State<AuthScreen>
                   ),
 
                   // ── Bouton de démonstration évaluateurs (caché) ─────────
-                  // Visible uniquement après 7 tapotements sur le logo.
+                  // Visible uniquement après 5 tapotements sur le logo.
                   if (_showReviewerButton) ...[
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: _loading ? null : _signInAsReviewer,
-                        icon: const Icon(Icons.preview_rounded, size: 16),
+                        icon: const Icon(Icons.preview_rounded, size: 18),
                         label: Text(
                           'App Review — Demo Access',
-                          style: GoogleFonts.ibmPlexMono(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.ash,
-                          side: const BorderSide(color: AppColors.paperDim),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.marigold,
+                          foregroundColor: AppColors.ink,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
