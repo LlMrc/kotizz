@@ -327,7 +327,9 @@ ${t.inviteMessageIntro} "${_nameCtrl.text.trim()}" !
 ${desc.isNotEmpty ? '$desc\n' : ''}${t.inviteMessageAmountLabel} : $amount $_currency
 ${t.inviteMessageFrequencyLabel} : $freqLabel
 ${t.inviteMessageStartLabel} : $dateLabel
-${inviteCode != null && inviteCode.isNotEmpty ? '\n${t.inviteCode} : $inviteCode' : ''}
+${inviteCode != null && inviteCode.isNotEmpty ? '\n${t.inviteCode} : $inviteCode\n' : ''}
+${t.inviteMessageJoinLabel} :
+https://apps.apple.com/app/id6795205027
 ''';
   }
 

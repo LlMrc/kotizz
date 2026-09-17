@@ -885,7 +885,9 @@ ${t.inviteMessageIntro} "${widget.group.name}" !
 ${t.inviteMessageAmountLabel} : ${widget.group.contributionAmount} ${widget.group.currency}
 ${t.inviteMessageFrequencyLabel} : ${widget.group.frequency}
 ${t.inviteMessageStartLabel} : ${widget.group.nextTurnDate}
-${code.isNotEmpty ? '\n${t.inviteCode} : $code' : ''}
+${code.isNotEmpty ? '\n${t.inviteCode} : $code\n' : ''}
+${t.inviteMessageJoinLabel} :
+https://apps.apple.com/app/id6795205027
 ''';
 
     showModalBottomSheet(
