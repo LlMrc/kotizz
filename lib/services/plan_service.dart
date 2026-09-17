@@ -77,6 +77,24 @@ class PlanService {
     }
   }
 
+  /// Restaure les achats in-app via RevenueCat (Obligation App Store 3.1.1).
+  static Future<bool> restorePurchases() async {
+    if (_uid == null) return false;
+    try {
+      await Purchases.logIn(_uid!);
+      final customerInfo = await Purchases.restorePurchases();
+      final isProActive =
+          customerInfo.entitlements.active.containsKey('Kotizz Pro');
+      if (isProActive) {
+        await _db.from('profiles').update({'plan': 'pro'}).eq('id', _uid!);
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── Quotas ─────────────────────────────────────────────────────
 
   /// L'utilisateur peut-il créer un nouveau groupe SOL ?

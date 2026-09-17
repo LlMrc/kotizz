@@ -249,5 +249,12 @@
   "youBadge": "VOUS",
   "potReceived": "Pot perçu ✓",
   "currentTurnBeneficiary": "Bénéficiaire du tour actuel",
-  "waitingTurn": "En attente"
+  "waitingTurn": "En attente",
+  "cancel": "Annuler",
+  "deleteAccount": "Supprimer mon compte",
+  "deleteAccountConfirmationTitle": "Supprimer votre compte ?",
+  "deleteAccountConfirmationMessage": "Cette action est irréversible. Toutes vos données personnelles, vos groupes et votre historique seront définitivement supprimés.",
+  "deleteAccountConfirmAction": "Oui, supprimer mon compte",
+  "deleteAccountSuccess": "Votre compte a été supprimé avec succès.",
+  "deleteAccountError": "Impossible de supprimer le compte. Veuillez réessayer."
 }

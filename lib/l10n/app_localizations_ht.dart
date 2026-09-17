@@ -451,4 +451,26 @@ class AppLocalizationsHt extends AppLocalizations {
 
   @override
   String get waitingTurn => 'Ap tann';
+
+  @override
+  String get cancel => 'Anile';
+
+  @override
+  String get deleteAccount => 'Efase kont mwen';
+
+  @override
+  String get deleteAccountConfirmationTitle => 'Efase kont lan ?';
+
+  @override
+  String get deleteAccountConfirmationMessage =>
+      'Aksyon sa a pa ka defèt. Tout done pèsonèl ou, gwoup ou yo ak istrik ou ap efase nèt.';
+
+  @override
+  String get deleteAccountConfirmAction => 'Wi, efase kont mwen';
+
+  @override
+  String get deleteAccountSuccess => 'Kont ou an efase avèk siksè.';
+
+  @override
+  String get deleteAccountError => 'Pa ka efase kont lan. Tanpri eseye ankò.';
 }

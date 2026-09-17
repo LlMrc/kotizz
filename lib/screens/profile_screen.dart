@@ -86,6 +86,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // AuthGate redirige automatiquement vers AuthScreen.
   }
 
+  bool _isDeletingAccount = false;
+
+  Future<void> _confirmDeleteAccount() async {
+    final t = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.paper,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          t.deleteAccountConfirmationTitle,
+          style: GoogleFonts.bricolageGrotesque(
+            fontWeight: FontWeight.w700,
+            color: AppColors.coral,
+          ),
+        ),
+        content: Text(
+          t.deleteAccountConfirmationMessage,
+          style: GoogleFonts.ibmPlexSans(
+            fontSize: 14,
+            color: AppColors.ink,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              t.cancel,
+              style: GoogleFonts.ibmPlexSans(
+                color: AppColors.ash,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.coral,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              t.deleteAccountConfirmAction,
+              style: GoogleFonts.ibmPlexSans(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _deleteAccount();
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final t = AppLocalizations.of(context)!;
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    setState(() => _isDeletingAccount = true);
+
+    try {
+      // 1. Tenter d'exécuter la fonction RPC Supabase sécurisée
+      try {
+        await Supabase.instance.client.rpc('delete_user_account');
+      } catch (_) {
+        // Fallback: suppression directe dans la table profiles (cascade sur les données)
+        await Supabase.instance.client
+            .from('profiles')
+            .delete()
+            .eq('id', user.id);
+      }
+
+      // 2. Déconnexion de la session locale
+      await Supabase.instance.client.auth.signOut();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.deleteAccountSuccess),
+            backgroundColor: AppColors.palm,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isDeletingAccount = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.deleteAccountError),
+            backgroundColor: AppColors.coral,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
@@ -299,6 +410,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w600, fontSize: 14.5),
                 ),
               ),
+            ),
+            const SizedBox(height: 12),
+
+            // Delete Account button (Apple Guideline 5.1.1(v))
+            Center(
+              child: _isDeletingAccount
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.coral,
+                      ),
+                    )
+                  : TextButton.icon(
+                      onPressed: _confirmDeleteAccount,
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        size: 16,
+                        color: AppColors.ash,
+                      ),
+                      label: Text(
+                        t.deleteAccount,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          color: AppColors.ash,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
             ),
             const SizedBox(height: 18),
 

@@ -249,5 +249,12 @@
   "youBadge": "YOU",
   "potReceived": "Pot received ✓",
   "currentTurnBeneficiary": "Current turn beneficiary",
-  "waitingTurn": "Waiting"
+  "waitingTurn": "Waiting",
+  "cancel": "Cancel",
+  "deleteAccount": "Delete Account",
+  "deleteAccountConfirmationTitle": "Delete Account?",
+  "deleteAccountConfirmationMessage": "This action is irreversible. All your personal data, groups, and history will be permanently deleted.",
+  "deleteAccountConfirmAction": "Yes, delete my account",
+  "deleteAccountSuccess": "Your account has been deleted successfully.",
+  "deleteAccountError": "Could not delete account. Please try again."
 }

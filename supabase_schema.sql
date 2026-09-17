@@ -196,6 +196,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- RPC: Delete user account & all associated data (Apple App Store Guideline 5.1.1(v))
+CREATE OR REPLACE FUNCTION public.delete_user_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Suppression du compte auth.users (qui déclenche les cascades vers profiles, groupes, etc.)
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;
+
 -- =============================================================================
 -- 5. TRIGGERS & AUTOMATIONS
 -- =============================================================================
@@ -330,6 +343,12 @@ CREATE POLICY "Public profiles are viewable by authenticated users"
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can delete their own profile" ON public.profiles;
+CREATE POLICY "Users can delete their own profile"
+  ON public.profiles FOR DELETE
   TO authenticated
   USING (auth.uid() = id);
 
