@@ -34,17 +34,21 @@ workflows:
 
       - name: Build and Sign IPA
         script: |
-          # 1. Configurer le projet avec les profils de signature Codemagic
+          # 1. Préparer le projet avec les profils de signature Codemagic
           xcode-project use-profiles
 
-          # 2. Compiler et signer directement l'archive IPA
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist \
+          # 2. Compiler l'archive sans signature (Codemagic signe à l'étape suivante)
+          flutter build ipa --release --no-codesign \
             --build-name=1.2.0 \
             --build-number=$((1 + $PROJECT_BUILD_NUMBER)) \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
             --dart-define=SUPABASE_KEY=$SUPABASE_KEY \
             --dart-define=REVENUECAT_KEY=$REVENUECAT_KEY
+
+          # 3. Signer et packager l'IPA via l'outil Codemagic
+          xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner
 
     artifacts:
       - build/ios/ipa/*.ipa
