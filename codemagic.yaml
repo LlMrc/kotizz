@@ -61,6 +61,8 @@
 #           - Internal Testers
 
 
+ 
+workflows:
   ios-validation-vnc:
     name: iOS Test & Build with VNC
     integrations:
