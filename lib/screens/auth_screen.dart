@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -91,7 +93,7 @@ class _AuthScreenState extends State<AuthScreen>
   }
 
   /// Authentification Apple native (iOS/iPadOS) via ASAuthorizationAppleIDProvider.
-  /// Utilise signInWithIdToken pour éviter le redirect web qui échoue sur iPad.
+  /// Utilise signInWithIdToken avec un nonce brut haché en SHA-256 pour Supabase.
   Future<void> _signInWithApple() async {
     setState(() {
       _loading = true;
@@ -99,11 +101,16 @@ class _AuthScreenState extends State<AuthScreen>
     });
 
     try {
+      final supabase = Supabase.instance.client;
+      final rawNonce = supabase.auth.generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
+        nonce: hashedNonce,
       );
 
       final idToken = appleCredential.identityToken;
@@ -112,12 +119,10 @@ class _AuthScreenState extends State<AuthScreen>
         return;
       }
 
-      final supabase = Supabase.instance.client;
       await supabase.auth.signInWithIdToken(
         provider: OAuthProvider.apple,
         idToken: idToken,
-        // authorizationCode sert de nonce côté Supabase
-        nonce: appleCredential.authorizationCode,
+        nonce: rawNonce,
       );
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) {

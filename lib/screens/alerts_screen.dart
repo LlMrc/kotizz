@@ -103,12 +103,23 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
     final unreadCount = _realAlerts.where((a) => a.isUnread).length;
 
+    final isTablet = MediaQuery.sizeOf(context).width >= 720;
+
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        padding: EdgeInsets.fromLTRB(
+          isTablet ? 32 : 20,
+          16,
+          isTablet ? 32 : 20,
+          100,
+        ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             // Top Bar Title & Mark read action
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -227,6 +238,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 const SizedBox(height: 12),
               ],
           ],
+            ),
+          ),
         ),
       ),
     );
@@ -235,13 +248,18 @@ class _AlertsScreenState extends State<AlertsScreen> {
   void _showAlertDetailSheet(BuildContext context, _AlertItem alert) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.paper,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(22, 24, 22, 36),
-        child: Column(
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: AppColors.paper,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 36),
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -324,7 +342,9 @@ class _AlertsScreenState extends State<AlertsScreen> {
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

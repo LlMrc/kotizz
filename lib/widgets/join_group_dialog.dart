@@ -178,15 +178,25 @@ Future<void> showJoinGroupDialog(
                             final groupId = groupResp['id'] as String;
                             final maxMembers = (groupResp['max_members'] as int?) ?? 5;
 
-                            // 3. Vérifier si déjà membre
+                            // 3. Vérifier si déjà membre ou banni
                             final existingMember = await Supabase.instance.client
                                 .from('group_members')
-                                .select('id')
+                                .select('id, status')
                                 .eq('group_id', groupId)
                                 .eq('user_id', user.id)
                                 .maybeSingle();
 
                             if (existingMember != null) {
+                              final memberStatus = existingMember['status'] as String? ?? '';
+                              if (memberStatus == 'left') {
+                                // Membre banni — bloquer
+                                setModalState(() {
+                                  isJoining = false;
+                                  errorMessage = 'Vous avez été banni de ce groupe par l\'organisateur.';
+                                });
+                                return;
+                              }
+                              // Déjà membre actif
                               setModalState(() {
                                 isJoining = false;
                                 errorMessage = t.alreadyMember;

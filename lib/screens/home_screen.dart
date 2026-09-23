@@ -116,6 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final activeGroups =
         _userGroups.where((g) => g['status'] != 'completed').toList();
     final featuredGroup = activeGroups.isNotEmpty ? activeGroups.first : null;
+    final isTablet = MediaQuery.sizeOf(context).width >= 720;
 
     return SafeArea(
       child: RefreshIndicator(
@@ -123,36 +124,47 @@ class _HomeScreenState extends State<HomeScreen> {
         color: AppColors.marigold,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _TopBar(
-                displayName: _displayName,
-                initials: _initials,
-                trustScore: _trustScore,
+          padding: EdgeInsets.fromLTRB(
+            isTablet ? 32 : 20,
+            16,
+            isTablet ? 32 : 20,
+            100,
+          ),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _TopBar(
+                    displayName: _displayName,
+                    initials: _initials,
+                    trustScore: _trustScore,
+                  ),
+                  const SizedBox(height: 18),
+                  _SummaryStatsRow(
+                    totalSavings: _totalSavings,
+                    currency: _currency,
+                    activeGroupsCount: activeGroups.length,
+                    nextPayout: _nextPayout,
+                    trustScore: _trustScore,
+                  ),
+                  const SizedBox(height: 18),
+                  _WheelCard(
+                    featuredGroup: featuredGroup,
+                    onRefresh: _loadHomeData,
+                  ),
+                  const SizedBox(height: 22),
+                  _GroupsPreview(
+                    groups: activeGroups,
+                    onGroupCreated: _loadHomeData,
+                  ),
+                  const SizedBox(height: 22),
+                  _QuickActionsSection(onRefresh: _loadHomeData),
+                ],
               ),
-              const SizedBox(height: 18),
-              _SummaryStatsRow(
-                totalSavings: _totalSavings,
-                currency: _currency,
-                activeGroupsCount: activeGroups.length,
-                nextPayout: _nextPayout,
-                trustScore: _trustScore,
-              ),
-              const SizedBox(height: 18),
-              _WheelCard(
-                featuredGroup: featuredGroup,
-                onRefresh: _loadHomeData,
-              ),
-              const SizedBox(height: 22),
-              _GroupsPreview(
-                groups: activeGroups,
-                onGroupCreated: _loadHomeData,
-              ),
-              const SizedBox(height: 22),
-              _QuickActionsSection(onRefresh: _loadHomeData),
-            ],
+            ),
           ),
         ),
       ),
@@ -284,35 +296,56 @@ class _SummaryStatsRow extends StatelessWidget {
         : '0 $currency';
     final nextDate = nextPayout?['scheduled_date'] as String? ?? 'À venir';
 
+    final isWide = MediaQuery.sizeOf(context).width >= 720;
+
+    final cards = [
+      _MiniStatCard(
+        title: t.globalSavingsTitle,
+        value: '$totalSavings $currency',
+        sub: t.activeTontinesCount(activeGroupsCount),
+        icon: Icons.account_balance_wallet_rounded,
+        iconColor: AppColors.marigold,
+        isFlexible: isWide,
+      ),
+      _MiniStatCard(
+        title: t.nextPotTitle,
+        value: nextAmount,
+        sub: nextPayout != null
+            ? t.nextPotReceivedSub(nextDate, 'Vous')
+            : 'Aucun pot en attente',
+        icon: Icons.savings_rounded,
+        iconColor: AppColors.palm,
+        isFlexible: isWide,
+      ),
+      _MiniStatCard(
+        title: t.trustScoreTitle,
+        value: '$trustScore / 100',
+        sub: trustScore >= 75 ? t.verifiedStatus : 'En cours',
+        icon: Icons.verified_user_rounded,
+        iconColor: AppColors.coral,
+        isFlexible: isWide,
+      ),
+    ];
+
+    if (isWide) {
+      return Row(
+        children: [
+          for (int i = 0; i < cards.length; i++) ...[
+            if (i > 0) const SizedBox(width: 14),
+            Expanded(child: cards[i]),
+          ],
+        ],
+      );
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _MiniStatCard(
-            title: t.globalSavingsTitle,
-            value: '$totalSavings $currency',
-            sub: t.activeTontinesCount(activeGroupsCount),
-            icon: Icons.account_balance_wallet_rounded,
-            iconColor: AppColors.marigold,
-          ),
-          const SizedBox(width: 12),
-          _MiniStatCard(
-            title: t.nextPotTitle,
-            value: nextAmount,
-            sub: nextPayout != null
-                ? t.nextPotReceivedSub(nextDate, 'Vous')
-                : 'Aucun pot en attente',
-            icon: Icons.savings_rounded,
-            iconColor: AppColors.palm,
-          ),
-          const SizedBox(width: 12),
-          _MiniStatCard(
-            title: t.trustScoreTitle,
-            value: '$trustScore / 100',
-            sub: trustScore >= 75 ? t.verifiedStatus : 'En cours',
-            icon: Icons.verified_user_rounded,
-            iconColor: AppColors.coral,
-          ),
+          for (int i = 0; i < cards.length; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            cards[i],
+          ],
         ],
       ),
     );
@@ -323,6 +356,7 @@ class _MiniStatCard extends StatelessWidget {
   final String title, value, sub;
   final IconData icon;
   final Color iconColor;
+  final bool isFlexible;
 
   const _MiniStatCard({
     required this.title,
@@ -330,13 +364,14 @@ class _MiniStatCard extends StatelessWidget {
     required this.sub,
     required this.icon,
     required this.iconColor,
+    this.isFlexible = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 175,
-      padding: const EdgeInsets.all(14),
+      width: isFlexible ? null : 175,
+      padding: EdgeInsets.all(isFlexible ? 16 : 14),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(18),
@@ -496,6 +531,14 @@ class _WheelCard extends StatelessWidget {
     final totalTurns = (featuredGroup!['max_members'] as int?) ?? 5;
     final amount = featuredGroup!['contribution_amount']?.toString() ?? '0';
     final currency = (featuredGroup!['currency'] as String?) ?? 'HTG';
+    final amountNum = double.tryParse(amount) ?? 0.0;
+    final totalPot = '${(amountNum * totalTurns).toStringAsFixed(0)} $currency';
+    final rawFreq = featuredGroup!['frequency'] as String?;
+    final freq = rawFreq == 'monthly'
+        ? 'Mensuel'
+        : (rawFreq == 'weekly' ? 'Hebdo' : 'Bi-hebdo');
+    final startDate = (featuredGroup!['start_date'] as String?) ?? 'En cours';
+    final isWide = MediaQuery.sizeOf(context).width >= 720;
 
     return Container(
       width: double.infinity,
@@ -587,26 +630,33 @@ class _WheelCard extends StatelessWidget {
                       totalTurns: totalTurns,
                     ),
                     const SizedBox(width: 14),
-                    Expanded(
+                    Flexible(
+                      flex: 1,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.marigold,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              t.yourTurn.toUpperCase(),
-                              style: GoogleFonts.ibmPlexMono(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.ink,
+                          // Badge "C'EST VOTRE TOUR"
+                          Wrap(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.marigold,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  t.yourTurn.toUpperCase(),
+                                  style: GoogleFonts.ibmPlexMono(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.ink,
+                                  ),
+                                  softWrap: true,
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                           const SizedBox(height: 5),
                           Text(
@@ -615,7 +665,8 @@ class _WheelCard extends StatelessWidget {
                               fontSize: 12,
                               color: AppColors.white.withValues(alpha: 0.7),
                             ),
-                            overflow: TextOverflow.ellipsis,
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
                           ),
                           const SizedBox(height: 8),
                           FittedBox(
@@ -648,12 +699,117 @@ class _WheelCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    // Panneau enrichi pour iPad / écran large
+                    if (isWide) ...[
+                      Container(
+                        width: 1,
+                        height: 120,
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        color: AppColors.white.withValues(alpha: 0.12),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _WheelDetailMetric(
+                                title: 'POT TOTAL',
+                                value: totalPot,
+                                icon: Icons.savings_rounded,
+                                iconColor: AppColors.palm,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _WheelDetailMetric(
+                                title: 'CYCLE',
+                                value: '$freq • $totalTurns pers.',
+                                icon: Icons.repeat_rounded,
+                                iconColor: AppColors.marigold,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _WheelDetailMetric(
+                                title: 'DÉMARRAGE',
+                                value: startDate,
+                                icon: Icons.calendar_today_rounded,
+                                iconColor: const Color(0xFF64B5F6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WheelDetailMetric extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color iconColor;
+
+  const _WheelDetailMetric({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: iconColor),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  title,
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: AppColors.white.withValues(alpha: 0.6),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.white,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -678,11 +834,11 @@ class _RotationWheelState extends State<_RotationWheel>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
 
-  static const double _wheelSize = 125.0;
-  static const double _center = _wheelSize / 2; // 62.5
-  static const double _radius = 46.0;
-  static const double _nodeSize = 24.0;
-  static const double _nodeRadius = _nodeSize / 2; // 12.0
+  static const double _wheelSize = 150.0;
+  static const double _center = _wheelSize / 2; // 75
+  static const double _radius = 54.0;
+  static const double _nodeSize = 28.0;
+  static const double _nodeRadius = _nodeSize / 2; // 14.0
 
   @override
   void initState() {
@@ -866,6 +1022,9 @@ class _GroupsPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final isWide = MediaQuery.sizeOf(context).width >= 720;
+    final displayGroups = groups.take(isWide ? 4 : 3).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -925,30 +1084,52 @@ class _GroupsPreview extends StatelessWidget {
               ],
             ),
           )
-        else
-          for (final g in groups.take(3)) ...[
-            _GroupCard(
-              name: (g['name'] as String?) ?? 'Sòl',
-              meta:
-                  '${g['max_members'] ?? 5} membres • ${g['contribution_amount']} ${g['currency'] ?? 'HTG'}',
-              label: g['status'] == 'active'
-                  ? t.statusUpToDate
-                  : (g['status'] == 'draft'
-                      ? t.statusPending
-                      : t.statusDispute),
-              color: g['status'] == 'active'
-                  ? AppColors.palm
-                  : AppColors.marigold,
-              bg: g['status'] == 'active'
-                  ? AppColors.palm.withValues(alpha: 0.15)
-                  : AppColors.marigold.withValues(alpha: 0.18),
-              fg: g['status'] == 'active'
-                  ? AppColors.palm
-                  : const Color(0xFFB87A1F),
+        else if (isWide) ...[
+          for (int i = 0; i < displayGroups.length; i += 2) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _buildGroupCard(displayGroups[i], t),
+                ),
+                const SizedBox(width: 14),
+                if (i + 1 < displayGroups.length)
+                  Expanded(
+                    child: _buildGroupCard(displayGroups[i + 1], t),
+                  )
+                else
+                  const Expanded(child: SizedBox.shrink()),
+              ],
             ),
+            const SizedBox(height: 12),
+          ],
+        ] else
+          for (final g in displayGroups) ...[
+            _buildGroupCard(g, t),
             const SizedBox(height: 10),
           ],
       ],
+    );
+  }
+
+  Widget _buildGroupCard(Map<String, dynamic> g, AppLocalizations t) {
+    return _GroupCard(
+      name: (g['name'] as String?) ?? 'Sòl',
+      meta:
+          '${g['max_members'] ?? 5} membres • ${g['contribution_amount']} ${g['currency'] ?? 'HTG'}',
+      label: g['status'] == 'active'
+          ? t.statusUpToDate
+          : (g['status'] == 'draft'
+              ? t.statusPending
+              : t.statusDispute),
+      color: g['status'] == 'active'
+          ? AppColors.palm
+          : AppColors.marigold,
+      bg: g['status'] == 'active'
+          ? AppColors.palm.withValues(alpha: 0.15)
+          : AppColors.marigold.withValues(alpha: 0.18),
+      fg: g['status'] == 'active'
+          ? AppColors.palm
+          : const Color(0xFFB87A1F),
     );
   }
 }

@@ -200,12 +200,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final isTablet = MediaQuery.sizeOf(context).width >= 720;
+
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        padding: EdgeInsets.fromLTRB(
+          isTablet ? 32 : 20,
+          16,
+          isTablet ? 32 : 20,
+          100,
+        ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             // Title
             Text(
               t.profileTitle,
@@ -454,6 +465,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ],
+            ),
+          ),
         ),
       ),
     );
