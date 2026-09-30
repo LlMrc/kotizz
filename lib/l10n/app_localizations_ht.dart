@@ -193,14 +193,14 @@ class AppLocalizationsHt extends AppLocalizations {
   String get wheelGroupExample => 'Gwoup egzanp';
 
   @override
-  String get wheelSectionLabel => 'Pwochèn kontribisyon ou';
+  String get wheelSectionLabel => 'Wonn kotizasyon an';
 
   @override
-  String get yourTurn => 'Se vire ou !';
+  String get yourTurn => 'Ton tour';
 
   @override
   String confirmedCount(int confirmed, int total) {
-    return '$confirmed/$total konfime';
+    return '$confirmed sou $total konfime';
   }
 
   @override

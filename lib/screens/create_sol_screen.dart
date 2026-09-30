@@ -175,130 +175,133 @@ class _CreateSolScreenState extends State<CreateSolScreen> {
 
     await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: AppColors.paper,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.ink,
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              body,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 13.5,
-                color: AppColors.ash,
+              const SizedBox(height: 8),
+              Text(
+                body,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13.5,
+                  color: AppColors.ash,
+                ),
               ),
-            ),
-            const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.ink,
-                borderRadius: BorderRadius.circular(16),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.ink,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.paywallPlanName,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '9,99 \$ / mois',
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.marigold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.workspace_premium_rounded,
+                      color: AppColors.marigold,
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.paywallPlanName,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.white,
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(ctx).pop(); // Ferme le bottom sheet d'abord
+
+                    // Lance l'achat
+                    final success = await PlanService.purchasePro();
+                    if (success) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Merci pour votre achat ! Vous êtes maintenant PRO.',
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '9,99 \$ / mois',
-                          style: GoogleFonts.ibmPlexMono(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.marigold,
-                          ),
+                      );
+                      // Recharge le plan pour débloquer l'interface
+                      _loadUserPlan();
+                    } else {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('L\'achat n\'a pas pu être finalisé.'),
                         ),
-                      ],
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.marigold,
+                    foregroundColor: AppColors.ink,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  const Icon(
-                    Icons.workspace_premium_rounded,
-                    color: AppColors.marigold,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(ctx).pop(); // Ferme le bottom sheet d'abord
-
-                  // Lance l'achat
-                  final success = await PlanService.purchasePro();
-                  if (success) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Merci pour votre achat ! Vous êtes maintenant PRO.',
-                        ),
-                      ),
-                    );
-                    // Recharge le plan pour débloquer l'interface
-                    _loadUserPlan();
-                  } else {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('L\'achat n\'a pas pu être finalisé.'),
-                      ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.marigold,
-                  foregroundColor: AppColors.ink,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: Text(
-                  t.paywallCta,
-                  style: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  child: Text(
+                    t.paywallCta,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(
-                  t.later,
-                  style: GoogleFonts.ibmPlexSans(color: AppColors.ash),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    t.later,
+                    style: GoogleFonts.ibmPlexSans(color: AppColors.ash),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -340,146 +343,149 @@ https://apps.apple.com/app/id6795205027
 
     await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: AppColors.paper,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              t.inviteSheetTitle,
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.ink,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              t.inviteSheetSubtitle,
-              style: GoogleFonts.ibmPlexSans(
-                fontSize: 13.5,
-                color: AppColors.ash,
-              ),
-            ),
-            if (inviteCode != null && inviteCode.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.marigold.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.marigold),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.inviteCode.toUpperCase(),
-                          style: GoogleFonts.ibmPlexMono(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.8,
-                            color: const Color(0xFFB87A1F),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          inviteCode,
-                          style: GoogleFonts.bricolageGrotesque(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 2.0,
-                            color: AppColors.ink,
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy_rounded, color: AppColors.ink),
-                      tooltip: t.copyCode,
-                      onPressed: () async {
-                        await Clipboard.setData(ClipboardData(text: inviteCode));
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(t.codeCopied),
-                              backgroundColor: AppColors.palm,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.paperDim),
-              ),
-              child: Text(
-                message,
-                style: GoogleFonts.ibmPlexSans(
-                  fontSize: 12.5,
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t.inviteSheetTitle,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.ink,
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () =>
-                    SharePlus.instance.share(ShareParams(text: message)),
-                icon: const Icon(Icons.share_rounded, size: 18),
-                label: Text(t.shareInvite),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.marigold,
-                  foregroundColor: AppColors.ink,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
+              const SizedBox(height: 6),
+              Text(
+                t.inviteSheetSubtitle,
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13.5,
+                  color: AppColors.ash,
+                ),
+              ),
+              if (inviteCode != null && inviteCode.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.marigold.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.marigold),
                   ),
-                  textStyle: GoogleFonts.ibmPlexSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.inviteCode.toUpperCase(),
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.8,
+                              color: const Color(0xFFB87A1F),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            inviteCode,
+                            style: GoogleFonts.bricolageGrotesque(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2.0,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded, color: AppColors.ink),
+                        tooltip: t.copyCode,
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: inviteCode));
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(t.codeCopied),
+                                backgroundColor: AppColors.palm,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  Navigator.of(context).pop();
-                },
+              ],
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.paperDim),
+                ),
                 child: Text(
-                  t.later,
-                  style: GoogleFonts.ibmPlexSans(color: AppColors.ash),
+                  message,
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 12.5,
+                    color: AppColors.ink,
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () =>
+                      SharePlus.instance.share(ShareParams(text: message)),
+                  icon: const Icon(Icons.share_rounded, size: 18),
+                  label: Text(t.shareInvite),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.marigold,
+                    foregroundColor: AppColors.ink,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    textStyle: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    t.later,
+                    style: GoogleFonts.ibmPlexSans(color: AppColors.ash),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

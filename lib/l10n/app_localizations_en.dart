@@ -196,11 +196,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wheelSectionLabel => 'Your next contribution';
 
   @override
-  String get yourTurn => 'It\'s your turn!';
+  String get yourTurn => 'Your turn';
 
   @override
   String confirmedCount(int confirmed, int total) {
-    return '$confirmed/$total confirmed';
+    return '$confirmed of $total confirmed';
   }
 
   @override

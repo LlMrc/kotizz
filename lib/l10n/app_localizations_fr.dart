@@ -196,11 +196,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get wheelSectionLabel => 'Votre prochaine contribution';
 
   @override
-  String get yourTurn => 'C\'est votre tour !';
+  String get yourTurn => 'Ton tour';
 
   @override
   String confirmedCount(int confirmed, int total) {
-    return '$confirmed/$total confirmés';
+    return '$confirmed sur $total ont confirmé';
   }
 
   @override

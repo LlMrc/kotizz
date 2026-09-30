@@ -23,6 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _nextPayout;
   num _totalSavings = 0;
   String _currency = 'HTG';
+  int _confirmedContribsCount = 0;
+  bool _isUserTurn = false;
+  String? _turnBeneficiaryName;
 
   @override
   void initState() {
@@ -59,11 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
             firstName.substring(0, firstName.length >= 2 ? 2 : 1).toUpperCase();
       }
 
-      // 2. Groupes de l'utilisateur
+      // 2. Groupes de l'utilisateur (organisateur ou membre via RLS)
       final groupsResponse = await Supabase.instance.client
           .from('groups')
-          .select('*, profiles!organizer_id(full_name)')
-          .or('organizer_id.eq.${user.id}')
+          .select('*, profiles!organizer_id(full_name), group_members(user_id, turn_order, status, profiles(full_name))')
           .order('created_at', ascending: false);
 
       final groupsList = (groupsResponse as List).cast<Map<String, dynamic>>();
@@ -88,6 +90,45 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
 
+      final activeGroups =
+          groupsList.where((g) => g['status'] != 'completed').toList();
+      final featuredGroup = activeGroups.isNotEmpty ? activeGroups.first : null;
+
+      int confirmedContribsCount = 0;
+      bool isUserTurn = false;
+      String? turnBeneficiaryName;
+
+      if (featuredGroup != null) {
+        final currentTurn = (featuredGroup['current_turn'] as int?) ?? 1;
+        final groupId = featuredGroup['id'];
+
+        final gmList = (featuredGroup['group_members'] as List?) ?? [];
+        for (final m in gmList) {
+          if (m['turn_order'] == currentTurn) {
+            if (m['user_id'] == user.id) {
+              isUserTurn = true;
+            }
+            final prof = m['profiles'];
+            if (prof != null && prof['full_name'] != null) {
+              turnBeneficiaryName =
+                  (prof['full_name'] as String).trim().split(' ').first;
+            }
+            break;
+          }
+        }
+
+        // Récupérer le nombre réel de paiements confirmés pour ce tour
+        try {
+          final contribsResponse = await Supabase.instance.client
+              .from('contributions')
+              .select('id')
+              .eq('group_id', groupId)
+              .eq('turn_number', currentTurn)
+              .eq('payment_status', 'confirmed');
+          confirmedContribsCount = (contribsResponse as List).length;
+        } catch (_) {}
+      }
+
       if (mounted) {
         setState(() {
           _displayName = firstName;
@@ -97,6 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
           _nextPayout = nextPayout;
           _totalSavings = totalSavings;
           _currency = curr;
+          _confirmedContribsCount = confirmedContribsCount;
+          _isUserTurn = isUserTurn;
+          _turnBeneficiaryName = turnBeneficiaryName;
           _isLoading = false;
         });
       }
@@ -153,6 +197,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 18),
                   _WheelCard(
                     featuredGroup: featuredGroup,
+                    confirmedCount: _confirmedContribsCount,
+                    isUserTurn: _isUserTurn,
+                    beneficiaryName: _turnBeneficiaryName,
                     onRefresh: _loadHomeData,
                   ),
                   const SizedBox(height: 22),
@@ -294,7 +341,7 @@ class _SummaryStatsRow extends StatelessWidget {
     final nextAmount = nextPayout?['total_amount'] != null
         ? '${nextPayout!['total_amount']} ${nextPayout!['currency'] ?? currency}'
         : '0 $currency';
-    final nextDate = nextPayout?['scheduled_date'] as String? ?? 'À venir';
+    final nextDate = nextPayout?['scheduled_date'] as String? ?? t.waitingTurn;
 
     final isWide = MediaQuery.sizeOf(context).width >= 720;
 
@@ -311,8 +358,8 @@ class _SummaryStatsRow extends StatelessWidget {
         title: t.nextPotTitle,
         value: nextAmount,
         sub: nextPayout != null
-            ? t.nextPotReceivedSub(nextDate, 'Vous')
-            : 'Aucun pot en attente',
+            ? t.nextPotReceivedSub(nextDate, t.youBadge)
+            : t.waitingTurn,
         icon: Icons.savings_rounded,
         iconColor: AppColors.palm,
         isFlexible: isWide,
@@ -320,7 +367,7 @@ class _SummaryStatsRow extends StatelessWidget {
       _MiniStatCard(
         title: t.trustScoreTitle,
         value: '$trustScore / 100',
-        sub: trustScore >= 75 ? t.verifiedStatus : 'En cours',
+        sub: trustScore >= 75 ? t.verifiedStatus : t.statusPending,
         icon: Icons.verified_user_rounded,
         iconColor: AppColors.coral,
         isFlexible: isWide,
@@ -423,11 +470,17 @@ class _MiniStatCard extends StatelessWidget {
 
 class _WheelCard extends StatelessWidget {
   final Map<String, dynamic>? featuredGroup;
+  final int confirmedCount;
+  final bool isUserTurn;
+  final String? beneficiaryName;
   final VoidCallback onRefresh;
 
   const _WheelCard({
     required this.featuredGroup,
     required this.onRefresh,
+    this.confirmedCount = 0,
+    this.isUserTurn = false,
+    this.beneficiaryName,
   });
 
   @override
@@ -535,14 +588,14 @@ class _WheelCard extends StatelessWidget {
     final totalPot = '${(amountNum * totalTurns).toStringAsFixed(0)} $currency';
     final rawFreq = featuredGroup!['frequency'] as String?;
     final freq = rawFreq == 'monthly'
-        ? 'Mensuel'
-        : (rawFreq == 'weekly' ? 'Hebdo' : 'Bi-hebdo');
-    final startDate = (featuredGroup!['start_date'] as String?) ?? 'En cours';
+        ? t.freqMonthly
+        : (rawFreq == 'weekly' ? t.freqWeekly : t.freqBiweekly);
+    final startDate = (featuredGroup!['start_date'] as String?) ??
+        (featuredGroup!['status'] == 'active' ? t.statusUpToDate : t.waitingTurn);
     final isWide = MediaQuery.sizeOf(context).width >= 720;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
         color: AppColors.ink,
         borderRadius: BorderRadius.circular(28),
@@ -554,71 +607,50 @@ class _WheelCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -90,
-              right: -60,
-              child: Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.marigold.withValues(alpha: 0.35),
-                      AppColors.marigold.withValues(alpha: 0),
-                    ],
-                  ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Positioned(
+            top: -90,
+            right: -60,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.marigold.withValues(alpha: 0.35),
+                    AppColors.marigold.withValues(alpha: 0),
+                  ],
                 ),
               ),
             ),
-            Column(
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${t.featuredTontine}: ${groupName.toUpperCase()}',
-                        style: GoogleFonts.ibmPlexMono(
-                          fontSize: 10.5,
-                          letterSpacing: 1.1,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.marigold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.marigold.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        t.turnIndicator(currentTurn, totalTurns),
-                        style: GoogleFonts.ibmPlexMono(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.marigold,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  groupName.toUpperCase(),
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 11,
+                    letterSpacing: 1.1,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.white.withValues(alpha: 0.5),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   t.wheelSectionLabel,
                   style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.white,
+                    letterSpacing: -0.3,
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -629,73 +661,38 @@ class _WheelCard extends StatelessWidget {
                       currentTurn: currentTurn,
                       totalTurns: totalTurns,
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 18),
                     Flexible(
                       flex: 1,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Badge "C'EST VOTRE TOUR"
-                          Wrap(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppColors.marigold,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  t.yourTurn.toUpperCase(),
-                                  style: GoogleFonts.ibmPlexMono(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.ink,
-                                  ),
-                                  softWrap: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
                           Text(
-                            t.confirmedCount(currentTurn, totalTurns),
+                            isUserTurn
+                                ? t.yourTurn
+                                : (beneficiaryName != null &&
+                                        beneficiaryName!.isNotEmpty
+                                    ? 'Tour de $beneficiaryName'
+                                    : 'Tour $currentTurn'),
+                            style: GoogleFonts.bricolageGrotesque(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.white,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            t.confirmedCount(confirmedCount, totalTurns),
                             style: GoogleFonts.ibmPlexSans(
-                              fontSize: 12,
-                              color: AppColors.white.withValues(alpha: 0.7),
+                              fontSize: 12.5,
+                              color: AppColors.white.withValues(alpha: 0.65),
                             ),
                             softWrap: true,
-                            overflow: TextOverflow.visible,
                           ),
-                          const SizedBox(height: 8),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  amount,
-                                  style: GoogleFonts.ibmPlexMono(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.marigold,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  currency,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.white.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const SizedBox(height: 12),
+                          _buildAmountDisplay(amount, currency),
                         ],
                       ),
                     ),
@@ -748,6 +745,67 @@ class _WheelCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAmountDisplay(String rawAmount, String currency) {
+    final numVal = double.tryParse(rawAmount.replaceAll(' ', '').replaceAll(',', '')) ?? 0.0;
+    final intVal = numVal.toInt();
+
+    String topPart;
+    String bottomPart;
+
+    if (intVal >= 1000) {
+      final thousands = intVal ~/ 1000;
+      final remainder = intVal % 1000;
+      topPart = thousands.toString();
+      bottomPart = remainder.toString().padLeft(3, '0');
+    } else {
+      topPart = intVal.toString();
+      bottomPart = '';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          topPart,
+          style: GoogleFonts.ibmPlexMono(
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+            color: AppColors.marigold,
+            height: 1.05,
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            if (bottomPart.isNotEmpty) ...[
+              Text(
+                bottomPart,
+                style: GoogleFonts.ibmPlexMono(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.marigold,
+                  height: 1.05,
+                ),
+              ),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              currency,
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.marigold,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -834,11 +892,13 @@ class _RotationWheelState extends State<_RotationWheel>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
 
-  static const double _wheelSize = 150.0;
-  static const double _center = _wheelSize / 2; // 75
-  static const double _radius = 54.0;
+  static const double _wheelSize = 154.0;
+  static const double _center = _wheelSize / 2; // 77.0
+  static const double _radius = 52.0;
   static const double _nodeSize = 28.0;
   static const double _nodeRadius = _nodeSize / 2; // 14.0
+  static const double _haloSize = 44.0;
+  static const double _haloRadius = _haloSize / 2; // 22.0
 
   @override
   void initState() {
@@ -858,6 +918,10 @@ class _RotationWheelState extends State<_RotationWheel>
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final turnsCount = math.max(2, widget.totalTurns);
+    final nodeSize = turnsCount > 8 ? 24.0 : 28.0;
+    final haloSize = turnsCount > 8 ? 38.0 : 44.0;
+
     return SizedBox(
       width: _wheelSize,
       height: _wheelSize,
@@ -894,67 +958,104 @@ class _RotationWheelState extends State<_RotationWheel>
               ],
             ),
           ),
-          for (int i = 0; i < 8; i++)
-            _buildNodePositioned(i),
+          for (int i = 0; i < turnsCount; i++)
+            _buildNodePositioned(i, turnsCount, nodeSize, haloSize),
         ],
       ),
     );
   }
 
-  Widget _buildNodePositioned(int i) {
-    final angle = i * (2 * math.pi / 8) - (math.pi / 2);
-    final left = _center + _radius * math.cos(angle) - _nodeRadius;
-    final top = _center + _radius * math.sin(angle) - _nodeRadius;
+  Widget _buildNodePositioned(
+    int i,
+    int turnsCount,
+    double nodeSize,
+    double haloSize,
+  ) {
+    final nodeRadius = nodeSize / 2;
+    final haloRadius = haloSize / 2;
+    final angle = i * (2 * math.pi / turnsCount) - (math.pi / 2);
+    final left = _center + _radius * math.cos(angle) - nodeRadius;
+    final top = _center + _radius * math.sin(angle) - nodeRadius;
+    final isCurrent = (i + 1 == widget.currentTurn);
+
+    if (isCurrent) {
+      final haloOffset = haloRadius - nodeRadius;
+      return Positioned(
+        top: top - haloOffset,
+        left: left - haloOffset,
+        child: SizedBox(
+          width: haloSize,
+          height: haloSize,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: haloSize,
+                height: haloSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.white.withValues(alpha: 0.08),
+                  border: Border.all(
+                    color: AppColors.white.withValues(alpha: 0.18),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  return Container(
+                    width: nodeSize,
+                    height: nodeSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.marigold,
+                      border: Border.all(color: AppColors.ink, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.marigold.withValues(
+                            alpha: 0.4 + 0.4 * _pulseController.value,
+                          ),
+                          blurRadius: 6 + 4 * _pulseController.value,
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${i + 1}',
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: turnsCount > 8 ? 9 : 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Positioned(
       top: top,
       left: left,
-      child: (i + 1 == widget.currentTurn)
-          ? AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                return Container(
-                  width: _nodeSize,
-                  height: _nodeSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.marigold,
-                    border: Border.all(color: AppColors.ink, width: 1.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.marigold.withValues(
-                          alpha: 0.4 + 0.4 * _pulseController.value,
-                        ),
-                        blurRadius: 6 + 4 * _pulseController.value,
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${i + 1}',
-                    style: GoogleFonts.ibmPlexMono(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.ink,
-                    ),
-                  ),
-                );
-              },
-            )
-          : _StaticNode(
-              state: (i + 1 < widget.currentTurn)
-                  ? _NodeState.done
-                  : _NodeState.upcoming,
-              label: '${i + 1}',
-              size: _nodeSize,
-            ),
+      child: _StaticNode(
+        state: (i + 1 < widget.currentTurn)
+            ? _NodeState.done
+            : _NodeState.upcoming,
+        label: '${i + 1}',
+        size: nodeSize,
+      ),
     );
   }
 }
 
 class _RingTrackPainter extends CustomPainter {
   final double radius;
-  const _RingTrackPainter({this.radius = 46.0});
+  const _RingTrackPainter({this.radius = 52.0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -981,7 +1082,7 @@ class _StaticNode extends StatelessWidget {
   const _StaticNode({
     required this.state,
     required this.label,
-    this.size = 24.0,
+    this.size = 28.0,
   });
 
   @override

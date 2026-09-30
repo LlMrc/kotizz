@@ -139,9 +139,9 @@
   "profileLanguage": "Lang",
   "logOut": "Dekonekte",
   "wheelGroupExample": "Gwoup egzanp",
-  "wheelSectionLabel": "Pwochèn kontribisyon ou",
-  "yourTurn": "Se vire ou !",
-  "confirmedCount": "{confirmed}/{total} konfime",
+  "wheelSectionLabel": "Wonn kotizasyon an",
+  "yourTurn": "Ton tour",
+  "confirmedCount": "{confirmed} sou {total} konfime",
   "@confirmedCount": {
     "placeholders": {
       "confirmed": {

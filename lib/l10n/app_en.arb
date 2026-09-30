@@ -140,8 +140,8 @@
   "logOut": "Log Out",
   "wheelGroupExample": "Example Group",
   "wheelSectionLabel": "Your next contribution",
-  "yourTurn": "It's your turn!",
-  "confirmedCount": "{confirmed}/{total} confirmed",
+  "yourTurn": "Your turn",
+  "confirmedCount": "{confirmed} of {total} confirmed",
   "@confirmedCount": {
     "placeholders": {
       "confirmed": {
