@@ -67,6 +67,8 @@ flutter:
 
   assets:
     - assets/icon.png
+    - assets/kotizz_logo.png
+    - assets/kotizz_background.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

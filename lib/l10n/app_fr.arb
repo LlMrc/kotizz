@@ -256,5 +256,7 @@
   "deleteAccountConfirmationMessage": "Cette action est irréversible. Toutes vos données personnelles, vos groupes et votre historique seront définitivement supprimés.",
   "deleteAccountConfirmAction": "Oui, supprimer mon compte",
   "deleteAccountSuccess": "Votre compte a été supprimé avec succès.",
-  "deleteAccountError": "Impossible de supprimer le compte. Veuillez réessayer."
+  "deleteAccountError": "Impossible de supprimer le compte. Veuillez réessayer.",
+  "splashSlogan": "Cotisons ensemble,\nGrandissons ensemble !",
+  "komanseBtnLabel": "Commencer"
 }

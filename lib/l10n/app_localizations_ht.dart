@@ -473,4 +473,10 @@ class AppLocalizationsHt extends AppLocalizations {
 
   @override
   String get deleteAccountError => 'Pa ka efase kont lan. Tanpri eseye ankò.';
+
+  @override
+  String get splashSlogan => 'Kotize ansanm,\nGrandi ansanm!';
+
+  @override
+  String get komanseBtnLabel => 'Kòmanse';
 }

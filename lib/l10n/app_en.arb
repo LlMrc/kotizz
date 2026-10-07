@@ -256,5 +256,7 @@
   "deleteAccountConfirmationMessage": "This action is irreversible. All your personal data, groups, and history will be permanently deleted.",
   "deleteAccountConfirmAction": "Yes, delete my account",
   "deleteAccountSuccess": "Your account has been deleted successfully.",
-  "deleteAccountError": "Could not delete account. Please try again."
+  "deleteAccountError": "Could not delete account. Please try again.",
+  "splashSlogan": "Save together,\nGrow together!",
+  "komanseBtnLabel": "Get Started"
 }

@@ -256,5 +256,7 @@
   "deleteAccountConfirmationMessage": "Aksyon sa a pa ka defèt. Tout done pèsonèl ou, gwoup ou yo ak istrik ou ap efase nèt.",
   "deleteAccountConfirmAction": "Wi, efase kont mwen",
   "deleteAccountSuccess": "Kont ou an efase avèk siksè.",
-  "deleteAccountError": "Pa ka efase kont lan. Tanpri eseye ankò."
+  "deleteAccountError": "Pa ka efase kont lan. Tanpri eseye ankò.",
+  "splashSlogan": "Kotize ansanm,\nGrandi ansanm!",
+  "komanseBtnLabel": "Kòmanse"
 }

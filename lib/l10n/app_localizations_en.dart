@@ -476,4 +476,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Could not delete account. Please try again.';
+
+  @override
+  String get splashSlogan => 'Save together,\nGrow together!';
+
+  @override
+  String get komanseBtnLabel => 'Get Started';
 }

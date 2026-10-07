@@ -477,4 +477,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Impossible de supprimer le compte. Veuillez réessayer.';
+
+  @override
+  String get splashSlogan => 'Cotisons ensemble,\nGrandissons ensemble !';
+
+  @override
+  String get komanseBtnLabel => 'Commencer';
 }

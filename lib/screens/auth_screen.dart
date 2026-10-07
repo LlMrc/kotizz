@@ -257,558 +257,633 @@ class _AuthScreenState extends State<AuthScreen>
     return msg;
   }
 
+  /// Ouvre la bottom sheet contenant le formulaire de connexion.
+  /// Le bouton "Kòmanse" est le point d'entrée de la connexion.
+  void _showLoginSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _LoginSheet(
+        formKey: _formKey,
+        emailCtrl: _emailCtrl,
+        otpCtrl: _otpCtrl,
+        loading: _loading,
+        magicLinkSent: _magicLinkSent,
+        errorMsg: _errorMsg,
+        isIOS: _isIOS,
+        onSendMagicLink: _sendMagicLink,
+        onVerifyOtp: _verifyOtp,
+        onSignInWithApple: _signInWithApple,
+        onResetMagicLink: () => setState(() {
+          _magicLinkSent = false;
+          _otpCtrl.clear();
+          _errorMsg = null;
+        }),
+        onResendCode: () {
+          _otpCtrl.clear();
+          _sendMagicLink();
+        },
+        onSignInAsReviewer: _showReviewerButton ? _signInAsReviewer : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final t = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: AppColors.paper,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Logo / En-tête ─────────────────────────────
-                  Center(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _onLogoTap,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: AppColors.ink,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.ink.withValues(alpha: 0.18),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'K',
-                          style: GoogleFonts.bricolageGrotesque(
-                            fontSize: 38,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.marigold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: Text(
-                      'Kotizz',
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      t.authTagline,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 14,
-                        color: AppColors.ash,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 36),
+      backgroundColor: const Color(0xFF0B1A3B),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── Fond plein écran ─────────────────────────────────────────
+          Image.asset(
+            'assets/kotizz_background.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+          ),
 
-                  // ── iOS Mode : Bouton Apple prioritaire ────────
-                  if (_isIOS) ...[
-                    Text(
-                      t.authWelcome,
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      t.authApplePrompt,
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 13.5,
-                        color: AppColors.ash,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _loading ? null : _signInWithApple,
-                        icon: const Icon(Icons.apple, size: 24, color: AppColors.white),
-                        label: Text(
-                          t.continueWithApple,
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    Row(
-                      children: [
-                        const Expanded(child: Divider(color: AppColors.paperDim)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            t.orEmail,
-                            style: GoogleFonts.ibmPlexMono(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.ash,
-                            ),
-                          ),
-                        ),
-                        const Expanded(child: Divider(color: AppColors.paperDim)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // ── Non-iOS (ou secours iOS) : Magic Link Email ─
-                  if (!_isIOS) ...[
-                    Text(
-                      'Connexion rapide',
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Entrez votre email. Aucun mot de passe requis !',
-                      style: GoogleFonts.ibmPlexSans(
-                        fontSize: 13.5,
-                        color: AppColors.ash,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  if (_magicLinkSent) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.paperDim),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.ink.withValues(alpha: 0.04),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: AppColors.palm.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                alignment: Alignment.center,
-                                child: const Icon(Icons.mark_email_read_rounded, size: 24, color: AppColors.palm),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Code envoyé ! ✉️',
-                                      style: GoogleFonts.bricolageGrotesque(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.ink,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _emailCtrl.text.trim(),
-                                      style: GoogleFonts.ibmPlexSans(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.ash,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 18),
-                          Text(
-                            t.enterEmailCodePrompt,
-                            style: GoogleFonts.ibmPlexSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.ink,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Champ de saisie du code OTP (supporte 6 à 8 chiffres)
-                          TextField(
-                            controller: _otpCtrl,
-                            keyboardType: TextInputType.number,
-                            maxLength: 8,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.ibmPlexMono(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 4,
-                              color: AppColors.ink,
-                            ),
-                            decoration: InputDecoration(
-                              counterText: '',
-                              hintText: '••••••••',
-                              hintStyle: GoogleFonts.ibmPlexMono(
-                                fontSize: 22,
-                                letterSpacing: 4,
-                                color: AppColors.ash.withValues(alpha: 0.35),
-                              ),
-                              filled: true,
-                              fillColor: AppColors.paper,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(color: AppColors.paperDim),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(color: AppColors.paperDim),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(color: AppColors.marigold, width: 2),
-                              ),
-                            ),
-                            onChanged: (val) {
-                              final trimmed = val.trim();
-                              if (trimmed.length == 8) {
-                                _verifyOtp();
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 14),
-
-                          if (_errorMsg != null) ...[
-                            Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: AppColors.coral.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.error_outline_rounded, color: AppColors.coral, size: 18),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _errorMsg!,
-                                      style: GoogleFonts.ibmPlexSans(
-                                        fontSize: 13,
-                                        color: AppColors.coral,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _loading ? null : _verifyOtp,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.ink,
-                                foregroundColor: AppColors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 15),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: _loading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.4,
-                                        color: AppColors.white,
-                                      ),
-                                    )
-                                  : Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(Icons.check_circle_outline_rounded, size: 18, color: AppColors.marigold),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          t.validateMyCode,
-                                          style: GoogleFonts.ibmPlexSans(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              TextButton.icon(
-                                onPressed: _loading
-                                    ? null
-                                    : () {
-                                        _otpCtrl.clear();
-                                        _sendMagicLink();
-                                      },
-                                icon: const Icon(Icons.refresh_rounded, size: 16, color: AppColors.ink),
-                                label: Text(
-                                  t.resendCode,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.ink,
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: _loading
-                                    ? null
-                                    : () {
-                                        setState(() {
-                                          _magicLinkSent = false;
-                                          _otpCtrl.clear();
-                                          _errorMsg = null;
-                                        });
-                                      },
-                                child: Text(
-                                  t.changeEmail,
-                                  style: GoogleFonts.ibmPlexSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.ash,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else ...[
-                    Form(
-                      key: _formKey,
-                      child: _AuthField(
-                        controller: _emailCtrl,
-                        label: t.emailAddressLabel,
-                        hint: t.emailHint,
-                        icon: Icons.mail_outline_rounded,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return t.validationAmountRequired;
-                          }
-                          if (!v.contains('@')) {
-                            return 'Email invalide';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    if (_errorMsg != null)
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 11),
-                        decoration: BoxDecoration(
-                          color: AppColors.coral.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: AppColors.coral.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline_rounded,
-                                color: AppColors.coral, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _errorMsg!,
-                                style: GoogleFonts.ibmPlexSans(
-                                  fontSize: 13,
-                                  color: AppColors.coral,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _loading ? null : _sendMagicLink,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.ink,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _loading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: AppColors.white,
-                                ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.marigold),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    t.sendLoginCode,
-                                    style: GoogleFonts.ibmPlexSans(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 32),
-
-                  // ── Note d'information plan FREE / PRO ─────────
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.marigold.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: AppColors.marigold.withValues(alpha: 0.25)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.info_outline_rounded,
-                            color: AppColors.marigold, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              style: GoogleFonts.ibmPlexSans(
-                                fontSize: 12.5,
-                                color: AppColors.ink,
-                              ),
-                              children: const [
-                                TextSpan(
-                                  text: 'Plan Gratuit : ',
-                                  style: TextStyle(fontWeight: FontWeight.w700),
-                                ),
-                                TextSpan(
-                                  text: '1 groupe SOL max, 5 membres max. Passez au ',
-                                ),
-                                TextSpan(
-                                  text: 'PRO (9,99\$/mois)',
-                                  style: TextStyle(fontWeight: FontWeight.w700),
-                                ),
-                                TextSpan(text: ' pour des groupes illimités.'),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Bouton de démonstration évaluateurs (caché) ─────────
-                  // Visible uniquement après 5 tapotements sur le logo.
-                  if (_showReviewerButton) ...[
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _loading ? null : _signInAsReviewer,
-                        icon: const Icon(Icons.preview_rounded, size: 18),
-                        label: Text(
-                          'App Review — Demo Access',
-                          style: GoogleFonts.ibmPlexSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.marigold,
-                          foregroundColor: AppColors.ink,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+          // ── Fondu sombre haut (lisibilité logo) ──────────────────────
+          Positioned(
+            top: 0, left: 0, right: 0,
+            height: size.height * 0.45,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xCC0B1A3B), Colors.transparent],
+                ),
               ),
             ),
           ),
+
+          // ── Fondu sombre bas (lisibilité bouton) ─────────────────────
+          Positioned(
+            bottom: 0, left: 0, right: 0,
+            height: size.height * 0.32,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0xEA0B1A3B), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Contenu ──────────────────────────────────────────────────
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 36),
+
+                // Logo (tap 5× → démo reviewer)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _onLogoTap,
+                  child: Image.asset(
+                    'assets/kotizz_logo.png',
+                    width: 92,
+                    height: 92,
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // Nom de l'application
+                Text(
+                  'Kotizz',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 38,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.marigold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                // Sous-titre
+                Text(
+                  'Your Sòl, Simplified',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.72),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // ── Slogan aligné à droite ───────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      t.splashSlogan,
+                      textAlign: TextAlign.right,
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        height: 1.25,
+                        shadows: const [
+                          Shadow(
+                            color: Color(0xAA0B1A3B),
+                            blurRadius: 14,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 44),
+
+                // ── Bouton Kòmanse = bouton de connexion ─────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _showLoginSheet,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.marigold,
+                        foregroundColor: AppColors.ink,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        elevation: 8,
+                        shadowColor: AppColors.marigold.withValues(alpha: 0.55),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            t.komanseBtnLabel,
+                            style: GoogleFonts.bricolageGrotesque(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 22,
+                            color: AppColors.ink,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bottom sheet — formulaire complet de connexion
+// ─────────────────────────────────────────────────────────────────────────────
+class _LoginSheet extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final TextEditingController emailCtrl;
+  final TextEditingController otpCtrl;
+  final bool loading;
+  final bool magicLinkSent;
+  final String? errorMsg;
+  final bool isIOS;
+  final VoidCallback onSendMagicLink;
+  final VoidCallback onVerifyOtp;
+  final VoidCallback onSignInWithApple;
+  final VoidCallback onResetMagicLink;
+  final VoidCallback onResendCode;
+  final VoidCallback? onSignInAsReviewer;
+
+  const _LoginSheet({
+    required this.formKey,
+    required this.emailCtrl,
+    required this.otpCtrl,
+    required this.loading,
+    required this.magicLinkSent,
+    required this.errorMsg,
+    required this.isIOS,
+    required this.onSendMagicLink,
+    required this.onVerifyOtp,
+    required this.onSignInWithApple,
+    required this.onResetMagicLink,
+    required this.onResendCode,
+    this.onSignInAsReviewer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        24, 20, 24,
+        MediaQuery.viewInsetsOf(context).bottom + 32,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Indicateur glissement
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.paperDim,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+            ),
+            const SizedBox(height: 22),
+
+            // Mini en-tête logo + nom
+            Row(
+              children: [
+                Image.asset('assets/kotizz_logo.png', width: 34, height: 34),
+                const SizedBox(width: 10),
+                Text(
+                  'Kotizz',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // ── iOS : Bouton Apple ────────────────────────────────────
+            if (isIOS) ...[
+              Text(
+                t.authWelcome,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                t.authApplePrompt,
+                style: GoogleFonts.ibmPlexSans(fontSize: 13.5, color: AppColors.ash),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: loading ? null : onSignInWithApple,
+                  icon: const Icon(Icons.apple, size: 22, color: AppColors.white),
+                  label: Text(
+                    t.continueWithApple,
+                    style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: AppColors.paperDim)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      t.orEmail,
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ash,
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: Divider(color: AppColors.paperDim)),
+                ],
+              ),
+              const SizedBox(height: 18),
+            ],
+
+            // ── Non-iOS ───────────────────────────────────────────────
+            if (!isIOS) ...[
+              Text(
+                'Connexion rapide',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Entrez votre email. Aucun mot de passe requis !',
+                style: GoogleFonts.ibmPlexSans(fontSize: 13.5, color: AppColors.ash),
+              ),
+              const SizedBox(height: 18),
+            ],
+
+            // ── Code OTP envoyé ───────────────────────────────────────
+            if (magicLinkSent) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.paperDim),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: AppColors.palm.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.mark_email_read_rounded, size: 22, color: AppColors.palm),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Code envoyé ! ✉️',
+                                style: GoogleFonts.bricolageGrotesque(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                              Text(
+                                emailCtrl.text.trim(),
+                                style: GoogleFonts.ibmPlexSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.ash,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      t.enterEmailCodePrompt,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: otpCtrl,
+                      keyboardType: TextInputType.number,
+                      maxLength: 8,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 4,
+                        color: AppColors.ink,
+                      ),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        hintText: '••••••••',
+                        hintStyle: GoogleFonts.ibmPlexMono(
+                          fontSize: 22,
+                          letterSpacing: 4,
+                          color: AppColors.ash.withValues(alpha: 0.35),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.paper,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppColors.paperDim),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppColors.paperDim),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppColors.marigold, width: 2),
+                        ),
+                      ),
+                      onChanged: (val) {
+                        if (val.trim().length == 8) onVerifyOtp();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    if (errorMsg != null) _ErrorBanner(message: errorMsg!),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: loading ? null : onVerifyOtp,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.ink,
+                          foregroundColor: AppColors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
+                        ),
+                        child: loading
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.white))
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.check_circle_outline_rounded, size: 18, color: AppColors.marigold),
+                                  const SizedBox(width: 8),
+                                  Text(t.validateMyCode, style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          onPressed: loading ? null : onResendCode,
+                          icon: const Icon(Icons.refresh_rounded, size: 15, color: AppColors.ink),
+                          label: Text(t.resendCode, style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                        ),
+                        TextButton(
+                          onPressed: loading ? null : onResetMagicLink,
+                          child: Text(t.changeEmail, style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ash)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              // ── Formulaire email ──────────────────────────────────────
+              Form(
+                key: formKey,
+                child: _AuthField(
+                  controller: emailCtrl,
+                  label: t.emailAddressLabel,
+                  hint: t.emailHint,
+                  icon: Icons.mail_outline_rounded,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return t.validationAmountRequired;
+                    if (!v.contains('@')) return 'Email invalide';
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (errorMsg != null) _ErrorBanner(message: errorMsg!),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: loading ? null : onSendMagicLink,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.ink,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: loading
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.white))
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.marigold),
+                            const SizedBox(width: 8),
+                            Text(t.sendLoginCode, style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 18),
+
+            // ── Note plan FREE / PRO ──────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.marigold.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.marigold.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.info_outline_rounded, color: AppColors.marigold, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ink),
+                        children: const [
+                          TextSpan(text: 'Plan Gratuit : ', style: TextStyle(fontWeight: FontWeight.w700)),
+                          TextSpan(text: '1 groupe SOL max, 5 membres max. Passez au '),
+                          TextSpan(text: 'PRO (9,99\$/mois)', style: TextStyle(fontWeight: FontWeight.w700)),
+                          TextSpan(text: ' pour des groupes illimités.'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Bouton démo reviewers (caché, 5 taps sur logo) ───────
+            if (onSignInAsReviewer != null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: loading ? null : onSignInAsReviewer,
+                  icon: const Icon(Icons.preview_rounded, size: 18),
+                  label: Text(
+                    'App Review — Demo Access',
+                    style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.marigold,
+                    foregroundColor: AppColors.ink,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bannière d'erreur réutilisable
+// ─────────────────────────────────────────────────────────────────────────────
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+  const _ErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.coral.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppColors.coral, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.ibmPlexSans(fontSize: 13, color: AppColors.coral, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
       ),
     );
   }

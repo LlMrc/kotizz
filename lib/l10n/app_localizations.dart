@@ -433,13 +433,13 @@ abstract class AppLocalizations {
   /// No description provided for @yourTurn.
   ///
   /// In en, this message translates to:
-  /// **'It\'s your turn!'**
+  /// **'Your turn'**
   String get yourTurn;
 
   /// No description provided for @confirmedCount.
   ///
   /// In en, this message translates to:
-  /// **'{confirmed}/{total} confirmed'**
+  /// **'{confirmed} of {total} confirmed'**
   String confirmedCount(int confirmed, int total);
 
   /// No description provided for @createSolTitle.
@@ -969,6 +969,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not delete account. Please try again.'**
   String get deleteAccountError;
+
+  /// No description provided for @splashSlogan.
+  ///
+  /// In en, this message translates to:
+  /// **'Save together,\nGrow together!'**
+  String get splashSlogan;
+
+  /// No description provided for @komanseBtnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get komanseBtnLabel;
 }
 
 class _AppLocalizationsDelegate
