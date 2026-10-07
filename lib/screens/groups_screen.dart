@@ -288,8 +288,10 @@ class _GroupsScreenState extends State<GroupsScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 10,
+                        runSpacing: 10,
                         children: [
                           ElevatedButton.icon(
                             onPressed: () async {
@@ -310,7 +312,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
                           OutlinedButton.icon(
                             onPressed: () => _showJoinGroupDialog(context),
                             icon: const Icon(Icons.vpn_key_rounded, size: 18),
