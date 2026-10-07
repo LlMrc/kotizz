@@ -479,4 +479,48 @@ class AppLocalizationsHt extends AppLocalizations {
 
   @override
   String get komanseBtnLabel => 'Kòmanse';
+
+  @override
+  String get solCompletedBadge => 'SÒL FINI 🏆';
+
+  @override
+  String rotationCompletedTitle(String name) {
+    return 'Wotasyon fini pou \"$name\"';
+  }
+
+  @override
+  String get allMembersPaidSubtitle =>
+      'Tout manm yo resevwa kòb yo san pwoblèm !';
+
+  @override
+  String get restartSolButton => 'Rekòmanse Sòl la';
+
+  @override
+  String get restartSolDialogTitle => 'Èske ou vle rekòmanse Sòl sa a ?';
+
+  @override
+  String restartSolDialogMessage(String name) {
+    return 'Yon nouvo sik ap kòmanse nan Tou 1 pou \"$name\". Tout manm aktyèl yo ap konsève.';
+  }
+
+  @override
+  String get restartSolConfirmAction => 'Wi, rekòmanse';
+
+  @override
+  String get restartSolSuccess => 'Sòl la rekòmanse avèk siksè ! 🎉';
+
+  @override
+  String get congratsTitle => 'Felisitasyon ! 🎉';
+
+  @override
+  String congratsMessage(String name) {
+    return 'Wotasyon konplè \"$name\" fini avèk siksè. Tout manm yo resevwa kòb yo !';
+  }
+
+  @override
+  String get organizerRestartHint =>
+      'Kòm òganizatè, ou ka relanse yon nouvo sik avèk menm gwoup sa a.';
+
+  @override
+  String get close => 'Fèmen';
 }

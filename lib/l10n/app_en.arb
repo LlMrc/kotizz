@@ -258,5 +258,38 @@
   "deleteAccountSuccess": "Your account has been deleted successfully.",
   "deleteAccountError": "Could not delete account. Please try again.",
   "splashSlogan": "Save together,\nGrow together!",
-  "komanseBtnLabel": "Get Started"
+  "komanseBtnLabel": "Get Started",
+  "solCompletedBadge": "SOL COMPLETED 🏆",
+  "rotationCompletedTitle": "Rotation completed for \"{name}\"",
+  "@rotationCompletedTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "allMembersPaidSubtitle": "All members have received their payout successfully!",
+  "restartSolButton": "Restart the Sòl",
+  "restartSolDialogTitle": "Do you want to restart the Sòl?",
+  "restartSolDialogMessage": "A new cycle will start at Round 1 for \"{name}\". Current members will be kept.",
+  "@restartSolDialogMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restartSolConfirmAction": "Yes, restart",
+  "restartSolSuccess": "Sòl restarted successfully! 🎉",
+  "congratsTitle": "Congratulations! 🎉",
+  "congratsMessage": "Full rotation of \"{name}\" completed successfully. All members received their pot!",
+  "@congratsMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "organizerRestartHint": "As the organizer, you can start a new cycle with this same group.",
+  "close": "Close"
 }

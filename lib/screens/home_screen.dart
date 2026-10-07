@@ -490,6 +490,7 @@ class _WheelCard extends StatelessWidget {
   });
 
   Future<void> _restartCompletedGroup(BuildContext context, Map<String, dynamic> group) async {
+    final t = AppLocalizations.of(context)!;
     final groupId = group['id'];
     final groupName = group['name'] ?? 'Sòl';
     final confirm = await showDialog<bool>(
@@ -498,20 +499,20 @@ class _WheelCard extends StatelessWidget {
         backgroundColor: AppColors.paper,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Souhaitez-vous redémarrer la Sòl ?',
+          t.restartSolDialogTitle,
           style: GoogleFonts.bricolageGrotesque(
             fontWeight: FontWeight.w700,
             color: AppColors.ink,
           ),
         ),
         content: Text(
-          'Un nouveau cycle débutera au Tour 1 pour "$groupName". Les membres actuels seront conservés.',
+          t.restartSolDialogMessage(groupName),
           style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ash),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Annuler', style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+            child: Text(t.cancel, style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -520,7 +521,7 @@ class _WheelCard extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Oui, redémarrer'),
+            child: Text(t.restartSolConfirmAction),
           ),
         ],
       ),
@@ -567,8 +568,8 @@ class _WheelCard extends StatelessWidget {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sòl redémarrée avec succès ! 🎉'),
+          SnackBar(
+            content: Text(t.restartSolSuccess),
             backgroundColor: AppColors.palm,
             behavior: SnackBarBehavior.floating,
           ),
@@ -625,7 +626,7 @@ class _WheelCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'SÒL TERMINÉE 🏆',
+                      t.solCompletedBadge,
                       style: GoogleFonts.ibmPlexMono(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -638,7 +639,7 @@ class _WheelCard extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                'Rotation terminée pour "$cName"',
+                t.rotationCompletedTitle(cName),
                 style: GoogleFonts.bricolageGrotesque(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -647,7 +648,7 @@ class _WheelCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Tous les membres ont reçu leur cagnotte avec succès !',
+                t.allMembersPaidSubtitle,
                 style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,
                   color: AppColors.white.withValues(alpha: 0.72),
@@ -662,7 +663,7 @@ class _WheelCard extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () => _restartCompletedGroup(context, completedGroup!),
                       icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                      label: const Text('Redémarrer cette Sòl'),
+                      label: Text(t.restartSolButton),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.marigold,
                         foregroundColor: AppColors.ink,

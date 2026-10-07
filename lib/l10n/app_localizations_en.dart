@@ -482,4 +482,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get komanseBtnLabel => 'Get Started';
+
+  @override
+  String get solCompletedBadge => 'SOL COMPLETED 🏆';
+
+  @override
+  String rotationCompletedTitle(String name) {
+    return 'Rotation completed for \"$name\"';
+  }
+
+  @override
+  String get allMembersPaidSubtitle =>
+      'All members have received their payout successfully!';
+
+  @override
+  String get restartSolButton => 'Restart the Sòl';
+
+  @override
+  String get restartSolDialogTitle => 'Do you want to restart the Sòl?';
+
+  @override
+  String restartSolDialogMessage(String name) {
+    return 'A new cycle will start at Round 1 for \"$name\". Current members will be kept.';
+  }
+
+  @override
+  String get restartSolConfirmAction => 'Yes, restart';
+
+  @override
+  String get restartSolSuccess => 'Sòl restarted successfully! 🎉';
+
+  @override
+  String get congratsTitle => 'Congratulations! 🎉';
+
+  @override
+  String congratsMessage(String name) {
+    return 'Full rotation of \"$name\" completed successfully. All members received their pot!';
+  }
+
+  @override
+  String get organizerRestartHint =>
+      'As the organizer, you can start a new cycle with this same group.';
+
+  @override
+  String get close => 'Close';
 }

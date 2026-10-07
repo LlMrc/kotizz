@@ -258,5 +258,38 @@
   "deleteAccountSuccess": "Votre compte a été supprimé avec succès.",
   "deleteAccountError": "Impossible de supprimer le compte. Veuillez réessayer.",
   "splashSlogan": "Cotisons ensemble,\nGrandissons ensemble !",
-  "komanseBtnLabel": "Commencer"
+  "komanseBtnLabel": "Commencer",
+  "solCompletedBadge": "SÒL TERMINÉE 🏆",
+  "rotationCompletedTitle": "Rotation terminée pour \"{name}\"",
+  "@rotationCompletedTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "allMembersPaidSubtitle": "Tous les membres ont reçu leur cagnotte avec succès !",
+  "restartSolButton": "Redémarrer la Sòl",
+  "restartSolDialogTitle": "Souhaitez-vous redémarrer la Sòl ?",
+  "restartSolDialogMessage": "Un nouveau cycle débutera au Tour 1 pour \"{name}\". Les membres actuels seront conservés.",
+  "@restartSolDialogMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restartSolConfirmAction": "Oui, redémarrer",
+  "restartSolSuccess": "Sòl redémarrée avec succès ! 🎉",
+  "congratsTitle": "Félicitations ! 🎉",
+  "congratsMessage": "La rotation complète de \"{name}\" est terminée avec succès. Tous les membres ont reçu leur cagnotte !",
+  "@congratsMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "organizerRestartHint": "En tant qu'organisateur, vous pouvez relancer un nouveau cycle avec ce même groupe.",
+  "close": "Fermer"
 }

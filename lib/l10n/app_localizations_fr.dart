@@ -483,4 +483,48 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get komanseBtnLabel => 'Commencer';
+
+  @override
+  String get solCompletedBadge => 'SÒL TERMINÉE 🏆';
+
+  @override
+  String rotationCompletedTitle(String name) {
+    return 'Rotation terminée pour \"$name\"';
+  }
+
+  @override
+  String get allMembersPaidSubtitle =>
+      'Tous les membres ont reçu leur cagnotte avec succès !';
+
+  @override
+  String get restartSolButton => 'Redémarrer la Sòl';
+
+  @override
+  String get restartSolDialogTitle => 'Souhaitez-vous redémarrer la Sòl ?';
+
+  @override
+  String restartSolDialogMessage(String name) {
+    return 'Un nouveau cycle débutera au Tour 1 pour \"$name\". Les membres actuels seront conservés.';
+  }
+
+  @override
+  String get restartSolConfirmAction => 'Oui, redémarrer';
+
+  @override
+  String get restartSolSuccess => 'Sòl redémarrée avec succès ! 🎉';
+
+  @override
+  String get congratsTitle => 'Félicitations ! 🎉';
+
+  @override
+  String congratsMessage(String name) {
+    return 'La rotation complète de \"$name\" est terminée avec succès. Tous les membres ont reçu leur cagnotte !';
+  }
+
+  @override
+  String get organizerRestartHint =>
+      'En tant qu\'organisateur, vous pouvez relancer un nouveau cycle avec ce même groupe.';
+
+  @override
+  String get close => 'Fermer';
 }

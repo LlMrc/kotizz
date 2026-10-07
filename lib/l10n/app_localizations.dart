@@ -981,6 +981,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get Started'**
   String get komanseBtnLabel;
+
+  /// No description provided for @solCompletedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'SOL COMPLETED 🏆'**
+  String get solCompletedBadge;
+
+  /// No description provided for @rotationCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotation completed for \"{name}\"'**
+  String rotationCompletedTitle(String name);
+
+  /// No description provided for @allMembersPaidSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All members have received their payout successfully!'**
+  String get allMembersPaidSubtitle;
+
+  /// No description provided for @restartSolButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the Sòl'**
+  String get restartSolButton;
+
+  /// No description provided for @restartSolDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to restart the Sòl?'**
+  String get restartSolDialogTitle;
+
+  /// No description provided for @restartSolDialogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A new cycle will start at Round 1 for \"{name}\". Current members will be kept.'**
+  String restartSolDialogMessage(String name);
+
+  /// No description provided for @restartSolConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, restart'**
+  String get restartSolConfirmAction;
+
+  /// No description provided for @restartSolSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Sòl restarted successfully! 🎉'**
+  String get restartSolSuccess;
+
+  /// No description provided for @congratsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! 🎉'**
+  String get congratsTitle;
+
+  /// No description provided for @congratsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Full rotation of \"{name}\" completed successfully. All members received their pot!'**
+  String congratsMessage(String name);
+
+  /// No description provided for @organizerRestartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'As the organizer, you can start a new cycle with this same group.'**
+  String get organizerRestartHint;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 }
 
 class _AppLocalizationsDelegate

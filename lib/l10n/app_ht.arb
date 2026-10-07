@@ -258,5 +258,38 @@
   "deleteAccountSuccess": "Kont ou an efase avèk siksè.",
   "deleteAccountError": "Pa ka efase kont lan. Tanpri eseye ankò.",
   "splashSlogan": "Kotize ansanm,\nGrandi ansanm!",
-  "komanseBtnLabel": "Kòmanse"
+  "komanseBtnLabel": "Kòmanse",
+  "solCompletedBadge": "SÒL FINI 🏆",
+  "rotationCompletedTitle": "Wotasyon fini pou \"{name}\"",
+  "@rotationCompletedTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "allMembersPaidSubtitle": "Tout manm yo resevwa kòb yo san pwoblèm !",
+  "restartSolButton": "Rekòmanse Sòl la",
+  "restartSolDialogTitle": "Èske ou vle rekòmanse Sòl sa a ?",
+  "restartSolDialogMessage": "Yon nouvo sik ap kòmanse nan Tou 1 pou \"{name}\". Tout manm aktyèl yo ap konsève.",
+  "@restartSolDialogMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restartSolConfirmAction": "Wi, rekòmanse",
+  "restartSolSuccess": "Sòl la rekòmanse avèk siksè ! 🎉",
+  "congratsTitle": "Felisitasyon ! 🎉",
+  "congratsMessage": "Wotasyon konplè \"{name}\" fini avèk siksè. Tout manm yo resevwa kòb yo !",
+  "@congratsMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "organizerRestartHint": "Kòm òganizatè, ou ka relanse yon nouvo sik avèk menm gwoup sa a.",
+  "close": "Fèmen"
 }

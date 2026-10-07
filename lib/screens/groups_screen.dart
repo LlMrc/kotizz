@@ -1627,6 +1627,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
 
   /// Dialogue de célébration à la clôture de la Sòl avec option de redémarrage
   void _showCompletionDialog() {
+    final t = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1649,7 +1650,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Félicitations ! 🎉',
+              t.congratsTitle,
               style: GoogleFonts.bricolageGrotesque(
                 fontWeight: FontWeight.w800,
                 fontSize: 22,
@@ -1662,7 +1663,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'La rotation complète de "${widget.group.name}" est terminée avec succès. Tous les membres ont reçu leur cagnotte !',
+              t.congratsMessage(widget.group.name),
               textAlign: TextAlign.center,
               style: GoogleFonts.ibmPlexSans(
                 fontSize: 14,
@@ -1685,7 +1686,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'En tant qu\'organisateur, vous pouvez relancer un nouveau cycle avec ce même groupe.',
+                        t.organizerRestartHint,
                         style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ink),
                       ),
                     ),
@@ -1698,7 +1699,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Fermer', style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+            child: Text(t.close, style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
           ),
           if (_isOrganizer)
             ElevatedButton.icon(
@@ -1713,7 +1714,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
                 _restartSol();
               },
               icon: const Icon(Icons.play_arrow_rounded, size: 18),
-              label: const Text('Redémarrer la Sòl', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: Text(t.restartSolButton, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
         ],
       ),
@@ -1722,26 +1723,27 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
 
   /// Redémarre un nouveau cycle de Sòl pour le groupe
   Future<void> _restartSol() async {
+    final t = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.paper,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Souhaitez-vous redémarrer la Sòl ?',
+          t.restartSolDialogTitle,
           style: GoogleFonts.bricolageGrotesque(
             fontWeight: FontWeight.w700,
             color: AppColors.ink,
           ),
         ),
         content: Text(
-          'Un nouveau cycle débutera au Tour 1. Tous les membres actuels de "${widget.group.name}" seront conservés.',
+          t.restartSolDialogMessage(widget.group.name),
           style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ash),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Annuler', style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+            child: Text(t.cancel, style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1750,7 +1752,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Oui, redémarrer'),
+            child: Text(t.restartSolConfirmAction),
           ),
         ],
       ),
@@ -1808,8 +1810,8 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('La Sòl a été redémarrée avec succès ! 🎉 Tour 1 actif.'),
+          SnackBar(
+            content: Text(t.restartSolSuccess),
             backgroundColor: AppColors.palm,
             behavior: SnackBarBehavior.floating,
           ),
@@ -2108,13 +2110,13 @@ https://apps.apple.com/app/id6795205027
                   },
                   itemBuilder: (ctx) => [
                     if (_groupStatus == 'completed')
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'restart',
                         child: Row(
                           children: [
-                            Icon(Icons.restart_alt_rounded, size: 18, color: AppColors.palm),
-                            SizedBox(width: 10),
-                            Text('Redémarrer la Sòl'),
+                            const Icon(Icons.restart_alt_rounded, size: 18, color: AppColors.palm),
+                            const SizedBox(width: 10),
+                            Text(t.restartSolButton),
                           ],
                         ),
                       )
@@ -2742,9 +2744,9 @@ https://apps.apple.com/app/id6795205027
                             ),
                           ),
                           icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                          label: const Text(
-                            'Redémarrer la Sòl',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                          label: Text(
+                            t.restartSolButton,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         )
                       : ElevatedButton.icon(
