@@ -53,8 +53,7 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen>
-    with SingleTickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _otpCtrl = TextEditingController();
@@ -62,31 +61,22 @@ class _AuthScreenState extends State<AuthScreen>
   bool _magicLinkSent = false;
   String? _errorMsg;
 
-  // ── Reviewer demo access (hidden: tap logo 7 times) ──────────────────────
+  // ── Reviewer demo access (hidden: tap logo 5 times) ──────────────────────
   static const _demoEmail = 'reviewer@kotizz-demo.app';
   static const _demoPassword = 'K0t1zz#Rev!ew2026';
   int _logoTapCount = 0;
   DateTime? _firstLogoTap;
   bool _showReviewerButton = false;
 
-  late final AnimationController _fadeCtrl;
-  late final Animation<double> _fadeAnim;
-
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    )..forward();
-    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
   }
 
   @override
   void dispose() {
-    _fadeCtrl.dispose();
     _emailCtrl.dispose();
     _otpCtrl.dispose();
     super.dispose();
