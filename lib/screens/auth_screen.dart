@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -68,15 +69,27 @@ class _AuthScreenState extends State<AuthScreen> {
   DateTime? _firstLogoTap;
   bool _showReviewerButton = false;
 
+  // ── Souscription auth : ferme la bottom sheet avant AuthGate bascule ─────
+  late final StreamSubscription<AuthState> _authSub;
+
   bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {
     super.initState();
+    // Fermer la bottom sheet DÈS qu'une session active arrive,
+    // pour éviter l'assertion _dependents.isEmpty lors du rebuild d'AuthGate.
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.session != null && mounted) {
+        // Fermer tous les dialogs/sheets empilés sur le navigator courant
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _authSub.cancel();
     _emailCtrl.dispose();
     _otpCtrl.dispose();
     super.dispose();
