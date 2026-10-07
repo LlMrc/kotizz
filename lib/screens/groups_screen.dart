@@ -1564,6 +1564,23 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
             .from('groups')
             .update({'status': 'completed'})
             .eq('id', widget.group.id);
+
+        // Envoyer une alerte de clôture à tous les membres
+        try {
+          final alertsToInsert = activeMembers.map((m) {
+            return {
+              'user_id': m['user_id'],
+              'group_id': widget.group.id,
+              'type': 'system',
+              'title': 'Sòl terminée avec succès ! 🏆',
+              'body': 'Félicitations ! La rotation complète de "${widget.group.name}" est achevée.',
+              'is_read': false,
+            };
+          }).toList();
+          if (alertsToInsert.isNotEmpty) {
+            await Supabase.instance.client.from('alerts').insert(alertsToInsert);
+          }
+        } catch (_) {}
       } else {
         await Supabase.instance.client
             .from('groups')
@@ -1576,19 +1593,225 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
 
       setState(() {
         if (!isLast) _currentTurn = nextTurn;
+        if (isLast) _groupStatus = 'completed';
       });
       await _loadGroupMembers();
       widget.onGroupUpdated?.call();
 
       if (mounted) {
+        if (isLast) {
+          _showCompletionDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Bienvenue au Tour $nextTurn ! 🎉'),
+              backgroundColor: AppColors.palm,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isLast
-                ? 'Sòl clôturée avec succès ! 🏆'
-                : 'Bienvenue au Tour $nextTurn ! 🎉'),
+            content: Text('Erreur : $e'),
+            backgroundColor: AppColors.coral,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Dialogue de célébration à la clôture de la Sòl avec option de redémarrage
+  void _showCompletionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.paper,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.marigold.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                color: AppColors.marigold,
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Félicitations ! 🎉',
+              style: GoogleFonts.bricolageGrotesque(
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+                color: AppColors.ink,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'La rotation complète de "${widget.group.name}" est terminée avec succès. Tous les membres ont reçu leur cagnotte !',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
+                color: AppColors.ash,
+                height: 1.4,
+              ),
+            ),
+            if (_isOrganizer) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.paperDim),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.restart_alt_rounded, color: AppColors.palm, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'En tant qu\'organisateur, vous pouvez relancer un nouveau cycle avec ce même groupe.',
+                        style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ink),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Fermer', style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+          ),
+          if (_isOrganizer)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.marigold,
+                foregroundColor: AppColors.ink,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _restartSol();
+              },
+              icon: const Icon(Icons.play_arrow_rounded, size: 18),
+              label: const Text('Redémarrer la Sòl', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Redémarre un nouveau cycle de Sòl pour le groupe
+  Future<void> _restartSol() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.paper,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Souhaitez-vous redémarrer la Sòl ?',
+          style: GoogleFonts.bricolageGrotesque(
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
+        content: Text(
+          'Un nouveau cycle débutera au Tour 1. Tous les membres actuels de "${widget.group.name}" seront conservés.',
+          style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ash),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Annuler', style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.palm,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Oui, redémarrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      // 1. Remettre le groupe au Tour 1 et en statut actif
+      await Supabase.instance.client
+          .from('groups')
+          .update({
+            'current_turn': 1,
+            'status': 'active',
+            'start_date': DateTime.now().toIso8601String().split('T').first,
+          })
+          .eq('id', widget.group.id);
+
+      // 2. Nettoyer ou archiver les cotisations précédentes de ce groupe
+      await Supabase.instance.client
+          .from('contributions')
+          .delete()
+          .eq('group_id', widget.group.id);
+
+      // 3. Notifier les membres du redémarrage
+      final activeMembers = _membersList.where((m) {
+        final status = m['status'] as String? ?? 'confirmed';
+        return status != 'left';
+      }).toList();
+
+      final alerts = activeMembers.map((m) {
+        return {
+          'user_id': m['user_id'],
+          'group_id': widget.group.id,
+          'type': 'system',
+          'title': 'Nouveau cycle démarré ! 🚀',
+          'body': 'L\'organisateur a relancé un nouveau cycle pour "${widget.group.name}". Le Tour 1 est ouvert !',
+          'is_read': false,
+        };
+      }).toList();
+
+      if (alerts.isNotEmpty) {
+        try {
+          await Supabase.instance.client.from('alerts').insert(alerts);
+        } catch (_) {}
+      }
+
+      setState(() {
+        _currentTurn = 1;
+        _groupStatus = 'active';
+      });
+
+      await _loadGroupMembers();
+      widget.onGroupUpdated?.call();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('La Sòl a été redémarrée avec succès ! 🎉 Tour 1 actif.'),
             backgroundColor: AppColors.palm,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -1596,7 +1819,7 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur : $e'),
+            content: Text('Erreur lors du redémarrage : $e'),
             backgroundColor: AppColors.coral,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1878,21 +2101,34 @@ https://apps.apple.com/app/id6795205027
                   icon: const Icon(Icons.more_vert_rounded, color: AppColors.ink),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   onSelected: (val) {
+                    if (val == 'restart') _restartSol();
                     if (val == 'advance') _advanceTurn();
                     if (val == 'remind') _remindUnpaidMembers();
                     if (val == 'delete') _deleteGroup();
                   },
                   itemBuilder: (ctx) => [
-                    PopupMenuItem(
-                      value: 'advance',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.fast_forward_rounded, size: 18, color: AppColors.ink),
-                          const SizedBox(width: 10),
-                          Text('Passer au tour ${_currentTurn + 1}'),
-                        ],
+                    if (_groupStatus == 'completed')
+                      const PopupMenuItem(
+                        value: 'restart',
+                        child: Row(
+                          children: [
+                            Icon(Icons.restart_alt_rounded, size: 18, color: AppColors.palm),
+                            SizedBox(width: 10),
+                            Text('Redémarrer la Sòl'),
+                          ],
+                        ),
+                      )
+                    else
+                      PopupMenuItem(
+                        value: 'advance',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.fast_forward_rounded, size: 18, color: AppColors.ink),
+                            const SizedBox(width: 10),
+                            Text('Passer au tour ${_currentTurn + 1}'),
+                          ],
+                        ),
                       ),
-                    ),
                     PopupMenuItem(
                       value: 'remind',
                       child: const Row(
@@ -2494,24 +2730,41 @@ https://apps.apple.com/app/id6795205027
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _advanceTurn,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.palm,
-                      foregroundColor: AppColors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    icon: const Icon(Icons.fast_forward_rounded, size: 18),
-                    label: Text(
-                      _currentTurn >= widget.group.totalTurns
-                          ? 'Clôturer la Sòl'
-                          : 'Tour ${_currentTurn + 1}',
-                      style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w700),
-                    ),
-                  ),
+                  child: _groupStatus == 'completed'
+                      ? ElevatedButton.icon(
+                          onPressed: _restartSol,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.marigold,
+                            foregroundColor: AppColors.ink,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                          label: const Text(
+                            'Redémarrer la Sòl',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: _advanceTurn,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.palm,
+                            foregroundColor: AppColors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Icon(Icons.fast_forward_rounded, size: 18),
+                          label: Text(
+                            _currentTurn >= widget.group.totalTurns
+                                ? 'Clôturer la Sòl'
+                                : 'Tour ${_currentTurn + 1}',
+                            style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w700),
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(

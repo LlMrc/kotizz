@@ -159,7 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final activeGroups =
         _userGroups.where((g) => g['status'] != 'completed').toList();
+    final completedGroups =
+        _userGroups.where((g) => g['status'] == 'completed').toList();
     final featuredGroup = activeGroups.isNotEmpty ? activeGroups.first : null;
+    final latestCompletedGroup = completedGroups.isNotEmpty ? completedGroups.first : null;
     final isTablet = MediaQuery.sizeOf(context).width >= 720;
 
     return SafeArea(
@@ -197,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 18),
                   _WheelCard(
                     featuredGroup: featuredGroup,
+                    completedGroup: latestCompletedGroup,
                     confirmedCount: _confirmedContribsCount,
                     isUserTurn: _isUserTurn,
                     beneficiaryName: _turnBeneficiaryName,
@@ -470,6 +474,7 @@ class _MiniStatCard extends StatelessWidget {
 
 class _WheelCard extends StatelessWidget {
   final Map<String, dynamic>? featuredGroup;
+  final Map<String, dynamic>? completedGroup;
   final int confirmedCount;
   final bool isUserTurn;
   final String? beneficiaryName;
@@ -477,17 +482,218 @@ class _WheelCard extends StatelessWidget {
 
   const _WheelCard({
     required this.featuredGroup,
+    this.completedGroup,
     required this.onRefresh,
     this.confirmedCount = 0,
     this.isUserTurn = false,
     this.beneficiaryName,
   });
 
+  Future<void> _restartCompletedGroup(BuildContext context, Map<String, dynamic> group) async {
+    final groupId = group['id'];
+    final groupName = group['name'] ?? 'Sòl';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.paper,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Souhaitez-vous redémarrer la Sòl ?',
+          style: GoogleFonts.bricolageGrotesque(
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
+        content: Text(
+          'Un nouveau cycle débutera au Tour 1 pour "$groupName". Les membres actuels seront conservés.',
+          style: GoogleFonts.ibmPlexSans(fontSize: 14, color: AppColors.ash),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Annuler', style: GoogleFonts.ibmPlexSans(color: AppColors.ash)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.palm,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Oui, redémarrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await Supabase.instance.client
+          .from('groups')
+          .update({
+            'current_turn': 1,
+            'status': 'active',
+            'start_date': DateTime.now().toIso8601String().split('T').first,
+          })
+          .eq('id', groupId);
+
+      await Supabase.instance.client
+          .from('contributions')
+          .delete()
+          .eq('group_id', groupId);
+
+      // Notifier les membres
+      final gmList = (group['group_members'] as List?) ?? [];
+      final alerts = gmList
+          .where((m) => m['status'] != 'left' && m['user_id'] != null)
+          .map((m) => {
+                'user_id': m['user_id'],
+                'group_id': groupId,
+                'type': 'system',
+                'title': 'Nouveau cycle démarré ! 🚀',
+                'body': 'L\'organisateur a relancé un cycle pour "$groupName". Le Tour 1 est actif !',
+                'is_read': false,
+              })
+          .toList();
+
+      if (alerts.isNotEmpty) {
+        try {
+          await Supabase.instance.client.from('alerts').insert(alerts);
+        } catch (_) {}
+      }
+
+      onRefresh();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sòl redémarrée avec succès ! 🎉'),
+            backgroundColor: AppColors.palm,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur : $e'),
+            backgroundColor: AppColors.coral,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
     if (featuredGroup == null) {
+      // Si une tontine a été complétée, afficher la célébration + option de redémarrage
+      if (completedGroup != null) {
+        final cName = (completedGroup!['name'] as String?) ?? 'Sòl';
+        final isOrganizer = completedGroup!['organizer_id'] == currentUserId;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: AppColors.ink,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.15),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.marigold,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'SÒL TERMINÉE 🏆',
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.check_circle_rounded, color: AppColors.palm, size: 24),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Rotation terminée pour "$cName"',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Tous les membres ont reçu leur cagnotte avec succès !',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13,
+                  color: AppColors.white.withValues(alpha: 0.72),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  if (isOrganizer)
+                    ElevatedButton.icon(
+                      onPressed: () => _restartCompletedGroup(context, completedGroup!),
+                      icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                      label: const Text('Redémarrer cette Sòl'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.marigold,
+                        foregroundColor: AppColors.ink,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CreateSolScreen()),
+                      );
+                      onRefresh();
+                    },
+                    icon: const Icon(Icons.add_rounded, size: 18, color: AppColors.white),
+                    label: Text(t.createSol, style: const TextStyle(color: AppColors.white)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.paperDim),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }
+
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(22),
@@ -896,9 +1102,7 @@ class _RotationWheelState extends State<_RotationWheel>
   static const double _center = _wheelSize / 2; // 77.0
   static const double _radius = 52.0;
   static const double _nodeSize = 28.0;
-  static const double _nodeRadius = _nodeSize / 2; // 14.0
   static const double _haloSize = 44.0;
-  static const double _haloRadius = _haloSize / 2; // 22.0
 
   @override
   void initState() {
