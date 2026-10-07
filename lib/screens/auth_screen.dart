@@ -326,7 +326,46 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
 
-          // ── Contenu ──────────────────────────────────────────────────
+          // ── Slogan positionné exactement comme sur le mockup ────────
+          Positioned(
+            top: size.height * 0.40,
+            right: 24,
+            child: Transform.rotate(
+              angle: -0.09, // légère rotation dynamique / manuscrite
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    t.splashSlogan,
+                    textAlign: TextAlign.right,
+                    style: GoogleFonts.caveat(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.15,
+                      letterSpacing: 0.5,
+                      shadows: const [
+                        Shadow(
+                          color: Color(0xBB081226),
+                          blurRadius: 10,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Trait courbé doré / jaune sous le slogan
+                  CustomPaint(
+                    size: const Size(130, 8),
+                    painter: _SloganUnderlinePainter(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Contenu haut & bas ───────────────────────────────────────
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -369,30 +408,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
 
                 const Spacer(),
-
-                // ── Slogan centré au-dessus du bouton ─────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    t.splashSlogan,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.bricolageGrotesque(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      height: 1.25,
-                      shadows: const [
-                        Shadow(
-                          color: Color(0xAA0B1A3B),
-                          blurRadius: 14,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
 
                 // ── Bouton Kòmanse = bouton de connexion ─────────────
                 Padding(
@@ -442,6 +457,32 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     );
   }
+}
+
+/// Peintre personnalisé pour la ligne jaune courbée / brush sous le slogan
+class _SloganUnderlinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.marigold
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    path.moveTo(0, size.height * 0.7);
+    path.quadraticBezierTo(
+      size.width * 0.5,
+      size.height * 0.1,
+      size.width,
+      size.height * 0.6,
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
