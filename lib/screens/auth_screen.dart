@@ -370,32 +370,29 @@ class _AuthScreenState extends State<AuthScreen> {
 
                 const Spacer(),
 
-                // ── Slogan aligné à droite ───────────────────────────
+                // ── Slogan centré au-dessus du bouton ─────────────
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      t.splashSlogan,
-                      textAlign: TextAlign.right,
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.25,
-                        shadows: const [
-                          Shadow(
-                            color: Color(0xAA0B1A3B),
-                            blurRadius: 14,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    t.splashSlogan,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.25,
+                      shadows: const [
+                        Shadow(
+                          color: Color(0xAA0B1A3B),
+                          blurRadius: 14,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 44),
+                const SizedBox(height: 24),
 
                 // ── Bouton Kòmanse = bouton de connexion ─────────────
                 Padding(
