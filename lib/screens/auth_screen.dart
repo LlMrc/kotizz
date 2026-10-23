@@ -127,16 +127,33 @@ class _AuthScreenState extends State<AuthScreen> {
         idToken: idToken,
         nonce: rawNonce,
       );
-    } on SignInWithAppleAuthorizationException catch (e) {
+    } on SignInWithAppleAuthorizationException catch (e, st) {
+      debugPrint('APPLE AUTHORIZATION ERROR [${e.code}]: ${e.message}');
+      debugPrintStack(stackTrace: st);
+
       if (e.code == AuthorizationErrorCode.canceled) {
         // L'utilisateur a annulé → pas d'erreur à afficher
+        if (mounted) setState(() => _loading = false);
         return;
       }
-      setState(() => _errorMsg = 'Connexion Apple échouée : ${e.message}');
-    } on AuthException catch (e) {
-      setState(() => _errorMsg = _mapAuthError(e.message));
-    } catch (e) {
-      setState(() => _errorMsg = 'Impossible de se connecter avec Apple.');
+
+      if (mounted) {
+        setState(() => _errorMsg = 'Connexion Apple échouée : ${e.message}');
+      }
+    } on AuthException catch (e, st) {
+      debugPrint('SUPABASE APPLE AUTH ERROR: ${e.message}');
+      debugPrintStack(stackTrace: st);
+
+      if (mounted) {
+        setState(() => _errorMsg = _mapAuthError(e.message));
+      }
+    } catch (e, st) {
+      debugPrint('APPLE AUTH UNKNOWN ERROR: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (mounted) {
+        setState(() => _errorMsg = 'Impossible de se connecter avec Apple.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
