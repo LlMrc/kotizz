@@ -1,4 +1,4 @@
-# workflows:
+﻿# workflows:
 #   ios-production-build:
 #     name: iOS Production Build (App Store)
 #     max_build_duration: 60
@@ -63,6 +63,7 @@
 workflows:
   ios-validation-vnc:
     name: iOS Test & Build with VNC
+    max_build_duration: 120
     integrations:
       app_store_connect: Codemagic pp Store Api key
 
@@ -102,11 +103,12 @@ workflows:
 
       - name: Setup VNC Workspace & Keep Alive
         script: |
-          caffeinate -u -t 3600 &
+          caffeinate -dimsu &
           xcrun simctl boot "iPhone 15" || true
           open -a Simulator
           open $CM_BUILD_DIR/ios/Runner.xcworkspace
-          echo "🚀 WORKSPACE READY: Connect via VNC to debug."
+          echo "🚀 WORKSPACE READY: Connect via VNC to debug (session 2h)."
+          sleep 7200
 
     artifacts:
       - build/ios/iphonesimulator/*.app
