@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -108,6 +108,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final rawNonce = supabase.auth.generateRawNonce();
       final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
 
+      debugPrint('🍎 [Apple] Requesting credential with hashed nonce...');
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
@@ -115,18 +116,22 @@ class _AuthScreenState extends State<AuthScreen> {
         ],
         nonce: hashedNonce,
       );
+      debugPrint('🍎 [Apple] Credential received — identityToken present: ${appleCredential.identityToken != null}');
 
       final idToken = appleCredential.identityToken;
       if (idToken == null) {
+        debugPrint('🍎 [Apple] ERROR: identityToken is null!');
         setState(() => _errorMsg = 'Apple n\'a pas retourné de jeton. Veuillez réessayer.');
         return;
       }
 
+      debugPrint('🍎 [Apple] Calling Supabase signInWithIdToken...');
       await supabase.auth.signInWithIdToken(
         provider: OAuthProvider.apple,
         idToken: idToken,
         nonce: rawNonce,
       );
+      debugPrint('🍎 [Apple] ✅ Supabase sign-in completed successfully.');
     } on SignInWithAppleAuthorizationException catch (e, st) {
       debugPrint('APPLE AUTHORIZATION ERROR [${e.code}]: ${e.message}');
       debugPrintStack(stackTrace: st);
