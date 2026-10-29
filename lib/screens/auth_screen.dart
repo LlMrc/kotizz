@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -55,24 +55,13 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _otpCtrl = TextEditingController();
-  bool _loading = false;
-  bool _magicLinkSent = false;
-  String? _errorMsg;
-
   // ── Reviewer demo access (hidden: tap logo 5 times) ──────────────────────
-  static const _demoEmail = 'reviewer@kotizz-demo.app';
-  static const _demoPassword = 'K0t1zz#Rev!ew2026';
   int _logoTapCount = 0;
   DateTime? _firstLogoTap;
   bool _showReviewerButton = false;
 
   // ── Souscription auth : ferme la bottom sheet avant AuthGate bascule ─────
   late final StreamSubscription<AuthState> _authSub;
-
-  bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {
@@ -90,78 +79,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void dispose() {
     _authSub.cancel();
-    _emailCtrl.dispose();
-    _otpCtrl.dispose();
     super.dispose();
-  }
-
-  /// Authentification Apple native (iOS/iPadOS) via ASAuthorizationAppleIDProvider.
-  /// Utilise signInWithIdToken avec un nonce brut haché en SHA-256 pour Supabase.
-  Future<void> _signInWithApple() async {
-    setState(() {
-      _loading = true;
-      _errorMsg = null;
-    });
-
-    try {
-      final supabase = Supabase.instance.client;
-      final rawNonce = supabase.auth.generateRawNonce();
-      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
-
-      debugPrint('🍎 [Apple] Requesting credential with hashed nonce...');
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-        nonce: hashedNonce,
-      );
-      debugPrint('🍎 [Apple] Credential received — identityToken present: ${appleCredential.identityToken != null}');
-
-      final idToken = appleCredential.identityToken;
-      if (idToken == null) {
-        debugPrint('🍎 [Apple] ERROR: identityToken is null!');
-        setState(() => _errorMsg = 'Apple n\'a pas retourné de jeton. Veuillez réessayer.');
-        return;
-      }
-
-      debugPrint('🍎 [Apple] Calling Supabase signInWithIdToken...');
-      await supabase.auth.signInWithIdToken(
-        provider: OAuthProvider.apple,
-        idToken: idToken,
-        nonce: rawNonce,
-      );
-      debugPrint('🍎 [Apple] ✅ Supabase sign-in completed successfully.');
-    } on SignInWithAppleAuthorizationException catch (e, st) {
-      debugPrint('APPLE AUTHORIZATION ERROR [${e.code}]: ${e.message}');
-      debugPrintStack(stackTrace: st);
-
-      if (e.code == AuthorizationErrorCode.canceled) {
-        // L'utilisateur a annulé → pas d'erreur à afficher
-        if (mounted) setState(() => _loading = false);
-        return;
-      }
-
-      if (mounted) {
-        setState(() => _errorMsg = 'Connexion Apple échouée : ${e.message}');
-      }
-    } on AuthException catch (e, st) {
-      debugPrint('SUPABASE APPLE AUTH ERROR: ${e.message}');
-      debugPrintStack(stackTrace: st);
-
-      if (mounted) {
-        setState(() => _errorMsg = _mapAuthError(e.message));
-      }
-    } catch (e, st) {
-      debugPrint('APPLE AUTH UNKNOWN ERROR: $e');
-      debugPrintStack(stackTrace: st);
-
-      if (mounted) {
-        setState(() => _errorMsg = 'Impossible de se connecter avec Apple.');
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
   }
 
   /// Gère les tapotements sur le logo (5 taps en moins de 6 secondes
@@ -186,102 +104,6 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  /// Connexion silencieuse avec le compte de démonstration pour les évaluateurs.
-  Future<void> _signInAsReviewer() async {
-    setState(() {
-      _loading = true;
-      _errorMsg = null;
-    });
-    try {
-      final supabase = Supabase.instance.client;
-      await supabase.auth.signInWithPassword(
-        email: _demoEmail,
-        password: _demoPassword,
-      );
-    } on AuthException catch (e) {
-      setState(() => _errorMsg = 'Demo login failed: ${e.message}');
-    } catch (e) {
-      setState(() => _errorMsg = 'Demo login unavailable. Please try again.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  /// Envoi d'un Magic Link (Email sans mot de passe)
-  Future<void> _sendMagicLink() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _loading = true;
-      _errorMsg = null;
-      _magicLinkSent = false;
-    });
-
-    try {
-      final supabase = Supabase.instance.client;
-      await supabase.auth.signInWithOtp(
-        email: _emailCtrl.text.trim(),
-        emailRedirectTo: kIsWeb ? null : 'kotizz://login-callback',
-      );
-      setState(() {
-        _magicLinkSent = true;
-        _otpCtrl.clear();
-      });
-    } on AuthException catch (e) {
-      setState(() => _errorMsg = _mapAuthError(e.message));
-    } catch (e) {
-      setState(() => _errorMsg = 'Une erreur est survenue lors de l\'envoi du lien.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  /// Vérification du code OTP (6 à 8 chiffres selon la configuration Supabase)
-  Future<void> _verifyOtp() async {
-    final code = _otpCtrl.text.trim();
-    if (code.length < 6 || code.length > 8) {
-      setState(() => _errorMsg = 'Veuillez entrer le code complet reçu par email.');
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _errorMsg = null;
-    });
-
-    try {
-      final supabase = Supabase.instance.client;
-      await supabase.auth.verifyOTP(
-        email: _emailCtrl.text.trim(),
-        token: code,
-        type: OtpType.email,
-      );
-    } on AuthException catch (e) {
-      setState(() => _errorMsg = _mapAuthError(e.message));
-    } catch (e) {
-      setState(() => _errorMsg = 'Code invalide ou expiré. Veuillez réessayer.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  /// Traduit les messages d'erreur Supabase en français.
-  String _mapAuthError(String msg) {
-    if (msg.contains('Rate limit exceeded') || msg.contains('too many requests')) {
-      return 'Trop de tentatives. Veuillez patienter un instant.';
-    }
-    if (msg.contains('Invalid email')) {
-      return 'Adresse email invalide.';
-    }
-    if (msg.contains('Token has expired') || msg.contains('otp_expired') || msg.contains('expired')) {
-      return 'Le code a expiré. Veuillez en redemander un nouveau.';
-    }
-    if (msg.contains('invalid') || msg.contains('Invalid token') || msg.contains('Token is invalid')) {
-      return 'Code de confirmation incorrect.';
-    }
-    return msg;
-  }
-
   /// Ouvre la bottom sheet contenant le formulaire de connexion.
   /// Le bouton "Kòmanse" est le point d'entrée de la connexion.
   void _showLoginSheet() {
@@ -290,26 +112,7 @@ class _AuthScreenState extends State<AuthScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _LoginSheet(
-        formKey: _formKey,
-        emailCtrl: _emailCtrl,
-        otpCtrl: _otpCtrl,
-        loading: _loading,
-        magicLinkSent: _magicLinkSent,
-        errorMsg: _errorMsg,
-        isIOS: _isIOS,
-        onSendMagicLink: _sendMagicLink,
-        onVerifyOtp: _verifyOtp,
-        onSignInWithApple: _signInWithApple,
-        onResetMagicLink: () => setState(() {
-          _magicLinkSent = false;
-          _otpCtrl.clear();
-          _errorMsg = null;
-        }),
-        onResendCode: () {
-          _otpCtrl.clear();
-          _sendMagicLink();
-        },
-        onSignInAsReviewer: _showReviewerButton ? _signInAsReviewer : null,
+        showReviewerButton: _showReviewerButton,
       ),
     );
   }
@@ -523,40 +326,216 @@ class _SloganUnderlinePainter extends CustomPainter {
 // ─────────────────────────────────────────────────────────────────────────────
 // Bottom sheet — formulaire complet de connexion
 // ─────────────────────────────────────────────────────────────────────────────
-class _LoginSheet extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController emailCtrl;
-  final TextEditingController otpCtrl;
-  final bool loading;
-  final bool magicLinkSent;
-  final String? errorMsg;
-  final bool isIOS;
-  final VoidCallback onSendMagicLink;
-  final VoidCallback onVerifyOtp;
-  final VoidCallback onSignInWithApple;
-  final VoidCallback onResetMagicLink;
-  final VoidCallback onResendCode;
-  final VoidCallback? onSignInAsReviewer;
+class _LoginSheet extends StatefulWidget {
+  final bool showReviewerButton;
 
   const _LoginSheet({
-    required this.formKey,
-    required this.emailCtrl,
-    required this.otpCtrl,
-    required this.loading,
-    required this.magicLinkSent,
-    required this.errorMsg,
-    required this.isIOS,
-    required this.onSendMagicLink,
-    required this.onVerifyOtp,
-    required this.onSignInWithApple,
-    required this.onResetMagicLink,
-    required this.onResendCode,
-    this.onSignInAsReviewer,
+    required this.showReviewerButton,
   });
+
+  @override
+  State<_LoginSheet> createState() => _LoginSheetState();
+}
+
+class _LoginSheetState extends State<_LoginSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
+  bool _loading = false;
+  bool _magicLinkSent = false;
+  String? _errorMsg;
+
+  // ── Reviewer demo access ───────────────────────────────────────────────────
+  static const _demoEmail = 'reviewer@kotizz-demo.app';
+  static const _demoPassword = 'K0t1zz#Rev!ew2026';
+
+  bool get _isIOS => defaultTargetPlatform == TargetPlatform.iOS;
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _otpCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Authentification Apple native (iOS/iPadOS) via ASAuthorizationAppleIDProvider.
+  /// Utilise signInWithIdToken avec un nonce brut haché en SHA-256 pour Supabase.
+  Future<void> _signInWithApple() async {
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+    });
+
+    try {
+      final supabase = Supabase.instance.client;
+      final rawNonce = supabase.auth.generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      debugPrint('🍎 [Apple] Requesting credential with hashed nonce...');
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+      debugPrint('🍎 [Apple] Credential received — identityToken present: ${appleCredential.identityToken != null}');
+
+      final idToken = appleCredential.identityToken;
+      if (idToken == null) {
+        debugPrint('🍎 [Apple] ERROR: identityToken is null!');
+        if (mounted) {
+          setState(() => _errorMsg = 'Apple n\'a pas retourné de jeton. Veuillez réessayer.');
+        }
+        return;
+      }
+
+      debugPrint('🍎 [Apple] Calling Supabase signInWithIdToken...');
+      await supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+      debugPrint('🍎 [Apple] ✅ Supabase sign-in completed successfully.');
+    } on SignInWithAppleAuthorizationException catch (e, st) {
+      debugPrint('APPLE AUTHORIZATION ERROR [${e.code}]: ${e.message}');
+      debugPrintStack(stackTrace: st);
+
+      if (e.code == AuthorizationErrorCode.canceled) {
+        if (mounted) setState(() => _loading = false);
+        return;
+      }
+
+      if (mounted) {
+        setState(() => _errorMsg = 'Connexion Apple échouée : ${e.message}');
+      }
+    } on AuthException catch (e, st) {
+      debugPrint('SUPABASE APPLE AUTH ERROR: ${e.message}');
+      debugPrintStack(stackTrace: st);
+
+      if (mounted) {
+        setState(() => _errorMsg = _mapAuthError(e.message));
+      }
+    } catch (e, st) {
+      debugPrint('APPLE AUTH UNKNOWN ERROR: $e');
+      debugPrintStack(stackTrace: st);
+
+      if (mounted) {
+        setState(() => _errorMsg = 'Impossible de se connecter avec Apple.');
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Connexion silencieuse avec le compte de démonstration pour les évaluateurs.
+  Future<void> _signInAsReviewer() async {
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+    });
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.auth.signInWithPassword(
+        email: _demoEmail,
+        password: _demoPassword,
+      );
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _errorMsg = 'Demo login failed: ${e.message}');
+    } catch (e) {
+      if (mounted) setState(() => _errorMsg = 'Demo login unavailable. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Envoi d'un code OTP par email
+  Future<void> _sendMagicLink() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+      _magicLinkSent = false;
+    });
+
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.auth.signInWithOtp(
+        email: _emailCtrl.text.trim(),
+        emailRedirectTo: kIsWeb ? null : 'kotizz://login-callback',
+      );
+      if (mounted) {
+        setState(() {
+          _magicLinkSent = true;
+          _otpCtrl.clear();
+        });
+      }
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _errorMsg = _mapAuthError(e.message));
+    } catch (e) {
+      if (mounted) setState(() => _errorMsg = 'Une erreur est survenue lors de l\'envoi du lien.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Vérification du code OTP (6 à 8 chiffres selon la configuration Supabase)
+  Future<void> _verifyOtp() async {
+    final code = _otpCtrl.text.trim();
+    if (code.length < 6 || code.length > 8) {
+      setState(() => _errorMsg = 'Veuillez entrer le code complet (6 à 8 chiffres).');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMsg = null;
+    });
+
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.auth.verifyOTP(
+        email: _emailCtrl.text.trim(),
+        token: code,
+        type: OtpType.email,
+      );
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _errorMsg = _mapAuthError(e.message));
+    } catch (e) {
+      if (mounted) setState(() => _errorMsg = 'Code invalide ou expiré. Veuillez réessayer.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Traduit les messages d'erreur Supabase en français.
+  String _mapAuthError(String msg) {
+    if (msg.contains('Rate limit exceeded') || msg.contains('too many requests')) {
+      return 'Trop de tentatives. Veuillez patienter un instant.';
+    }
+    if (msg.contains('Invalid email')) {
+      return 'Adresse email invalide.';
+    }
+    if (msg.contains('Token has expired') || msg.contains('otp_expired') || msg.contains('expired')) {
+      return 'Le code a expiré. Veuillez en redemander un nouveau.';
+    }
+    if (msg.contains('invalid') || msg.contains('Invalid token') || msg.contains('Token is invalid')) {
+      return 'Code de confirmation incorrect.';
+    }
+    return msg;
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final alreadyHaveCodeLabel = locale == 'ht'
+        ? 'Mwen deja gen yon kòd konfimasyon'
+        : (locale == 'en'
+            ? 'I already have a confirmation code'
+            : 'J\'ai déjà un code de confirmation');
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.paper,
@@ -602,7 +581,7 @@ class _LoginSheet extends StatelessWidget {
             const SizedBox(height: 20),
 
             // ── iOS : Bouton Apple ────────────────────────────────────
-            if (isIOS) ...[
+            if (_isIOS && !_magicLinkSent) ...[
               Text(
                 t.authWelcome,
                 style: GoogleFonts.bricolageGrotesque(
@@ -620,7 +599,7 @@ class _LoginSheet extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: loading ? null : onSignInWithApple,
+                  onPressed: _loading ? null : _signInWithApple,
                   icon: const Icon(Icons.apple, size: 22, color: AppColors.white),
                   label: Text(
                     t.continueWithApple,
@@ -657,7 +636,7 @@ class _LoginSheet extends StatelessWidget {
             ],
 
             // ── Non-iOS ───────────────────────────────────────────────
-            if (!isIOS) ...[
+            if (!_isIOS && !_magicLinkSent) ...[
               Text(
                 'Connexion rapide',
                 style: GoogleFonts.bricolageGrotesque(
@@ -674,8 +653,8 @@ class _LoginSheet extends StatelessWidget {
               const SizedBox(height: 18),
             ],
 
-            // ── Code OTP envoyé ───────────────────────────────────────
-            if (magicLinkSent) ...[
+            // ── Code OTP envoyé ou saisie directe du code ─────────────
+            if (_magicLinkSent) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
@@ -705,7 +684,7 @@ class _LoginSheet extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Code envoyé ! ✉️',
+                                'Code de confirmation ✉️',
                                 style: GoogleFonts.bricolageGrotesque(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w700,
@@ -713,7 +692,7 @@ class _LoginSheet extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                emailCtrl.text.trim(),
+                                _emailCtrl.text.trim(),
                                 style: GoogleFonts.ibmPlexSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -733,10 +712,11 @@ class _LoginSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     TextField(
-                      controller: otpCtrl,
+                      controller: _otpCtrl,
                       keyboardType: TextInputType.number,
                       maxLength: 8,
                       textAlign: TextAlign.center,
+                      autofocus: true,
                       style: GoogleFonts.ibmPlexMono(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -745,7 +725,7 @@ class _LoginSheet extends StatelessWidget {
                       ),
                       decoration: InputDecoration(
                         counterText: '',
-                        hintText: '••••••••',
+                        hintText: '123456',
                         hintStyle: GoogleFonts.ibmPlexMono(
                           fontSize: 22,
                           letterSpacing: 4,
@@ -768,15 +748,18 @@ class _LoginSheet extends StatelessWidget {
                         ),
                       ),
                       onChanged: (val) {
-                        if (val.trim().length == 8) onVerifyOtp();
+                        final clean = val.trim();
+                        if (clean.length == 6 || clean.length == 8) {
+                          _verifyOtp();
+                        }
                       },
                     ),
                     const SizedBox(height: 10),
-                    if (errorMsg != null) _ErrorBanner(message: errorMsg!),
+                    if (_errorMsg != null) _ErrorBanner(message: _errorMsg!),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: loading ? null : onVerifyOtp,
+                        onPressed: _loading ? null : _verifyOtp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.ink,
                           foregroundColor: AppColors.white,
@@ -784,7 +767,7 @@ class _LoginSheet extends StatelessWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           elevation: 0,
                         ),
-                        child: loading
+                        child: _loading
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.white))
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -801,12 +784,23 @@ class _LoginSheet extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton.icon(
-                          onPressed: loading ? null : onResendCode,
+                          onPressed: _loading
+                              ? null
+                              : () {
+                                  _otpCtrl.clear();
+                                  _sendMagicLink();
+                                },
                           icon: const Icon(Icons.refresh_rounded, size: 15, color: AppColors.ink),
                           label: Text(t.resendCode, style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink)),
                         ),
                         TextButton(
-                          onPressed: loading ? null : onResetMagicLink,
+                          onPressed: _loading
+                              ? null
+                              : () => setState(() {
+                                    _magicLinkSent = false;
+                                    _otpCtrl.clear();
+                                    _errorMsg = null;
+                                  }),
                           child: Text(t.changeEmail, style: GoogleFonts.ibmPlexSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ash)),
                         ),
                       ],
@@ -817,9 +811,9 @@ class _LoginSheet extends StatelessWidget {
             ] else ...[
               // ── Formulaire email ──────────────────────────────────────
               Form(
-                key: formKey,
+                key: _formKey,
                 child: _AuthField(
-                  controller: emailCtrl,
+                  controller: _emailCtrl,
                   label: t.emailAddressLabel,
                   hint: t.emailHint,
                   icon: Icons.mail_outline_rounded,
@@ -832,11 +826,11 @@ class _LoginSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              if (errorMsg != null) _ErrorBanner(message: errorMsg!),
+              if (_errorMsg != null) _ErrorBanner(message: _errorMsg!),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: loading ? null : onSendMagicLink,
+                  onPressed: _loading ? null : _sendMagicLink,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.ink,
                     foregroundColor: AppColors.white,
@@ -844,7 +838,7 @@ class _LoginSheet extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  child: loading
+                  child: _loading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.white))
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -854,6 +848,33 @@ class _LoginSheet extends StatelessWidget {
                             Text(t.sendLoginCode, style: GoogleFonts.ibmPlexSans(fontSize: 15, fontWeight: FontWeight.w600)),
                           ],
                         ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton(
+                  onPressed: _loading
+                      ? null
+                      : () {
+                          if (_emailCtrl.text.trim().isEmpty || !_emailCtrl.text.contains('@')) {
+                            _formKey.currentState!.validate();
+                            return;
+                          }
+                          setState(() {
+                            _magicLinkSent = true;
+                            _errorMsg = null;
+                            _otpCtrl.clear();
+                          });
+                        },
+                  child: Text(
+                    alreadyHaveCodeLabel,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ash,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -891,12 +912,12 @@ class _LoginSheet extends StatelessWidget {
             ),
 
             // ── Bouton démo reviewers (caché, 5 taps sur logo) ───────
-            if (onSignInAsReviewer != null) ...[
+            if (widget.showReviewerButton) ...[
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: loading ? null : onSignInAsReviewer,
+                  onPressed: _loading ? null : _signInAsReviewer,
                   icon: const Icon(Icons.preview_rounded, size: 18),
                   label: Text(
                     'App Review — Demo Access',
