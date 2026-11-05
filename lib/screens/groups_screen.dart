@@ -1918,29 +1918,35 @@ https://apps.apple.com/app/id6795205027
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.inviteCode.toUpperCase(),
-                            style: GoogleFonts.ibmPlexMono(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.8,
-                              color: const Color(0xFFB87A1F),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              t.inviteCode.toUpperCase(),
+                              style: GoogleFonts.ibmPlexMono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.8,
+                                color: const Color(0xFFB87A1F),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            code,
-                            style: GoogleFonts.bricolageGrotesque(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 2.0,
-                              color: AppColors.ink,
+                            const SizedBox(height: 2),
+                            FittedBox(
+                              alignment: Alignment.centerLeft,
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                code,
+                                style: GoogleFonts.bricolageGrotesque(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                  color: AppColors.ink,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.copy_rounded, color: AppColors.ink),
