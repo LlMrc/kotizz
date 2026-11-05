@@ -160,11 +160,11 @@ Future<void> showJoinGroupDialog(
                           }
 
                           if (!joinedViaRpc) {
-                            // 2. Chercher le groupe avec ce code
+                            // 2. Chercher le groupe avec ce code (insensible à la casse)
                             final groupResp = await Supabase.instance.client
                                 .from('groups')
                                 .select('id, name, max_members, organizer_id')
-                                .eq('invite_code', code)
+                                .ilike('invite_code', code)
                                 .maybeSingle();
 
                             if (groupResp == null) {
