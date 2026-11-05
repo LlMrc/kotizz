@@ -62,10 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
             firstName.substring(0, firstName.length >= 2 ? 2 : 1).toUpperCase();
       }
 
-      // 2. Groupes de l'utilisateur (organisateur ou membre via RLS)
+      // 2. Groupes de l'utilisateur uniquement (membre ou organisateur)
       final groupsResponse = await Supabase.instance.client
           .from('groups')
-          .select('*, profiles!organizer_id(full_name), group_members(user_id, turn_order, status, profiles(full_name))')
+          .select('*, profiles!organizer_id(full_name), group_members!inner(user_id, turn_order, status, profiles(full_name))')
+          .eq('group_members.user_id', user.id)
           .order('created_at', ascending: false);
 
       final groupsList = (groupsResponse as List).cast<Map<String, dynamic>>();

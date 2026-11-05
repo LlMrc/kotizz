@@ -58,9 +58,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
     }
 
     try {
+      final userId = user.id;
       final response = await Supabase.instance.client
           .from('groups')
-          .select('*, profiles!organizer_id(full_name), group_members(user_id, turn_order, profiles(full_name))')
+          .select('*, profiles!organizer_id(full_name), group_members!inner(user_id, turn_order, profiles(full_name))')
+          .eq('group_members.user_id', userId)
           .order('created_at', ascending: false);
 
       final loaded = (response as List).map((map) {
