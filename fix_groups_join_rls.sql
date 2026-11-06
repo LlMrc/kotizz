@@ -1,23 +1,17 @@
 -- =============================================================================
--- KOTIZZ — FIX CRITIQUE : Adhésion par code d'invitation (RLS groups_select)
+-- KOTIZZ — FIX CRITIQUE : Adhésion par code & Standardisation 6 caractères
 -- =============================================================================
--- Ce script corrige la politique RLS sur `groups` pour permettre la recherche
--- d'un groupe via son invite_code, même quand l'utilisateur n'en est pas encore
--- membre. Sans cette correction, le formulaire "Rejoindre par code" retourne
--- silencieusement "groupe non trouvé" et aucune action ne se produit.
+-- Ce script résout :
+-- 1. La visibilité des groupes par code d'invitation (invite_code IS NOT NULL)
+-- 2. La visibilité des membres pour calculer le tour suivant
+-- 3. La fonction RPC sécurisée join_group_by_code
+-- 4. Le format par défaut universel de 6 caractères majuscules (ex: H7K2P9)
 --
 -- INSTRUCTIONS :
---   Supabase Dashboard → SQL Editor → coller ce script → RUN
+--   Supabase Dashboard → SQL Editor → coller tout ce script → RUN
 -- =============================================================================
 
 -- ─── 1. Remplacer la politique SELECT sur `groups` ───────────────────────────
--- Ancienne politique (fix_rls_policies.sql) :
---   organizer_id = auth.uid() OR is_group_member(id, auth.uid())
---   ❌ Bloque la recherche par invite_code pour les non-membres
---
--- Nouvelle politique :
---   + invite_code IS NOT NULL  → tout utilisateur authentifié peut trouver
---     un groupe via son code, sans en être membre
 DROP POLICY IF EXISTS "groups_select" ON public.groups;
 
 CREATE POLICY "groups_select" ON public.groups
@@ -29,8 +23,7 @@ CREATE POLICY "groups_select" ON public.groups
     OR invite_code IS NOT NULL
   );
 
--- ─── 2. Permettre à tout membre authentifié de voir les group_members
---        d'un groupe qu'il cherche par code (calcul du prochain tour) ─────────
+-- ─── 2. Remplacer la politique SELECT sur `group_members` ─────────────────────
 DROP POLICY IF EXISTS "group_members_select" ON public.group_members;
 
 CREATE POLICY "group_members_select" ON public.group_members
@@ -47,8 +40,7 @@ CREATE POLICY "group_members_select" ON public.group_members
     )
   );
 
--- ─── 3. S'assurer que la fonction RPC `join_group_by_code` existe ─────────────
--- Elle utilise SECURITY DEFINER → contourne RLS → toujours fiable
+-- ─── 3. Fonction RPC atomique SECURITY DEFINER : join_group_by_code ─────────
 CREATE OR REPLACE FUNCTION public.join_group_by_code(p_code TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -105,10 +97,22 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.join_group_by_code(TEXT) TO authenticated;
 
--- ─── 4. Vérification ─────────────────────────────────────────────────────────
-SELECT tablename, policyname, cmd
-FROM pg_policies
-WHERE schemaname = 'public'
-  AND tablename IN ('groups', 'group_members')
-ORDER BY tablename, policyname;
--- Résultat attendu : groups_select doit inclure "invite_code IS NOT NULL"
+-- ─── 4. Générateur par défaut de codes à 6 caractères majuscules en base ─────
+CREATE OR REPLACE FUNCTION public.generate_invite_code()
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  chars TEXT := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  result TEXT := '';
+  i INT;
+BEGIN
+  FOR i IN 1..6 LOOP
+    result := result || substr(chars, floor(random() * length(chars) + 1)::int, 1);
+  END LOOP;
+  RETURN result;
+END;
+$$;
+
+ALTER TABLE public.groups 
+  ALTER COLUMN invite_code SET DEFAULT public.generate_invite_code();

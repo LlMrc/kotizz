@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/join_group_dialog.dart';
+import '../widgets/pay_contribution_modal.dart';
 import 'create_sol_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -26,6 +27,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int _confirmedContribsCount = 0;
   bool _isUserTurn = false;
   String? _turnBeneficiaryName;
+  String? _turnBeneficiaryFullName;
+  Map<String, dynamic>? _currentBeneficiary;
+  String? _nextBeneficiaryName;
+  int? _nextBeneficiaryTurn;
+  List<Map<String, dynamic>> _activeGroupMembers = [];
+  bool _hasUserPaid = false;
 
   @override
   void initState() {
@@ -98,36 +105,145 @@ class _HomeScreenState extends State<HomeScreen> {
       int confirmedContribsCount = 0;
       bool isUserTurn = false;
       String? turnBeneficiaryName;
+      String? turnBeneficiaryFullName;
+      Map<String, dynamic>? currentBeneficiary;
+      String? nextBeneficiaryName;
+      int? nextBeneficiaryTurn;
+      List<Map<String, dynamic>> activeGroupMembers = [];
+      bool hasUserPaid = false;
 
       if (featuredGroup != null) {
         final currentTurn = (featuredGroup['current_turn'] as int?) ?? 1;
+        final totalTurns = (featuredGroup['max_members'] as int?) ?? 5;
         final groupId = featuredGroup['id'];
 
-        final gmList = (featuredGroup['group_members'] as List?) ?? [];
-        for (final m in gmList) {
-          if (m['turn_order'] == currentTurn) {
-            if (m['user_id'] == user.id) {
-              isUserTurn = true;
-            }
-            final prof = m['profiles'];
-            if (prof != null && prof['full_name'] != null) {
-              turnBeneficiaryName =
-                  (prof['full_name'] as String).trim().split(' ').first;
-            }
-            break;
-          }
-        }
+        // Récupérer tous les membres réels du groupe avec leurs profils
+        List<Map<String, dynamic>> rawMembers = [];
+        try {
+          final membersResponse = await Supabase.instance.client
+              .from('group_members')
+              .select('id, user_id, turn_order, status, profiles:user_id(id, full_name, phone, payout_method, payout_details, trust_score)')
+              .eq('group_id', groupId)
+              .order('turn_order', ascending: true);
 
-        // Récupérer le nombre réel de paiements confirmés pour ce tour
+          rawMembers = (membersResponse as List)
+              .cast<Map<String, dynamic>>()
+              .where((m) => (m['status'] as String?) != 'left')
+              .toList();
+        } catch (_) {}
+
+        // Récupérer les cotisations pour le tour courant
+        Map<String, Map<String, dynamic>> turnContribs = {};
         try {
           final contribsResponse = await Supabase.instance.client
               .from('contributions')
-              .select('id')
+              .select()
               .eq('group_id', groupId)
-              .eq('turn_number', currentTurn)
-              .eq('payment_status', 'confirmed');
-          confirmedContribsCount = (contribsResponse as List).length;
+              .eq('turn_number', currentTurn);
+
+          for (final c in (contribsResponse as List)) {
+            final uid = c['user_id'] as String?;
+            if (uid != null) {
+              turnContribs[uid] = Map<String, dynamic>.from(c);
+            }
+          }
         } catch (_) {}
+
+        confirmedContribsCount = turnContribs.values
+            .where((c) => c['payment_status'] == 'confirmed')
+            .length;
+
+        // Identifier le Bénéficiaire courant (turn_order == currentTurn)
+        Map<String, dynamic>? currentBeneficiaryMember;
+        for (final m in rawMembers) {
+          if (m['turn_order'] == currentTurn) {
+            currentBeneficiaryMember = m;
+            break;
+          }
+        }
+        if (currentBeneficiaryMember == null && rawMembers.isNotEmpty) {
+          final idx = (currentTurn - 1).clamp(0, rawMembers.length - 1);
+          currentBeneficiaryMember = rawMembers[idx];
+        }
+
+        if (currentBeneficiaryMember != null) {
+          final bUserId = currentBeneficiaryMember['user_id'] as String?;
+          final prof = currentBeneficiaryMember['profiles'] as Map<String, dynamic>?;
+          final bFullName = (prof?['full_name'] as String?)?.trim() ?? 'Membre';
+          turnBeneficiaryFullName = bFullName;
+          turnBeneficiaryName = bFullName.split(' ').first;
+          isUserTurn = (bUserId == user.id);
+
+          currentBeneficiary = {
+            'user_id': bUserId,
+            'full_name': bFullName,
+            'phone': (prof?['phone'] as String?) ?? '',
+            'payout_method': (prof?['payout_method'] as String?) ?? '',
+            'payout_details': (prof?['payout_details'] as String?) ?? '',
+            'turn_order': currentBeneficiaryMember['turn_order'] ?? currentTurn,
+          };
+        }
+
+        // Identifier le Bénéficiaire suivant
+        final maxT = rawMembers.isNotEmpty
+            ? rawMembers.map((m) => (m['turn_order'] as int?) ?? 1).reduce(math.max)
+            : totalTurns;
+        final nextTurnNum = (currentTurn >= maxT) ? 1 : (currentTurn + 1);
+
+        Map<String, dynamic>? nextBeneficiaryMember;
+        for (final m in rawMembers) {
+          if (m['turn_order'] == nextTurnNum) {
+            nextBeneficiaryMember = m;
+            break;
+          }
+        }
+        if (nextBeneficiaryMember == null) {
+          for (final m in rawMembers) {
+            if ((m['turn_order'] as int? ?? 0) > currentTurn) {
+              nextBeneficiaryMember = m;
+              break;
+            }
+          }
+        }
+        if (nextBeneficiaryMember == null && rawMembers.isNotEmpty) {
+          nextBeneficiaryMember = rawMembers.first;
+        }
+
+        if (nextBeneficiaryMember != null) {
+          final nextProf = nextBeneficiaryMember['profiles'] as Map<String, dynamic>?;
+          nextBeneficiaryName = (nextProf?['full_name'] as String?)?.trim() ?? 'Membre suivant';
+          nextBeneficiaryTurn = (nextBeneficiaryMember['turn_order'] as int?) ?? nextTurnNum;
+        }
+
+        // Construire la liste ordonnée des membres avec statut de paiement
+        for (final m in rawMembers) {
+          final uid = m['user_id'] as String?;
+          final prof = m['profiles'] as Map<String, dynamic>?;
+          final mTurn = (m['turn_order'] as int?) ?? 1;
+          final mFullName = (prof?['full_name'] as String?)?.trim() ?? 'Membre';
+          final contrib = (uid != null) ? turnContribs[uid] : null;
+          final payStatus = (contrib?['payment_status'] as String?) ?? 'pending';
+          final isPaid = (payStatus == 'confirmed');
+
+          if (uid == user.id && isPaid) {
+            hasUserPaid = true;
+          }
+
+          activeGroupMembers.add({
+            'id': m['id'],
+            'user_id': uid,
+            'full_name': mFullName,
+            'phone': (prof?['phone'] as String?) ?? '',
+            'payout_method': (prof?['payout_method'] as String?) ?? '',
+            'payout_details': (prof?['payout_details'] as String?) ?? '',
+            'turn_order': mTurn,
+            'is_current_beneficiary': (mTurn == currentTurn),
+            'is_next_beneficiary': (nextBeneficiaryMember != null && m['id'] == nextBeneficiaryMember['id']),
+            'is_current_user': (uid == user.id),
+            'payment_status': payStatus,
+            'is_paid': isPaid,
+          });
+        }
       }
 
       if (mounted) {
@@ -142,6 +258,12 @@ class _HomeScreenState extends State<HomeScreen> {
           _confirmedContribsCount = confirmedContribsCount;
           _isUserTurn = isUserTurn;
           _turnBeneficiaryName = turnBeneficiaryName;
+          _turnBeneficiaryFullName = turnBeneficiaryFullName;
+          _currentBeneficiary = currentBeneficiary;
+          _nextBeneficiaryName = nextBeneficiaryName;
+          _nextBeneficiaryTurn = nextBeneficiaryTurn;
+          _activeGroupMembers = activeGroupMembers;
+          _hasUserPaid = hasUserPaid;
           _isLoading = false;
         });
       }
@@ -205,15 +327,38 @@ class _HomeScreenState extends State<HomeScreen> {
                     confirmedCount: _confirmedContribsCount,
                     isUserTurn: _isUserTurn,
                     beneficiaryName: _turnBeneficiaryName,
+                    beneficiaryFullName: _turnBeneficiaryFullName,
+                    currentBeneficiary: _currentBeneficiary,
+                    hasUserPaid: _hasUserPaid,
                     onRefresh: _loadHomeData,
                   ),
+                  if (featuredGroup != null && _activeGroupMembers.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    _CycleMembersStatusSection(
+                      group: featuredGroup,
+                      currentTurn: (featuredGroup['current_turn'] as int?) ?? 1,
+                      totalTurns: (featuredGroup['max_members'] as int?) ?? 5,
+                      currentBeneficiaryName: _turnBeneficiaryFullName ?? _turnBeneficiaryName ?? 'Non défini',
+                      nextBeneficiaryName: _nextBeneficiaryName,
+                      nextBeneficiaryTurn: _nextBeneficiaryTurn,
+                      members: _activeGroupMembers,
+                      hasUserPaid: _hasUserPaid,
+                      currentBeneficiary: _currentBeneficiary,
+                      onRefresh: _loadHomeData,
+                    ),
+                  ],
                   const SizedBox(height: 22),
                   _GroupsPreview(
                     groups: activeGroups,
                     onGroupCreated: _loadHomeData,
                   ),
                   const SizedBox(height: 22),
-                  _QuickActionsSection(onRefresh: _loadHomeData),
+                  _QuickActionsSection(
+                    onRefresh: _loadHomeData,
+                    featuredGroup: featuredGroup,
+                    currentBeneficiary: _currentBeneficiary,
+                    hasUserPaid: _hasUserPaid,
+                  ),
                 ],
               ),
             ),
@@ -479,6 +624,9 @@ class _WheelCard extends StatelessWidget {
   final int confirmedCount;
   final bool isUserTurn;
   final String? beneficiaryName;
+  final String? beneficiaryFullName;
+  final Map<String, dynamic>? currentBeneficiary;
+  final bool hasUserPaid;
   final VoidCallback onRefresh;
 
   const _WheelCard({
@@ -488,6 +636,9 @@ class _WheelCard extends StatelessWidget {
     this.confirmedCount = 0,
     this.isUserTurn = false,
     this.beneficiaryName,
+    this.beneficiaryFullName,
+    this.currentBeneficiary,
+    this.hasUserPaid = false,
   });
 
   Future<void> _restartCompletedGroup(BuildContext context, Map<String, dynamic> group) async {
@@ -947,6 +1098,111 @@ class _WheelCard extends StatelessWidget {
                       ),
                     ],
                   ],
+                ),
+                const SizedBox(height: 16),
+                // Bénéficiaire courant
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.white.withValues(alpha: 0.12)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.marigold,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.ink, width: 1.2),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.stars_rounded, color: AppColors.ink, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'BÉNÉFICIAIRE COURANT',
+                              style: GoogleFonts.ibmPlexMono(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                color: AppColors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              beneficiaryFullName ?? (beneficiaryName != null ? 'Tour de $beneficiaryName' : 'Non défini'),
+                              style: GoogleFonts.bricolageGrotesque(
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isUserTurn)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.marigold,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'C\'est vous !',
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Bouton Payer votre cotisation
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: hasUserPaid ? AppColors.palm : AppColors.marigold,
+                      foregroundColor: hasUserPaid ? AppColors.white : AppColors.ink,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () {
+                      PayContributionModal.show(
+                        context,
+                        group: featuredGroup!,
+                        beneficiary: currentBeneficiary,
+                        hasPaid: hasUserPaid,
+                        onPaymentUpdated: onRefresh,
+                      );
+                    },
+                    icon: Icon(
+                      hasUserPaid ? Icons.check_circle_rounded : Icons.payments_rounded,
+                      size: 19,
+                    ),
+                    label: Text(
+                      hasUserPaid ? 'Cotisation payée ✓ (Voir infos)' : 'Payer votre cotisation',
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1538,9 +1794,659 @@ class _GroupCard extends StatelessWidget {
   }
 }
 
+class _CycleMembersStatusSection extends StatelessWidget {
+  final Map<String, dynamic> group;
+  final int currentTurn;
+  final int totalTurns;
+  final String currentBeneficiaryName;
+  final String? nextBeneficiaryName;
+  final int? nextBeneficiaryTurn;
+  final List<Map<String, dynamic>> members;
+  final bool hasUserPaid;
+  final Map<String, dynamic>? currentBeneficiary;
+  final VoidCallback onRefresh;
+
+  const _CycleMembersStatusSection({
+    required this.group,
+    required this.currentTurn,
+    required this.totalTurns,
+    required this.currentBeneficiaryName,
+    required this.nextBeneficiaryName,
+    required this.nextBeneficiaryTurn,
+    required this.members,
+    required this.hasUserPaid,
+    required this.currentBeneficiary,
+    required this.onRefresh,
+  });
+
+  Future<void> _togglePaymentStatus(BuildContext context, Map<String, dynamic> member) async {
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final organizerId = group['organizer_id'] as String?;
+    final isOrganizer = (currentUserId != null && organizerId == currentUserId);
+
+    // Si ce n'est pas l'organisateur, il ne peut pas modifier le statut
+    if (!isOrganizer) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Seul l\'organisateur de la tontine peut valider et confirmer les paiements.'),
+          backgroundColor: AppColors.ink,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    final memberUserId = member['user_id'] as String?;
+    final memberName = (member['full_name'] as String?) ?? 'Membre';
+    if (memberUserId == null) return;
+
+    final bool isCurrentlyPaid = member['is_paid'] == true;
+
+    // Dialogue de validation pour l'organisateur
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.paper,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.ash.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Validation cotisation — $memberName',
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'Tour $currentTurn • ${group['contribution_amount']} ${group['currency'] ?? 'HTG'}',
+              style: GoogleFonts.ibmPlexSans(fontSize: 13, color: AppColors.ash),
+            ),
+            const SizedBox(height: 18),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(
+                  color: isCurrentlyPaid ? AppColors.palm : AppColors.paperDim,
+                  width: isCurrentlyPaid ? 1.5 : 1,
+                ),
+              ),
+              tileColor: AppColors.white,
+              leading: const Icon(Icons.check_circle_rounded, color: AppColors.palm, size: 24),
+              title: Text(
+                'Confirmer le paiement (Payé)',
+                style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w700, color: AppColors.ink),
+              ),
+              subtitle: Text(
+                'Valider la réception de la cotisation pour ce tour',
+                style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ash),
+              ),
+              trailing: isCurrentlyPaid
+                  ? const Icon(Icons.check_rounded, color: AppColors.palm)
+                  : null,
+              onTap: () => Navigator.of(ctx).pop('confirmed'),
+            ),
+            const SizedBox(height: 10),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(
+                  color: !isCurrentlyPaid ? const Color(0xFFE65100) : AppColors.paperDim,
+                  width: !isCurrentlyPaid ? 1.5 : 1,
+                ),
+              ),
+              tileColor: AppColors.white,
+              leading: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFE65100), size: 24),
+              title: Text(
+                'Marquer comme Non payé',
+                style: GoogleFonts.ibmPlexSans(fontWeight: FontWeight.w700, color: AppColors.ink),
+              ),
+              subtitle: Text(
+                'Cotisation en attente de versement',
+                style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ash),
+              ),
+              trailing: !isCurrentlyPaid
+                  ? const Icon(Icons.check_rounded, color: Color(0xFFE65100))
+                  : null,
+              onTap: () => Navigator.of(ctx).pop('pending'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (chosen == null || (chosen == 'confirmed' && isCurrentlyPaid) || (chosen == 'pending' && !isCurrentlyPaid)) {
+      return;
+    }
+
+    try {
+      final groupId = group['id'] as String;
+      final rawAmt = group['contribution_amount'];
+      final amountNum = double.tryParse(rawAmt?.toString() ?? '0') ?? 0.0;
+      final currency = (group['currency'] as String?) ?? 'HTG';
+      final groupName = (group['name'] as String?) ?? 'Tontine';
+
+      // Vérifier si un enregistrement existe déjà dans contributions
+      final existing = await Supabase.instance.client
+          .from('contributions')
+          .select('id')
+          .eq('group_id', groupId)
+          .eq('user_id', memberUserId)
+          .eq('turn_number', currentTurn)
+          .maybeSingle();
+
+      if (existing != null) {
+        await Supabase.instance.client
+            .from('contributions')
+            .update({
+              'payment_status': chosen,
+              'paid_at': chosen == 'confirmed' ? DateTime.now().toIso8601String() : null,
+            })
+            .eq('id', existing['id']);
+      } else {
+        await Supabase.instance.client
+            .from('contributions')
+            .insert({
+              'group_id': groupId,
+              'user_id': memberUserId,
+              'turn_number': currentTurn,
+              'amount': amountNum,
+              'currency': currency,
+              'payment_status': chosen,
+              'paid_at': chosen == 'confirmed' ? DateTime.now().toIso8601String() : null,
+            });
+      }
+
+      // Si confirmé, notifier le membre
+      if (chosen == 'confirmed') {
+        try {
+          await Supabase.instance.client.from('alerts').insert({
+            'user_id': memberUserId,
+            'group_id': groupId,
+            'type': 'payment',
+            'title': 'Cotisation confirmée ! 🟢',
+            'body': 'L\'organisateur a confirmé que vous avez payé votre cotisation pour le Tour $currentTurn de "$groupName".',
+            'is_read': false,
+          });
+        } catch (_) {}
+      }
+
+      onRefresh();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(chosen == 'confirmed'
+                ? 'Paiement de $memberName confirmé (Payé) 🟢'
+                : 'Statut de $memberName remis à Non payé ⏳'),
+            backgroundColor: chosen == 'confirmed' ? AppColors.palm : AppColors.ink,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur : $e'),
+            backgroundColor: AppColors.coral,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final organizerId = group['organizer_id'] as String?;
+    final isOrganizer = (currentUserId != null && organizerId == currentUserId);
+
+    final paidCount = members.where((m) => m['is_paid'] == true).length;
+    final totalCount = members.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Carte Bénéficiaire Suivant
+        if (nextBeneficiaryName != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.paperDim),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.ink.withValues(alpha: 0.02),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.marigold.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.skip_next_rounded,
+                    color: Color(0xFFB87A1F),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'BÉNÉFICIAIRE SUIVANT',
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: AppColors.ash,
+                            ),
+                          ),
+                          if (nextBeneficiaryTurn != null) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: AppColors.ink.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Tour $nextBeneficiaryTurn',
+                                style: GoogleFonts.ibmPlexMono(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        nextBeneficiaryName!,
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.ash),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        // Liste des membres avec statuts de paiement
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.paperDim),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Statut des cotisations',
+                          style: GoogleFonts.bricolageGrotesque(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isOrganizer
+                              ? 'Tour $currentTurn • $paidCount/$totalCount payés (Touchez pour valider)'
+                              : 'Tour $currentTurn sur $totalTurns • $paidCount/$totalCount payés',
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 12,
+                            color: isOrganizer ? const Color(0xFFB87A1F) : AppColors.ash,
+                            fontWeight: isOrganizer ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: (paidCount == totalCount && totalCount > 0)
+                          ? AppColors.palm.withValues(alpha: 0.15)
+                          : AppColors.marigold.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '$paidCount/$totalCount payés',
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: (paidCount == totalCount && totalCount > 0)
+                            ? AppColors.palm
+                            : const Color(0xFFB87A1F),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Barre de progression
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: LinearProgressIndicator(
+                  value: totalCount > 0 ? (paidCount / totalCount) : 0,
+                  minHeight: 6,
+                  backgroundColor: AppColors.paperDim,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    paidCount == totalCount ? AppColors.palm : AppColors.marigold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Divider(height: 1, color: AppColors.paperDim),
+              const SizedBox(height: 8),
+
+              // Membres de la tontine
+              for (int i = 0; i < members.length; i++) ...[
+                if (i > 0) const Divider(height: 14, color: AppColors.paperDim),
+                _MemberStatusTile(
+                  member: members[i],
+                  currentTurn: currentTurn,
+                  isOrganizer: isOrganizer,
+                  onToggleStatus: isOrganizer
+                      ? () => _togglePaymentStatus(context, members[i])
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Seul l\'organisateur peut confirmer qu\'une personne a payé.'),
+                              backgroundColor: AppColors.ink,
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                  onViewBeneficiary: members[i]['is_current_beneficiary'] == true
+                      ? () => PayContributionModal.show(
+                            context,
+                            group: group,
+                            beneficiary: currentBeneficiary,
+                            hasPaid: hasUserPaid,
+                            onPaymentUpdated: onRefresh,
+                          )
+                      : null,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MemberStatusTile extends StatelessWidget {
+  final Map<String, dynamic> member;
+  final int currentTurn;
+  final bool isOrganizer;
+  final VoidCallback onToggleStatus;
+  final VoidCallback? onViewBeneficiary;
+
+  const _MemberStatusTile({
+    required this.member,
+    required this.currentTurn,
+    required this.isOrganizer,
+    required this.onToggleStatus,
+    this.onViewBeneficiary,
+  });
+
+  String get _initials {
+    final name = (member['full_name'] as String?)?.trim() ?? 'M';
+    if (name.isEmpty) return 'M';
+    final parts = name.split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fullName = (member['full_name'] as String?) ?? 'Membre';
+    final turnOrder = (member['turn_order'] as int?) ?? 1;
+    final isBeneficiary = member['is_current_beneficiary'] == true;
+    final isCurrentUser = member['is_current_user'] == true;
+    final isPaid = member['is_paid'] == true;
+
+    return InkWell(
+      onTap: isOrganizer ? onToggleStatus : (isBeneficiary ? onViewBeneficiary : onToggleStatus),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isBeneficiary
+                    ? AppColors.marigold
+                    : (isPaid ? AppColors.palm.withValues(alpha: 0.15) : AppColors.paperDim),
+                border: Border.all(
+                  color: isBeneficiary ? AppColors.ink : Colors.transparent,
+                  width: 1.2,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                _initials,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isBeneficiary
+                      ? AppColors.ink
+                      : (isPaid ? AppColors.palm : AppColors.ash),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Nom et tags
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          fullName,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isCurrentUser) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.ink,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Vous',
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Text(
+                        'Tour $turnOrder',
+                        style: GoogleFonts.ibmPlexMono(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.ash,
+                        ),
+                      ),
+                      if (isBeneficiary) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.marigold.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '👑 Bénéficiaire',
+                            style: GoogleFonts.ibmPlexMono(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF8A5A0A),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Badge Statut interactif : [Payé] ou [Non payé]
+            GestureDetector(
+              onTap: onToggleStatus,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: isPaid
+                      ? AppColors.palm.withValues(alpha: 0.12)
+                      : const Color(0xFFE65100).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: isPaid
+                        ? AppColors.palm.withValues(alpha: 0.3)
+                        : const Color(0xFFE65100).withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPaid ? Icons.check_circle_rounded : Icons.schedule_rounded,
+                      size: 13,
+                      color: isPaid ? AppColors.palm : const Color(0xFFE65100),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isPaid ? 'Payé' : 'Non payé',
+                      style: GoogleFonts.ibmPlexMono(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: isPaid ? AppColors.palm : const Color(0xFFE65100),
+                      ),
+                    ),
+                    if (isOrganizer) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.edit_rounded,
+                        size: 11,
+                        color: isPaid ? AppColors.palm : const Color(0xFFE65100),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _QuickActionsSection extends StatelessWidget {
   final VoidCallback onRefresh;
-  const _QuickActionsSection({required this.onRefresh});
+  final Map<String, dynamic>? featuredGroup;
+  final Map<String, dynamic>? currentBeneficiary;
+  final bool hasUserPaid;
+
+  const _QuickActionsSection({
+    required this.onRefresh,
+    this.featuredGroup,
+    this.currentBeneficiary,
+    this.hasUserPaid = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1591,9 +2497,28 @@ class _QuickActionsSection extends StatelessWidget {
             Expanded(
               flex: 4,
               child: _ActionTile(
-                icon: Icons.check_circle_outline_rounded,
-                label: t.iPaid,
-                onTap: () {},
+                icon: Icons.payments_rounded,
+                iconColor: hasUserPaid ? AppColors.palm : AppColors.marigold,
+                label: hasUserPaid ? 'Payé ✓' : 'Payer sòl',
+                onTap: () {
+                  if (featuredGroup != null) {
+                    PayContributionModal.show(
+                      context,
+                      group: featuredGroup!,
+                      beneficiary: currentBeneficiary,
+                      hasPaid: hasUserPaid,
+                      onPaymentUpdated: onRefresh,
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Aucune tontine active pour le moment.'),
+                        backgroundColor: AppColors.ink,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
               ),
             ),
           ],

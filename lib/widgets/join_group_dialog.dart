@@ -78,7 +78,7 @@ Future<void> showJoinGroupDialog(
                 color: AppColors.ink,
               ),
               decoration: InputDecoration(
-                hintText: 'EX: AFA5D2DC...',
+                hintText: 'EX: H7K2P9',
                 counterText: '',
                 filled: true,
                 fillColor: AppColors.white,
