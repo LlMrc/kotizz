@@ -115,6 +115,35 @@ class _SolAppState extends State<SolApp> {
 
   void _setLanguage(AppLanguage lang) => setState(() => _language = lang);
 
+  /// Restaure la langue depuis profiles.language dès qu'une session est active.
+  Future<void> _restoreLanguage() async {
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+      final data = await Supabase.instance.client
+          .from('profiles')
+          .select('language')
+          .eq('id', uid)
+          .maybeSingle();
+      final code = (data?['language'] as String?) ?? 'fr';
+      final lang = code == 'en'
+          ? AppLanguage.english
+          : code == 'ht'
+              ? AppLanguage.creole
+              : AppLanguage.french;
+      if (mounted) setState(() => _language = lang);
+    } catch (_) {}
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore saved language as soon as an auth session is available.
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.session != null) _restoreLanguage();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

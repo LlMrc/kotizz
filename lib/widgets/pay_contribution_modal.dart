@@ -78,6 +78,13 @@ class _PayContributionModalState extends State<PayContributionModal> {
     }
   }
 
+  Future<void> _sendEmail(String email) async {
+    final uri = Uri.parse('mailto:$email');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
   void _copyToClipboard(BuildContext context, String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
@@ -211,6 +218,15 @@ class _PayContributionModalState extends State<PayContributionModal> {
     final beneficiaryPhone = (beneficiary?['phone'] as String?)?.trim() ?? '';
     final payoutMethod = (beneficiary?['payout_method'] as String?)?.trim() ?? '';
     final payoutDetails = (beneficiary?['payout_details'] as String?)?.trim() ?? '';
+
+    String beneficiaryEmail = (beneficiary?['email'] as String?)?.trim() ?? '';
+    if (beneficiaryEmail.isEmpty && payoutDetails.isNotEmpty) {
+      final emailMatch = RegExp(r'[\w\.-]+@[\w\.-]+\.\w+').firstMatch(payoutDetails);
+      if (emailMatch != null) {
+        beneficiaryEmail = emailMatch.group(0) ?? '';
+      }
+    }
+    final beneficiaryUsername = (beneficiary?['username'] as String?)?.trim() ?? '';
     final isBeneficiaryUser = beneficiary != null && beneficiary['user_id'] == currentUser?.id;
 
     return Container(
@@ -444,6 +460,20 @@ class _PayContributionModalState extends State<PayContributionModal> {
                         const Divider(height: 1, color: AppColors.paperDim),
                         const SizedBox(height: 14),
 
+                        // Nom complet
+                        _InfoRow(
+                          icon: Icons.person_rounded,
+                          label: 'Nom complet du bénéficiaire',
+                          value: beneficiaryName,
+                          actionWidget: IconButton(
+                            tooltip: 'Copier',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.ash),
+                            onPressed: () => _copyToClipboard(context, beneficiaryName, 'Nom'),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
                         // Téléphone
                         _InfoRow(
                           icon: Icons.phone_rounded,
@@ -470,6 +500,37 @@ class _PayContributionModalState extends State<PayContributionModal> {
                                       visualDensity: VisualDensity.compact,
                                       icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18, color: Color(0xFF25D366)),
                                       onPressed: () => _openWhatsApp(beneficiaryPhone),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Email
+                        _InfoRow(
+                          icon: Icons.email_rounded,
+                          label: 'Adresse email',
+                          value: beneficiaryEmail.isNotEmpty
+                              ? beneficiaryEmail
+                              : (beneficiaryUsername.isNotEmpty
+                                  ? '@$beneficiaryUsername'
+                                  : 'Non renseignée'),
+                          actionWidget: beneficiaryEmail.isNotEmpty
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      tooltip: 'Copier l\'email',
+                                      visualDensity: VisualDensity.compact,
+                                      icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.ash),
+                                      onPressed: () => _copyToClipboard(context, beneficiaryEmail, 'Email'),
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Envoyer un email',
+                                      visualDensity: VisualDensity.compact,
+                                      icon: const Icon(Icons.mail_outline_rounded, size: 18, color: AppColors.marigold),
+                                      onPressed: () => _sendEmail(beneficiaryEmail),
                                     ),
                                   ],
                                 )

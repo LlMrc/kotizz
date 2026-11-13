@@ -35,7 +35,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _pushNotifications = true;
+  bool _pushNotifications = true;`r`n  int _disputesCount = 0;
 
   /// Plan courant de l'utilisateur ('free' ou 'pro'). Chargé depuis Supabase.
   String _plan = 'free';
@@ -60,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       final data = await Supabase.instance.client
           .from('profiles')
-          .select('full_name, phone, plan, plan_expires_at, trust_score, completed_cycles, phone_verified')
+          .select('full_name, phone, plan, plan_expires_at, trust_score, completed_cycles, phone_verified, disputes_count, push_enabled')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -72,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _plan = (data?['plan'] as String?) ?? 'free';
           _trustScore = (data?['trust_score'] as int?) ?? 50;
           _completedCycles = (data?['completed_cycles'] as int?) ?? 0;
-          _phoneVerified = (data?['phone_verified'] as bool?) ?? false;
+          _phoneVerified = (data?['phone_verified'] as bool?) ?? false;`r`n          _disputesCount = (data?['disputes_count'] as int?) ?? 0;`r`n          _pushNotifications = (data?['push_enabled'] as bool?) ?? true;`
           _planLoading = false;
         });
       }
@@ -359,8 +359,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Text(lang.nativeLabel),
                         );
                       }).toList(),
-                      onChanged: (lang) {
-                        if (lang != null) widget.onLanguageChanged(lang);
+                      onChanged: (lang) async {
+                        if (lang == null) return;
+                        widget.onLanguageChanged(lang);
+                        final uid = Supabase.instance.client.auth.currentUser?.id;
+                        if (uid != null) {
+                          final langCode = lang == AppLanguage.french ? 'fr'
+                              : lang == AppLanguage.english ? 'en'
+                              : 'ht';
+                          await Supabase.instance.client
+                              .from('profiles')
+                              .update({'language': langCode})
+                              .eq('id', uid);
+                        }
                       },
                     ),
                   ),
@@ -395,7 +406,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: GoogleFonts.ibmPlexSans(fontSize: 12, color: AppColors.ash),
                     ),
                     value: _pushNotifications,
-                    onChanged: (v) => setState(() => _pushNotifications = v),
+                    onChanged: (v) async {
+                      setState(() => _pushNotifications = v);
+                      final uid = Supabase.instance.client.auth.currentUser?.id;
+                      if (uid != null) {
+                        await Supabase.instance.client
+                            .from('profiles')
+                            .update({'push_enabled': v})
+                            .eq('id', uid);
+                      }
+                    },
                   ),
                 ],
               ),

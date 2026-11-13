@@ -53,8 +53,29 @@ class NotificationService {
   }
 
   /// Récupère le token FCM de l'appareil et le sauvegarde dans la table `profiles` de Supabase.
+  /// Si l'utilisateur a désactivé push_enabled, efface le token existant pour stopper les envois.
   static Future<void> syncFcmToken() async {
     try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+
+      // Vérifie la préférence push_enabled avant de syncer le token.
+      final data = await Supabase.instance.client
+          .from('profiles')
+          .select('push_enabled')
+          .eq('id', uid)
+          .maybeSingle();
+      final pushEnabled = (data?['push_enabled'] as bool?) ?? true;
+
+      if (!pushEnabled) {
+        // Efface le token pour que le backend ne lui envoie plus de notifications.
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'fcm_token': null})
+            .eq('id', uid);
+        return;
+      }
+
       final token = await _messaging.getToken();
       if (token != null) {
         await _saveTokenToSupabase(token);

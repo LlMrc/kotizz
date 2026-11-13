@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         try {
           final membersResponse = await Supabase.instance.client
               .from('group_members')
-              .select('id, user_id, turn_order, status, profiles:user_id(id, full_name, phone, payout_method, payout_details, trust_score)')
+              .select('id, user_id, turn_order, status, profiles:user_id(id, full_name, phone, payout_method, payout_details, trust_score, username)')
               .eq('group_id', groupId)
               .order('turn_order', ascending: true);
 
@@ -178,6 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
             'user_id': bUserId,
             'full_name': bFullName,
             'phone': (prof?['phone'] as String?) ?? '',
+            'email': (bUserId == user.id ? user.email : (prof?['email'] as String?)) ?? '',
+            'username': (prof?['username'] as String?) ?? '',
             'payout_method': (prof?['payout_method'] as String?) ?? '',
             'payout_details': (prof?['payout_details'] as String?) ?? '',
             'turn_order': currentBeneficiaryMember['turn_order'] ?? currentTurn,
@@ -329,6 +331,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     beneficiaryName: _turnBeneficiaryName,
                     beneficiaryFullName: _turnBeneficiaryFullName,
                     currentBeneficiary: _currentBeneficiary,
+                    nextBeneficiaryName: _nextBeneficiaryName,
+                    nextBeneficiaryTurn: _nextBeneficiaryTurn,
                     hasUserPaid: _hasUserPaid,
                     onRefresh: _loadHomeData,
                   ),
@@ -626,6 +630,8 @@ class _WheelCard extends StatelessWidget {
   final String? beneficiaryName;
   final String? beneficiaryFullName;
   final Map<String, dynamic>? currentBeneficiary;
+  final String? nextBeneficiaryName;
+  final int? nextBeneficiaryTurn;
   final bool hasUserPaid;
   final VoidCallback onRefresh;
 
@@ -638,6 +644,8 @@ class _WheelCard extends StatelessWidget {
     this.beneficiaryName,
     this.beneficiaryFullName,
     this.currentBeneficiary,
+    this.nextBeneficiaryName,
+    this.nextBeneficiaryTurn,
     this.hasUserPaid = false,
   });
 
@@ -1100,47 +1108,61 @@ class _WheelCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Bénéficiaire courant
+                // ── 1. BÉNÉFICIAIRE ACTUEL (EN VEDETTE) ────────────────────────
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.white.withValues(alpha: 0.08),
+                    color: AppColors.marigold.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.white.withValues(alpha: 0.12)),
+                    border: Border.all(
+                      color: AppColors.marigold.withValues(alpha: 0.45),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.marigold.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 36,
-                        height: 36,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           color: AppColors.marigold,
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.ink, width: 1.2),
+                          border: Border.all(color: AppColors.ink, width: 1.5),
                         ),
                         alignment: Alignment.center,
-                        child: const Icon(Icons.stars_rounded, color: AppColors.ink, size: 20),
+                        child: const Icon(Icons.stars_rounded, color: AppColors.ink, size: 22),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'BÉNÉFICIAIRE COURANT',
-                              style: GoogleFonts.ibmPlexMono(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
-                                color: AppColors.white.withValues(alpha: 0.6),
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  'BÉNÉFICIAIRE ACTUEL • TOUR $currentTurn',
+                                  style: GoogleFonts.ibmPlexMono(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.9,
+                                    color: AppColors.marigold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 3),
                             Text(
-                              beneficiaryFullName ?? (beneficiaryName != null ? 'Tour de $beneficiaryName' : 'Non défini'),
+                              beneficiaryFullName ?? (beneficiaryName != null ? beneficiaryName! : 'Non défini'),
                               style: GoogleFonts.bricolageGrotesque(
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
                                 color: AppColors.white,
                               ),
                               maxLines: 1,
@@ -1151,13 +1173,13 @@ class _WheelCard extends StatelessWidget {
                       ),
                       if (isUserTurn)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.marigold,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'C\'est vous !',
+                            'C\'est vous ! 🎉',
                             style: GoogleFonts.ibmPlexMono(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -1168,8 +1190,54 @@ class _WheelCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                // Bouton Payer votre cotisation
+
+                // ── 2. PROCHAIN BÉNÉFICIAIRE (SECONDAIRE / MOINS ÉVIDENT) ────────
+                if (nextBeneficiaryName != null && nextBeneficiaryName!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.white.withValues(alpha: 0.08)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 16,
+                          color: AppColors.white.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          nextBeneficiaryTurn != null
+                              ? 'Tour suivant (T$nextBeneficiaryTurn) : '
+                              : 'Tour suivant : ',
+                          style: GoogleFonts.ibmPlexMono(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.white.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            nextBeneficiaryName!,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.white.withValues(alpha: 0.82),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 14),
+                // ── 3. BOUTON EFFECTUER VOTRE COTISATION ─────────────────────────
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -1196,9 +1264,9 @@ class _WheelCard extends StatelessWidget {
                       size: 19,
                     ),
                     label: Text(
-                      hasUserPaid ? 'Cotisation payée ✓ (Voir infos)' : 'Payer votre cotisation',
+                      hasUserPaid ? 'Cotisation payée ✓ (Voir coordonnées)' : 'Effectuer votre cotisation',
                       style: GoogleFonts.ibmPlexSans(
-                        fontSize: 14,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
