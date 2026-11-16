@@ -1144,18 +1144,16 @@ class _WheelCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'BÉNÉFICIAIRE ACTUEL • TOUR $currentTurn',
-                                  style: GoogleFonts.ibmPlexMono(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.9,
-                                    color: AppColors.marigold,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              'BÉNÉFICIAIRE ACTUEL • TOUR $currentTurn',
+                              style: GoogleFonts.ibmPlexMono(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                                color: AppColors.marigold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 3),
                             Text(
@@ -1171,7 +1169,8 @@ class _WheelCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (isUserTurn)
+                      if (isUserTurn) ...[
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                           decoration: BoxDecoration(
@@ -1187,6 +1186,7 @@ class _WheelCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),

@@ -2286,15 +2286,20 @@ https://apps.apple.com/app/id6795205027
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                t.payoutSchedule,
-                style: GoogleFonts.ibmPlexMono(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.8,
-                  color: AppColors.ash,
+              Expanded(
+                child: Text(
+                  t.payoutSchedule,
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                    color: AppColors.ash,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: () => _showInviteModal(context),
                 child: Text(
@@ -2388,14 +2393,18 @@ https://apps.apple.com/app/id6795205027
                                   children: [
                                     Row(
                                       children: [
-                                        Text(
-                                          memberName,
-                                          style: GoogleFonts.ibmPlexSans(
-                                            fontSize: 14,
-                                            fontWeight: isUser
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
-                                            color: AppColors.ink,
+                                        Flexible(
+                                          child: Text(
+                                            memberName,
+                                            style: GoogleFonts.ibmPlexSans(
+                                              fontSize: 14,
+                                              fontWeight: isUser
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w500,
+                                              color: AppColors.ink,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         if (isUser) ...[
@@ -2435,6 +2444,8 @@ https://apps.apple.com/app/id6795205027
                                                   ? const Color(0xFFB87A1F)
                                                   : AppColors.ash),
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
