@@ -72,7 +72,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _plan = (data?['plan'] as String?) ?? 'free';
           _trustScore = (data?['trust_score'] as int?) ?? 50;
           _completedCycles = (data?['completed_cycles'] as int?) ?? 0;
-          _phoneVerified = (data?['phone_verified'] as bool?) ?? false;`r`n          _disputesCount = (data?['disputes_count'] as int?) ?? 0;`r`n          _pushNotifications = (data?['push_enabled'] as bool?) ?? true;`
+          _phoneVerified = (data?['phone_verified'] as bool?) ?? false;
+          _disputesCount = (data?['disputes_count'] as int?) ?? 0;
+          _pushNotifications = (data?['push_enabled'] as bool?) ?? true;
           _planLoading = false;
         });
       }
