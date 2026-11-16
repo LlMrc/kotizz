@@ -35,7 +35,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _pushNotifications = true;`r`n  int _disputesCount = 0;
+  bool _pushNotifications = true;
 
   /// Plan courant de l'utilisateur ('free' ou 'pro'). Chargé depuis Supabase.
   String _plan = 'free';
@@ -73,7 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _trustScore = (data?['trust_score'] as int?) ?? 50;
           _completedCycles = (data?['completed_cycles'] as int?) ?? 0;
           _phoneVerified = (data?['phone_verified'] as bool?) ?? false;
-          _disputesCount = (data?['disputes_count'] as int?) ?? 0;
           _pushNotifications = (data?['push_enabled'] as bool?) ?? true;
           _planLoading = false;
         });
