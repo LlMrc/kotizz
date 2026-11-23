@@ -60,6 +60,7 @@ AS $$
 $$;
 
 -- ── 2. Fonction RPC : membres non confirmés J+2 après le début du tour ──
+DROP FUNCTION IF EXISTS get_late_unpaid_members();
 CREATE OR REPLACE FUNCTION get_late_unpaid_members()
 RETURNS TABLE (
   user_id              uuid,
