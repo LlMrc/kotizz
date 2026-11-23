@@ -4,7 +4,7 @@
 -- ============================================================
 
 -- ── 1. Fonction RPC : membres non payés dont le tour est dans 3 jours ──
--- (remplace/améliore get_unpaid_members_for_reminder si déjà existante)
+DROP FUNCTION IF EXISTS get_unpaid_members_for_reminder();
 CREATE OR REPLACE FUNCTION get_unpaid_members_for_reminder()
 RETURNS TABLE (
   user_id          uuid,
