@@ -132,6 +132,79 @@ Future<void> showJoinGroupDialog(
                             if (rpcResult is Map) {
                               if (rpcResult['success'] == true) {
                                 joinedViaRpc = true;
+
+                                // Notifications via RPC path
+                                try {
+                                  final groupId =
+                                      rpcResult['group_id'] as String?;
+                                  if (groupId != null) {
+                                    final groupData = await Supabase
+                                        .instance.client
+                                        .from('groups')
+                                        .select('name, max_members, organizer_id')
+                                        .eq('id', groupId)
+                                        .maybeSingle();
+                                    final groupName =
+                                        groupData?['name'] as String? ??
+                                            'la Sòl';
+                                    final maxMembers =
+                                        (groupData?['max_members'] as int?) ??
+                                            5;
+                                    final organizerId =
+                                        groupData?['organizer_id'] as String?;
+
+                                    final profileData = await Supabase
+                                        .instance.client
+                                        .from('profiles')
+                                        .select('full_name')
+                                        .eq('id', user.id)
+                                        .maybeSingle();
+                                    final newMemberName =
+                                        profileData?['full_name'] as String? ??
+                                            'Un nouveau membre';
+
+                                    // Notification à l'organisateur
+                                    if (organizerId != null &&
+                                        organizerId != user.id) {
+                                      await Supabase.instance.client
+                                          .from('alerts')
+                                          .insert({
+                                        'user_id': organizerId,
+                                        'group_id': groupId,
+                                        'type': 'system',
+                                        'title': '👋 Nouveau membre rejoint',
+                                        'body':
+                                            '$newMemberName a rejoint votre Sòl "$groupName".',
+                                        'is_read': false,
+                                      });
+                                    }
+
+                                    // Vérifier quorum
+                                    final allMembersResp =
+                                        await Supabase.instance.client
+                                            .from('group_members')
+                                            .select('user_id')
+                                            .eq('group_id', groupId);
+                                    final count =
+                                        (allMembersResp as List).length;
+                                    if (count >= maxMembers) {
+                                      final quorumAlerts = allMembersResp
+                                          .map((m) => {
+                                                'user_id': m['user_id'],
+                                                'group_id': groupId,
+                                                'type': 'system',
+                                                'title': '✅ Sòl complète !',
+                                                'body':
+                                                    '"$groupName" est complète ($maxMembers membres). Le premier tour peut commencer !',
+                                                'is_read': false,
+                                              })
+                                          .toList();
+                                      await Supabase.instance.client
+                                          .from('alerts')
+                                          .insert(quorumAlerts);
+                                    }
+                                  }
+                                } catch (_) {}
                               } else {
                                 final err = rpcResult['error'];
                                 if (err == 'invalid_code') {
@@ -235,6 +308,64 @@ Future<void> showJoinGroupDialog(
                                   'turn_order': nextTurn,
                                   'status': 'confirmed',
                                 });
+
+                            // 5b. Notifications après rejoindre (fallback)
+                            try {
+                              final organizerId =
+                                  groupResp['organizer_id'] as String?;
+                              final groupName =
+                                  groupResp['name'] as String? ?? 'la Sòl';
+
+                              // Profil du nouvel arrivant
+                              final profileData = await Supabase.instance.client
+                                  .from('profiles')
+                                  .select('full_name')
+                                  .eq('id', user.id)
+                                  .maybeSingle();
+                              final newMemberName =
+                                  profileData?['full_name'] as String? ??
+                                      'Un nouveau membre';
+
+                              // Notification à l'organisateur
+                              if (organizerId != null &&
+                                  organizerId != user.id) {
+                                await Supabase.instance.client
+                                    .from('alerts')
+                                    .insert({
+                                  'user_id': organizerId,
+                                  'group_id': groupId,
+                                  'type': 'system',
+                                  'title': '👋 Nouveau membre rejoint',
+                                  'body':
+                                      '$newMemberName a rejoint votre Sòl "$groupName".',
+                                  'is_read': false,
+                                });
+                              }
+
+                              // Vérifier quorum atteint
+                              final newCount = membersList.length + 1;
+                              if (newCount >= maxMembers) {
+                                // Notifier tous les membres (y compris le nouveau)
+                                final allMembersResp =
+                                    await Supabase.instance.client
+                                        .from('group_members')
+                                        .select('user_id')
+                                        .eq('group_id', groupId);
+                                final quorumAlerts =
+                                    (allMembersResp as List).map((m) => {
+                                          'user_id': m['user_id'],
+                                          'group_id': groupId,
+                                          'type': 'system',
+                                          'title': '✅ Sòl complète !',
+                                          'body':
+                                              '"$groupName" est complète ($maxMembers membres). Le premier tour peut commencer !',
+                                          'is_read': false,
+                                        });
+                                await Supabase.instance.client
+                                    .from('alerts')
+                                    .insert(quorumAlerts.toList());
+                              }
+                            } catch (_) {}
                           }
 
                           if (ctx.mounted) {

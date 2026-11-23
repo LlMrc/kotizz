@@ -1066,6 +1066,26 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
             });
       }
 
+      // ── Notification → membre : confirmation / retard ──
+      if (chosen == 'confirmed' || chosen == 'late') {
+        try {
+          final emoji = chosen == 'confirmed' ? '✅' : '🟡';
+          final statusLabel =
+              chosen == 'confirmed' ? 'confirmée' : 'enregistrée comme tardive';
+          await Supabase.instance.client.from('alerts').insert({
+            'user_id': memberUserId,
+            'group_id': widget.group.id,
+            'type': 'payment',
+            'title': '$emoji Cotisation $statusLabel',
+            'body':
+                'L\'organisateur a $statusLabel votre cotisation de '
+                '${widget.group.contributionAmount} ${widget.group.currency} '
+                'pour "${widget.group.name}" (Tour $_currentTurn).',
+            'is_read': false,
+          });
+        } catch (_) {}
+      }
+
       await _loadGroupMembers();
       widget.onGroupUpdated?.call();
 
@@ -1592,6 +1612,56 @@ class _GroupDetailSheetState extends State<_GroupDetailSheet> {
               'status': 'active',
             })
             .eq('id', widget.group.id);
+
+        // ── Notifications Tour suivant ──
+        try {
+          final amountNum = double.tryParse(widget.group.contributionAmount) ?? 0.0;
+          final totalPayout = amountNum * activeMembers.length;
+
+          // Bénéficiaire du nouveau tour (index = nextTurn - 1)
+          final nextBeneficiaryIndex = nextTurn - 1;
+          String? nextBeneficiaryId;
+          String nextBeneficiaryName = 'le prochain membre';
+          if (nextBeneficiaryIndex < activeMembers.length) {
+            final bm = activeMembers[nextBeneficiaryIndex];
+            nextBeneficiaryId = bm['user_id'] as String?;
+            final bp = bm['profiles'] as Map<String, dynamic>?;
+            nextBeneficiaryName = bp?['full_name'] as String? ?? nextBeneficiaryName;
+          }
+
+          // 1. Notification privée au bénéficiaire du nouveau tour
+          if (nextBeneficiaryId != null) {
+            await Supabase.instance.client.from('alerts').insert({
+              'user_id': nextBeneficiaryId,
+              'group_id': widget.group.id,
+              'type': 'payment',
+              'title': '🎉 C\'est votre tour !',
+              'body':
+                  'Félicitations ! Vous êtes le bénéficiaire du Tour $nextTurn '
+                  'pour "${widget.group.name}". '
+                  '${totalPayout.toStringAsFixed(0)} ${widget.group.currency} vous sont dus.',
+              'is_read': false,
+            });
+          }
+
+          // 2. Annonce du nouveau tour à tous les membres
+          final turnAlerts = activeMembers
+              .where((m) => m['user_id'] != nextBeneficiaryId)
+              .map((m) => {
+                    'user_id': m['user_id'],
+                    'group_id': widget.group.id,
+                    'type': 'system',
+                    'title': '🔄 Tour $nextTurn démarré !',
+                    'body':
+                        '$nextBeneficiaryName est le prochain bénéficiaire '
+                        'dans "${widget.group.name}". Pensez à cotiser !',
+                    'is_read': false,
+                  })
+              .toList();
+          if (turnAlerts.isNotEmpty) {
+            await Supabase.instance.client.from('alerts').insert(turnAlerts);
+          }
+        } catch (_) {}
       }
 
       setState(() {

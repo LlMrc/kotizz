@@ -8,6 +8,11 @@
  *   SUPABASE_SERVICE_KEY     - Clé service_role
  *   FIREBASE_SERVICE_ACCOUNT - Tout le contenu du fichier JSON téléchargé (en une seule chaîne de caractères)
  *   CRON_SECRET              - Secret partagé avec PostgreSQL / GitHub Actions
+ *
+ * Types supportés :
+ *   reminder   - Rappel J-3 avant le tour (membres non payés)
+ *   penalty    - Pénalité J+2 après le tour (membres en retard)
+ *   late_alert - Rappel privé J+2 (cotisation non confirmée)
  */
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
@@ -15,7 +20,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SignJWT, importPKCS8 } from "https://deno.land/x/jose@v4.14.4/index.ts";
 
 interface RequestBody {
-  type: "reminder" | "penalty";
+  type: "reminder" | "penalty" | "late_alert";
   secret: string;
 }
 
@@ -29,6 +34,7 @@ interface UnpaidMember {
   currency: string;
   days_overdue?: number;
   penalty_points?: number;
+  days_until_turn?: number;
 }
 
 interface ServiceAccount {
@@ -137,10 +143,25 @@ serve(async (req: Request) => {
     const accessToken = await getGoogleAccessToken(serviceAccount);
 
     if (body.type === "reminder") {
+      // ── Rappel J-3 : membres non payés dont le tour arrive dans 3 jours ──
       const { data: members, error } = await supabase.rpc("get_unpaid_members_for_reminder");
       if (error) throw error;
       if (!members || members.length === 0) {
         return jsonResponse({ sent: 0, message: "No unpaid members found" });
+      }
+
+      // Insérer aussi dans la table alerts pour l'historique in-app
+      const alertsToInsert = (members as UnpaidMember[])
+        .filter((m) => m.user_id)
+        .map((m) => ({
+          user_id: m.user_id,
+          type: "payment",
+          title: "⏰ Rappel de cotisation",
+          body: `Votre cotisation de ${m.contribution_amount} ${m.currency} pour "${m.group_name}" (Tour ${m.current_turn}) est due dans ${m.days_until_turn ?? 3} jours.`,
+          is_read: false,
+        }));
+      if (alertsToInsert.length > 0) {
+        await supabase.from("alerts").insert(alertsToInsert).throwOnError();
       }
 
       const results = await sendBatchFcmV1(
@@ -148,12 +169,14 @@ serve(async (req: Request) => {
         accessToken,
         members as UnpaidMember[],
         (m) => ({
-          title: "💰 Rappel de cotisation",
-          body: `Votre cotisation de ${m.contribution_amount} ${m.currency} pour "${m.group_name}" (Tour ${m.current_turn}) n'est pas encore confirmée. Pensez à payer avant la fin du mois !`,
+          title: "⏰ Rappel de cotisation",
+          body: `Votre cotisation de ${m.contribution_amount} ${m.currency} pour "${m.group_name}" (Tour ${m.current_turn}) est due dans ${m.days_until_turn ?? 3} jours.`,
         })
       );
       return jsonResponse(results);
+
     } else if (body.type === "penalty") {
+      // ── Pénalité : membres ayant un retard avéré (trust score déduit) ──
       const { data: members, error } = await supabase.rpc("get_penalized_members_today");
       if (error) throw error;
       if (!members || members.length === 0) {
@@ -170,6 +193,40 @@ serve(async (req: Request) => {
         })
       );
       return jsonResponse(results);
+
+    } else if (body.type === "late_alert") {
+      // ── Alerte privée J+2 : membres dont la cotisation n'est pas confirmée ──
+      const { data: members, error } = await supabase.rpc("get_late_unpaid_members");
+      if (error) throw error;
+      if (!members || members.length === 0) {
+        return jsonResponse({ sent: 0, message: "No late unpaid members" });
+      }
+
+      // Insérer dans la table alerts pour l'historique in-app
+      const alertsToInsert = (members as UnpaidMember[])
+        .filter((m) => m.user_id)
+        .map((m) => ({
+          user_id: m.user_id,
+          type: "payment",
+          title: "⏳ Cotisation non confirmée",
+          body: `Votre cotisation de ${m.contribution_amount} ${m.currency} pour "${m.group_name}" (Tour ${m.current_turn}) n'a pas encore été confirmée par l'organisateur.`,
+          is_read: false,
+        }));
+      if (alertsToInsert.length > 0) {
+        await supabase.from("alerts").insert(alertsToInsert).throwOnError();
+      }
+
+      const results = await sendBatchFcmV1(
+        serviceAccount.project_id,
+        accessToken,
+        members as UnpaidMember[],
+        (m) => ({
+          title: "⏳ Cotisation non confirmée",
+          body: `Votre cotisation de ${m.contribution_amount} ${m.currency} pour "${m.group_name}" (Tour ${m.current_turn}) n'a pas encore été confirmée. Contactez votre organisateur.`,
+        })
+      );
+      return jsonResponse(results);
+
     } else {
       return jsonResponse({ error: "Unknown type" }, 400);
     }
